@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="hu" xmlns:th="http://www.thymeleaf.org"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Költözési leltár · Otthontár</title><link rel="stylesheet" th:href="@{/inventory.css}"><script defer th:src="@{/inventory.js}"></script></head>
 <body><header th:replace="~{layout :: header}"></header>
-<main><nav class="tabs" aria-label="Leltár"><a href="/leltar">Tárgyak</a><a href="/leltar/eladas">Eladás</a><a href="/leltar/beallitasok">Beállítások</a><a href="/leltar/lomtar">Lomtár</a></nav>
+<main><nav class="tabs" aria-label="Leltár"><a href="/leltar">Tárgyak</a><a href="/leltar/eladas">Eladás</a><a href="/leltar/koltoztetes">Költöztetés</a><a href="/leltar/beallitasok">Beállítások</a><a href="/leltar/lomtar">Lomtár</a></nav>
 <p id="message" role="alert" hidden></p><section id="content" aria-live="polite">Betöltés…</section></main>
 <template id="editor"><form id="itemform"><div class="heading"><h1>Tárgy adatlapja</h1><button class="primary">Mentés</button></div>
 <fieldset><legend>Tárgy adatai</legend><label>Név<input name="name" maxlength="200" required></label>

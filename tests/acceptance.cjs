@@ -16,13 +16,18 @@ const start = (...args) => execFileSync('powershell.exe',['-NoProfile','-Executi
     const field=(name)=>page.locator('[name="'+name+'"]');
     const get=async route=>{const res=await fetch(origin+'/api/'+route,{headers:{connection:'close'}});assert.ok(res.ok);return res.json();};
     async function save(){
+        const savedName=await field('name').inputValue();
+        const source=new URL(page.url()).searchParams.get('from');
         const navigated=page.waitForEvent('framenavigated',frame=>frame===page.mainFrame());
         const response=page.waitForResponse(r=>r.url()===origin+'/api/items'&&r.request().method()==='POST');
         await page.getByRole('button',{name:'Mentés',exact:true}).first().click();
         const r=await response;
         if(!r.ok())throw Error('Mentés: '+await r.text());
         await navigated; await page.waitForLoadState('domcontentloaded');
-        await page.waitForFunction(()=>!document.querySelector('form')?.inert && document.querySelector('#picker'));
+        assert.equal(page.url(),origin+'/leltar'+(source?'/'+source:''));
+        assert.equal(await page.locator('#itemform').count(),0);
+        const saved=(await get('items')).find(i=>i.name===savedName);
+        await page.goto(origin+'/leltar/'+saved.id);await field('name').waitFor();
         return new URL(page.url()).pathname.split('/').pop();
     }
     async function place(name){
@@ -72,7 +77,20 @@ const start = (...args) => execFileSync('powershell.exe',['-NoProfile','-Executi
         await page.goto(origin+'/leltar/uj');await field('actionId').waitFor();
         assert.equal(await field('actionId').locator('option[value="'+custom.id+'"]').count(),0);
         await visit();await field('actionId').waitFor();assert.equal(await field('actionId').inputValue(),custom.id);
-        await page.getByText('Áthelyezés végrehajtása').click();await save();
+        await page.getByRole('link',{name:'Költöztetés',exact:true}).click();
+        await page.locator('#locationFilter').selectOption(locations[0]);
+        const moveCard=page.locator('.card').filter({hasText:lamp});
+        assert.ok((await moveCard.innerText()).includes('Lakás'+run+' → Garázs'+run));
+        await moveCard.getByText('Adatlap').click();await save();
+        await page.goto(origin+'/leltar/koltoztetes');
+        const moved=page.waitForResponse(r=>r.url().includes('/'+id+'/move?') && r.request().method()==='POST');
+        await moveCard.getByRole('button',{name:'Költöztetés végrehajtása'}).click();
+        assert.ok((await moved).ok());
+        await moveCard.waitFor({state:'detached'});
+        assert.equal((await get('items/'+id)).action_id,null);
+        const repeat=await fetch(origin+'/api/items/'+id+'/move?version='+planned.version,{method:'POST'});
+        assert.equal(repeat.status,409);
+        await visit();
         planned=await get('items/'+id);assert.equal(planned.location_id,locations[1]);assert.equal(planned.destination_id,null);
         await field('location').selectOption(locations[0]);await save();
         console.log('OK: egyedi művelet, kikapcsolás, költöztetési cél és végrehajtás.');
@@ -115,7 +133,7 @@ const start = (...args) => execFileSync('powershell.exe',['-NoProfile','-Executi
         await other.getByRole('button',{name:'Mentés',exact:true}).first().click();await other.locator('#conflict').waitFor();
         assert.equal(await other.locator('[name=description]').inputValue(),'Másik piszkozat');assert.equal(await other.locator('figure').count(),3);
         await other.getByRole('button',{name:'Mentés',exact:true}).first().click();
-        await other.waitForFunction(()=>document.querySelector('#conflict')?.hidden && document.querySelectorAll('figure').length===3);
+        await other.waitForURL(origin+'/leltar');
         assert.equal((await get('items/'+id)).description,'Másik piszkozat');await other.close();
         await visit();await field('description').fill('Piszkozat');let warned=false;
         page.once('dialog',async d=>{warned=true;await d.dismiss();});

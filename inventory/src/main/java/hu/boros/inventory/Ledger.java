@@ -200,6 +200,19 @@ public class Ledger {
   @Transactional
   public void transition(UUID id, long version, String action) {
     String key = id.toString();
+    if (action.equals("move")) {
+      changed(
+          db.update(
+              """
+          UPDATE item SET location_id=destination_id, destination_id=NULL, action_id=NULL,
+                          version=version+1
+          WHERE id=? AND version=? AND trashed=0 AND destination_id IS NOT NULL
+            AND action_id IN (SELECT id FROM item_action WHERE kind='MOVE')
+          """,
+              key,
+              version));
+      return;
+    }
     if (action.equals("purge")) {
       var locked =
           db.queryForList(

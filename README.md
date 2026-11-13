@@ -11,7 +11,7 @@ Magyar nyelvű, helyi alkalmazás. Első modulja a költözési leltár. A házt
 
 A helyi cím [Otthontár](http://127.0.0.1:8740/leltar). A második indítás megnyitja a már futó példányt. Az első beállításkor működő Docker Compose esetén az indító a konténereket választja. Ezen a gépen előkészítettük a közvetlen windowsos indítást. A kiválasztott módot a gép megjegyzi, így a következő alkalommal is ugyanazt a leltárt látod.
 
-A Beállítások fülön saját tárgyműveleteket adhatsz hozzá egyszerű jelölésként vagy célhelyszínes költöztetésként. A kikapcsolt művelet a korábbi tárgyakon megmarad. Az áthelyezést a tárgy adatlapján tervezheted meg. Az Áthelyezés végrehajtása, majd a Mentés gombbal frissül a tényleges helyszín.
+A Beállítások fülön saját tárgyműveleteket adhatsz hozzá egyszerű jelölésként vagy célhelyszínes költöztetésként. A kikapcsolt művelet a korábbi tárgyakon megmarad. Az áthelyezést a tárgy adatlapján tervezheted meg. A Költöztetés fülön az indulási helyszín szerint is szűrhetsz. A Költöztetés végrehajtása gomb azonnal átvezeti a célhelyszínt, és leveszi a tárgyat a költöztetési listáról.
 
 ## MySQL megnyitása VS Code-ban
 
@@ -50,7 +50,7 @@ Az Actuator /actuator/health végpont mindkét szolgáltatásnál elérhető. A 
 | GET /api/items?trash=false | Tárgyak helyszínnel és borítóazonosítóval |
 | GET /api/items/{id} | Adatlap, verzió, fotók sorrendben |
 | POST /api/items | Multipart draft JSON és ismételhető files mező. A Ledger.Draft a mezőszerződés. Új UUID-nál version=0, frissítéskor az utoljára olvasott verzió kell. |
-| POST /api/items/{id}/{trash,restore,purge}?version=N | Verzióvédett Lomtár-művelet |
+| POST /api/items/{id}/{trash,restore,purge,move}?version=N | Verzióvédett Lomtár-művelet |
 | GET /api/photos/{id}/{original,small} | JPEG |
 | POST /thumbnail (imaging) | image/jpeg bemenet és JPEG válasz |
 

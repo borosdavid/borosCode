@@ -2,6 +2,7 @@
 const content = document.querySelector('#content');
 const message = document.querySelector('#message');
 const page = location.pathname.split('/')[2] || 'targyak';
+const moving = page === 'koltoztetes';
 const sale = page === 'eladas', trash = page === 'lomtar';
 const statuses = {KEEP:'Megtartjuk', WAIT:'Meghirdetésre vár', LISTED:'Meghirdetve', SOLD:'Elkelt'};
 let actions = [], places = [], dirty = () => false;
@@ -74,21 +75,31 @@ function showPlaces() {
         } catch(err){warn(err);}
     };
 }
-async function list() {
+async function list(selectedPlace='') {
     const rows=await api('items?trash='+trash);
-    const title=trash?'Lomtár':sale?'Eladás':'Tárgyak';
-    content.innerHTML='<div class="heading"><h1>'+title+'</h1>'+(trash?'':'<a class="button" href="'+(places.length?'/leltar/uj':'/leltar/beallitasok')+'">'+(places.length?'Új tárgy':'Első helyszín felvétele')+'</a>')+'</div><div class="bar"><label>Helyszín<select id="locationFilter"><option value="">Minden helyszín</option>'+options()+'</select></label>'+(!sale&&!trash?'<label><span><input type="checkbox" id="saleFilter"> Csak eladó tárgyak</span></label>':'')+'</div><div class="cards"></div>';
+    const sourceQuery=(sale||moving)?'?from='+page:'';
+    const title=moving?'Költöztetés':trash?'Lomtár':sale?'Eladás':'Tárgyak';
+    content.innerHTML='<div class="heading"><h1>'+title+'</h1>'+(trash||moving?'':'<a class="button" href="'+(places.length?'/leltar/uj'+sourceQuery:'/leltar/beallitasok')+'">'+(places.length?'Új tárgy':'Első helyszín felvétele')+'</a>')+'</div><div class="bar"><label>Helyszín<select id="locationFilter"><option value="">Minden helyszín</option>'+options()+'</select></label>'+(!sale&&!trash&&!moving?'<label><span><input type="checkbox" id="saleFilter"> Csak eladó tárgyak</span></label>':'')+'</div><div class="cards"></div>';
     const filter=content.querySelector('#locationFilter');
+    filter.value=selectedPlace;
     const draw=()=>{
         const cards=content.querySelector('.cards');
-        const visible=rows.filter(r=>(!filter.value||r.location_id===filter.value)&&(!(sale||document.querySelector('#saleFilter')?.checked)||r.status!=='KEEP'));
-        cards.innerHTML=visible.map(r=>'<article class="card '+(r.status==='SOLD'?'sold':'')+'">'+(r.cover?'<img alt="" src="/api/photos/'+esc(r.cover)+'/small">':'')+'<span class="tag">'+esc(actionLabel(r))+'</span><h2>'+esc(r.name)+'</h2><p>'+esc(r.place)+'</p>'+(trash?'<button data-action="restore">Visszaállítás</button> <button data-action="purge">Végleges törlés</button>':'<a href="/leltar/'+esc(r.id)+'">Adatlap</a> <button data-action="trash">Lomtárba</button>')+'</article>').join('');
-        if(!visible.length) cards.innerHTML='<p class="empty">'+(trash?'A Lomtár üres.':'Nincs megjeleníthető tárgy.')+'</p>';
+        const visible=rows.filter(r=>(!moving || actions.some(a=>a.id===r.action_id && a.kind==='MOVE')) && (!filter.value||r.location_id===filter.value)&&(!(sale||document.querySelector('#saleFilter')?.checked)||r.status!=='KEEP'));
+        cards.innerHTML=visible.map(r=>'<article class="card '+(r.status==='SOLD'?'sold':'')+'">'+(r.cover?'<img alt="" src="/api/photos/'+esc(r.cover)+'/small">':'')+'<span class="tag">'+esc(moving ? actions.find(a=>a.id===r.action_id)?.name : actionLabel(r))+'</span><h2>'+esc(r.name)+'</h2><p>'+esc(r.place)+(moving?' → '+esc(places.find(p=>p.id===r.destination_id)?.name):'')+'</p>'+(trash?'<button data-action="restore">Visszaállítás</button> <button data-action="purge">Végleges törlés</button>':'<a href="/leltar/'+esc(r.id)+sourceQuery+'">Adatlap</a> '+(moving?'<button class="primary" data-action="move">Költöztetés végrehajtása</button>':'<button data-action="trash">Lomtárba</button>'))+'</article>').join('');
+        if(!visible.length) cards.innerHTML='<p class="empty">'+(moving?'Nincs költöztetésre kijelölt tárgy ezen a listán.':trash?'A Lomtár üres.':'Nincs megjeleníthető tárgy.')+'</p>';
         [...cards.querySelectorAll('article')].forEach((card,i)=>{
             for(const b of card.querySelectorAll('button')) b.onclick=async()=>{
                 const action=b.dataset.action,r=visible[i];
                 if(action==='purge'&&!confirm('Végleg törlöd a következő tárgyat és az összes fotóját? '+r.name))return;
-                try{await api('items/'+r.id+'/'+action+'?version='+r.version,{method:'POST'});await list();}catch(e){warn(e);}
+                b.disabled=true;
+                try {
+                    await api('items/'+r.id+'/'+action+'?version='+r.version,{method:'POST'});
+                    await list(filter.value);
+                    if(action==='move'){
+                        message.textContent=r.name+' áthelyezve: '+places.find(p=>p.id===r.destination_id)?.name;
+                        message.hidden=false;
+                    }
+                } catch(e){b.disabled=false;warn(e);}
             };
         });
     };
@@ -97,6 +108,8 @@ async function list() {
 function editor(item) {
     content.replaceChildren(document.querySelector('#editor').content.cloneNode(true));
     const form=content.querySelector('form'), fields=form.elements;
+    const source=new URLSearchParams(location.search).get('from');
+    const returnPath=['koltoztetes','eladas'].includes(source)?'/leltar/'+source:'/leltar';
     const id=item.id || crypto.randomUUID();
     let version=item.version||0, photos=item.photos||[], pending=[], cover=item.cover||'', baseline;
     const keys=['actionId','destination','name','description','location','status','asking','link','actual','soldDate'];
@@ -175,7 +188,7 @@ function editor(item) {
         pending.forEach(p=>data.append('files',p.file));
         form.inert=true;
         try{
-            await api('items',{method:'POST',body:data});dirty=()=>false;location.assign('/leltar/'+id);
+            await api('items',{method:'POST',body:data});dirty=()=>false;location.replace(returnPath);
         }catch(err){
             warn(err);
             if(err.status===409)try{await conflict();}catch(other){warn(other);}
@@ -186,6 +199,6 @@ function editor(item) {
     [places,actions]=await Promise.all([api('places'),api('actions')]);
     document.querySelectorAll('.tabs a').forEach(a=>{if(a.pathname===location.pathname)a.setAttribute('aria-current','page');});
     if(['helyszinek','beallitasok'].includes(page))showPlaces();
-    else if(['targyak','eladas','lomtar'].includes(page))await list();
+    else if(['targyak','eladas','koltoztetes','lomtar'].includes(page))await list();
     else editor(page==='uj'?{}:await api('items/'+page));
 })().catch(warn);
