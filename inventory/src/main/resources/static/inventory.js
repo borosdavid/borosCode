@@ -75,6 +75,34 @@ function showPlaces() {
         } catch(err){warn(err);}
     };
 }
+function showSaleDialog(item,selectedPlace) {
+    const dialog=document.querySelector('#sale-dialog');
+    const form=dialog.querySelector('form');
+    const error=form.querySelector('[role=alert]');
+    const today=new Date();
+    today.setMinutes(today.getMinutes()-today.getTimezoneOffset());
+    form.reset();
+    form.elements.soldDate.value=today.toISOString().slice(0,10);
+    form.querySelector('.item-name').textContent=item.name;
+    error.hidden=true;
+    form.querySelector('[type=button]').onclick=()=>dialog.close();
+    dialog.oncancel=e=>{if(form.inert)e.preventDefault();};
+    form.onsubmit=async e=>{
+        e.preventDefault();
+        form.inert=true;
+        try {
+            const body={version:item.version,actual:form.elements.actual.value,soldDate:form.elements.soldDate.value};
+            await api('items/'+item.id+'/sold',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        } catch(err){
+            error.textContent=err.message;
+            error.hidden=false;
+            return;
+        } finally {form.inert=false;}
+        dialog.close();
+        try {await list(selectedPlace);} catch(err){warn(err);}
+    };
+    dialog.showModal();
+}
 async function list(selectedPlace='') {
     const rows=await api('items?trash='+trash);
     const sourceQuery=(sale||moving)?'?from='+page:'';
@@ -85,11 +113,12 @@ async function list(selectedPlace='') {
     const draw=()=>{
         const cards=content.querySelector('.cards');
         const visible=rows.filter(r=>(!moving || actions.some(a=>a.id===r.action_id && a.kind==='MOVE')) && (!filter.value||r.location_id===filter.value)&&(!(sale||document.querySelector('#saleFilter')?.checked)||r.status!=='KEEP'));
-        cards.innerHTML=visible.map(r=>'<article class="card '+(r.status==='SOLD'?'sold':'')+'">'+(r.cover?'<img alt="" src="/api/photos/'+esc(r.cover)+'/small">':'')+'<span class="tag">'+esc(moving ? actions.find(a=>a.id===r.action_id)?.name : actionLabel(r))+'</span><h2>'+esc(r.name)+'</h2><p>'+esc(r.place)+(moving?' → '+esc(places.find(p=>p.id===r.destination_id)?.name):'')+'</p>'+(trash?'<button data-action="restore">Visszaállítás</button> <button data-action="purge">Végleges törlés</button>':'<a href="/leltar/'+esc(r.id)+sourceQuery+'">Adatlap</a> '+(moving?'<button class="primary" data-action="move">Költöztetés végrehajtása</button>':'<button data-action="trash">Lomtárba</button>'))+'</article>').join('');
+        cards.innerHTML=visible.map(r=>'<article class="card '+(r.status==='SOLD'?'sold':'')+'">'+(r.cover?'<img alt="" src="/api/photos/'+esc(r.cover)+'/small">':'')+'<span class="tag">'+esc(moving ? actions.find(a=>a.id===r.action_id)?.name : actionLabel(r))+'</span><h2>'+esc(r.name)+'</h2><p>'+esc(r.place)+(moving?' → '+esc(places.find(p=>p.id===r.destination_id)?.name):'')+'</p>'+(sale&&r.status!=='SOLD'?'<button class="primary" data-action="sold">Eladva</button> ':'')+(trash?'<button data-action="restore">Visszaállítás</button> <button data-action="purge">Végleges törlés</button>':'<a href="/leltar/'+esc(r.id)+sourceQuery+'">Adatlap</a> '+(moving?'<button class="primary" data-action="move">Költöztetés végrehajtása</button>':'<button data-action="trash">Lomtárba</button>'))+'</article>').join('');
         if(!visible.length) cards.innerHTML='<p class="empty">'+(moving?'Nincs költöztetésre kijelölt tárgy ezen a listán.':trash?'A Lomtár üres.':'Nincs megjeleníthető tárgy.')+'</p>';
         [...cards.querySelectorAll('article')].forEach((card,i)=>{
             for(const b of card.querySelectorAll('button')) b.onclick=async()=>{
                 const action=b.dataset.action,r=visible[i];
+                if(action==='sold'){showSaleDialog(r,filter.value);return;}
                 if(action==='purge'&&!confirm('Végleg törlöd a következő tárgyat és az összes fotóját? '+r.name))return;
                 b.disabled=true;
                 try {

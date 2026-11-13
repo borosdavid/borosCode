@@ -74,6 +74,11 @@ public class Web {
     return ledger.item(draft.id());
   }
 
+  @PostMapping("/items/{id}/sold")
+  void completeSale(@PathVariable UUID id, @RequestBody Ledger.Sale sale) {
+    ledger.completeSale(id, sale);
+  }
+
   @PostMapping("/items/{id}/{action}")
   void action(@PathVariable UUID id, @PathVariable String action, @RequestParam long version) {
     ledger.transition(id, version, action);

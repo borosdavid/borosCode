@@ -14,3 +14,4 @@
 @media (max-width:600px) {
     .actionlist .place { flex-wrap:wrap; }
 }
+#sale-dialog{width:min(380px,90vw);border:1px solid #aabbb0;border-radius:10px;color:inherit;padding:24px}#sale-dialog::backdrop{background:#172d2566}#sale-dialog label,#sale-dialog .actions{margin-top:16px}#sale-dialog h2{margin:0}

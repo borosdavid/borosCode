@@ -84,6 +84,32 @@ public class Ledger {
     return row;
   }
 
+  private static void validatePrice(BigDecimal price) {
+    if (price != null)
+      require(
+          price.signum() >= 0 && price.scale() <= 2 && price.precision() - price.scale() <= 12,
+          "Érvénytelen ár.");
+  }
+
+  record Sale(long version, BigDecimal actual, LocalDate soldDate) {}
+
+  public void completeSale(UUID id, Sale sale) {
+    require(
+        sale.actual() != null && sale.soldDate() != null,
+        "Add meg a tényleges eladási árat és az eladás dátumát.");
+    validatePrice(sale.actual());
+    changed(
+        db.update(
+            """
+        UPDATE item SET status='SOLD', actual=?, sold_date=?, version=version+1
+        WHERE id=? AND version=? AND trashed=0 AND status IN ('WAIT','LISTED')
+        """,
+            sale.actual(),
+            sale.soldDate(),
+            id.toString(),
+            sale.version()));
+  }
+
   static void validate(Draft d) {
     require(d.id() != null && d.location() != null, "Válassz helyszínt.");
     require(
@@ -95,11 +121,8 @@ public class Ledger {
     require(
         d.status() != null && Set.of("KEEP", "WAIT", "LISTED", "SOLD").contains(d.status()),
         "Ismeretlen állapot.");
-    for (var n : new BigDecimal[] {d.asking(), d.actual()})
-      if (n != null)
-        require(
-            n.signum() >= 0 && n.scale() <= 2 && n.precision() - n.scale() <= 12,
-            "Érvénytelen ár.");
+    validatePrice(d.asking());
+    validatePrice(d.actual());
     if (d.link() != null && !d.link().isBlank()) {
       URI uri;
       try {

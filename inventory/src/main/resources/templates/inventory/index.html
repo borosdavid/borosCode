@@ -3,6 +3,15 @@
 <body><header th:replace="~{layout :: header}"></header>
 <main><nav class="tabs" aria-label="Leltár"><a href="/leltar">Tárgyak</a><a href="/leltar/eladas">Eladás</a><a href="/leltar/koltoztetes">Költöztetés</a><a href="/leltar/beallitasok">Beállítások</a><a href="/leltar/lomtar">Lomtár</a></nav>
 <p id="message" role="alert" hidden></p><section id="content" aria-live="polite">Betöltés…</section></main>
+<dialog id="sale-dialog" aria-labelledby="sale-title">
+<form>
+<h2 id="sale-title">Eladás rögzítése</h2><p class="item-name"></p>
+<label>Tényleges eladási ár (Ft)<input name="actual" type="number" min="0" max="999999999999.99" step="0.01" required autofocus></label>
+<label>Eladás dátuma<input name="soldDate" type="date" required></label>
+<p role="alert" hidden></p>
+<div class="actions"><button type="button">Mégse</button><button class="primary">Mentés</button></div>
+</form>
+</dialog>
 <template id="editor"><form id="itemform"><div class="heading"><h1>Tárgy adatlapja</h1><button class="primary">Mentés</button></div>
 <fieldset><legend>Tárgy adatai</legend><label>Név<input name="name" maxlength="200" required></label>
 <label>Helyszín<select name="location" required></select></label><label class="wide">Leírás<textarea name="description" maxlength="12000" rows="3"></textarea></label></fieldset>
