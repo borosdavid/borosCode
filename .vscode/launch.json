@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Tesztleltár hibakeresése",
+      "request": "attach",
+      "hostName": "127.0.0.1",
+      "port": 18840
+    },
+    {
+      "type": "java",
+      "name": "Teszt képfeldolgozó hibakeresése",
+      "request": "attach",
+      "hostName": "127.0.0.1",
+      "port": 18841
+    }
+  ]
+}

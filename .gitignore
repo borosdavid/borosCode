@@ -1,0 +1,6 @@
+.local/
+.env
+target/
+*.log
+data/
+.vscode/*.local.json

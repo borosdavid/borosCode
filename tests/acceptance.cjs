@@ -1,0 +1,131 @@
+// Run against the isolated Windows test profile only.
+const { chromium } = require(process.env.PLAYWRIGHT_CORE || '../.local/package');
+const assert = require('node:assert/strict');
+
+const fs = require('node:fs');
+const {execFileSync} = require('node:child_process');
+const path = require('node:path');
+const origin = 'http://127.0.0.1:18740';
+const run = Date.now().toString(36);
+const state = path.resolve('.local/acceptance');
+const start = (...args) => execFileSync('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/Start.ps1','-TestRun','-Native','-NoBrowser',...args],{timeout:180000,stdio:'inherit'});
+(async()=>{
+    const browser=await chromium.launch({executablePath: process.env.BROWSER_EXE || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true});
+    const page=await browser.newPage();
+    page.setDefaultTimeout(10000);
+    const field=(name)=>page.locator('[name="'+name+'"]');
+    const get=async route=>{const res=await fetch(origin+'/api/'+route,{headers:{connection:'close'}});assert.ok(res.ok);return res.json();};
+    async function save(){
+        const navigated=page.waitForEvent('framenavigated',frame=>frame===page.mainFrame());
+        const response=page.waitForResponse(r=>r.url()===origin+'/api/items'&&r.request().method()==='POST');
+        await page.getByRole('button',{name:'Mentés',exact:true}).first().click();
+        const r=await response;
+        if(!r.ok())throw Error('Mentés: '+await r.text());
+        await navigated; await page.waitForLoadState('domcontentloaded');
+        await page.waitForFunction(()=>!document.querySelector('form')?.inert && document.querySelector('#picker'));
+        return new URL(page.url()).pathname.split('/').pop();
+    }
+    async function place(name){
+        await page.goto(origin+'/leltar/helyszinek');
+        const form=page.locator('form').first();
+        await form.locator('input').fill(name);
+        const response=page.waitForResponse(r=>r.url().endsWith('/api/places')&&r.request().method()==='POST');
+        await form.locator('button').click();assert.ok((await response).ok());
+        await page.getByText('Helyszín mentve.').waitFor();
+        return (await get('places')).find(p=>p.name===name).id;
+    }
+    try{
+        const locations=[];
+        for(const n of ['Lakás','Garázs','Raktár'])locations.push(await place(n+run));
+        await page.goto(origin+'/leltar/uj');
+        const lamp='Állólámpa '+run;
+        await field('name').fill(lamp);await field('location').selectOption(locations[0]);await field('description').fill('Olvasólámpa');
+        const data=await page.evaluate(()=>['red','green','blue'].map(color=>{const c=document.createElement('canvas');c.width=800;c.height=600;const ctx=c.getContext('2d');ctx.fillStyle=color;ctx.fillRect(0,0,800,600);return c.toDataURL('image/jpeg').split(',')[1];}));
+        const files=data.map((s,i)=>({name:i+'.jpg',mimeType:'image/jpeg',buffer:Buffer.from(s,'base64')}));
+        await page.locator('#picker').setInputFiles(files);assert.equal(await page.locator('figure').count(),3);
+        await page.locator('.remove').nth(1).click();assert.equal(await page.locator('figure').count(),2);
+        const id=await save();let row=await get('items/'+id);
+        assert.equal(row.photos.length,2);assert.equal(row.cover,row.photos[0].id);
+        assert.equal(row.description,'Olvasólámpa');
+        const original=await fetch(origin+'/api/photos/'+row.cover+'/original');
+        assert.deepEqual(Buffer.from(await original.arrayBuffer()),files[0].buffer);
+        await page.locator('.cover').nth(1).click();await save();row=await get('items/'+id);
+        assert.equal(row.cover,row.photos[1].id);
+        await page.goto(origin+'/leltar');await page.locator('img[src$="/'+row.cover+'/small"]').waitFor();
+        console.log('OK: fotók, eredeti bájtok, kivétel, borító és lista.');
+        const visit=()=>page.goto(origin+'/leltar/'+id);
+        await visit();await field('status').selectOption('WAIT');await save();
+        assert.equal((await get('items/'+id)).link,'');
+        await field('asking').fill('12500');await field('status').selectOption('LISTED');
+        await field('link').fill('https://www.facebook.com/marketplace/item/12345');await save();
+        await field('status').selectOption('SOLD');await field('actual').fill('11000');await field('soldDate').fill('2026-11-13');
+        assert.equal((await get('items/'+id)).status,'LISTED');await save();
+        await page.goto(origin+'/leltar/uj');await field('name').fill('Zsámoly '+run);await field('location').selectOption(locations[0]);await field('status').selectOption('WAIT');await save();
+        await page.goto(origin+'/leltar/eladas');await page.locator('#locationFilter').selectOption(locations[0]);
+        assert.ok((await page.locator('.card').last().innerText()).includes(lamp));
+        assert.equal(await page.locator('.card.sold').count(),1);
+        console.log('OK: eladás, szűrés és rendezés.');
+        await page.goto(origin+'/leltar/helyszinek');
+        const rename=page.locator('form[data-id="'+locations[0]+'"]');await rename.locator('input').fill('Pince'+run);await rename.locator('button').click();await page.getByText('Helyszín mentve.').waitFor();
+        assert.equal((await get('items/'+id)).sold_date,'2026-11-13');
+        const fourth=await place('Új lakás'+run);await visit();assert.equal(await field('location').locator('option:checked').innerText(),'Pince'+run);
+        await field('location').selectOption(fourth);await save();
+        async function restart(){start('-Stop');start();}
+        await restart();await visit();row=await get('items/'+id);
+        assert.equal(row.location_id,fourth);assert.equal(Number(row.actual),11000);assert.equal(row.sold_date,'2026-11-13');assert.equal(row.photos.length,2);
+        console.log('OK: áthelyezés és teljes újraindítás.');
+        async function action(section,label,accept=true){
+            await page.goto(origin+'/leltar'+section);
+            const card=page.locator('.card').filter({has:page.getByRole('heading',{name:lamp,exact:true})});
+            if(label==='Végleges törlés') page.once('dialog',d=>accept?d.accept():d.dismiss());
+            const done=accept?page.waitForResponse(r=>r.request().method()==='POST'):null;
+            await card.getByRole('button',{name:label,exact:true}).click();
+            if(done)assert.ok((await done).ok());
+        }
+        await action('','Lomtárba');await restart();
+        assert.ok(!(await get('items')).some(i=>i.id===id));
+        await action('/lomtar','Végleges törlés',false);await action('/lomtar','Visszaállítás');
+        assert.equal((await get('items/'+id)).cover,row.cover);
+        console.log('OK: Lomtár, megszakítás és visszaállítás.');
+        await visit();const other=await browser.newPage();await other.goto(origin+'/leltar/'+id);
+        await other.locator('[name=name]').waitFor();await field('description').fill('Új leírás');await save();
+        await other.locator('[name=description]').fill('Másik piszkozat');await other.locator('#picker').setInputFiles(files[0]);
+        await other.getByRole('button',{name:'Mentés',exact:true}).first().click();await other.locator('#conflict').waitFor();
+        assert.equal(await other.locator('[name=description]').inputValue(),'Másik piszkozat');assert.equal(await other.locator('figure').count(),3);
+        await other.getByRole('button',{name:'Mentés',exact:true}).first().click();
+        await other.waitForFunction(()=>document.querySelector('#conflict')?.hidden && document.querySelectorAll('figure').length===3);
+        assert.equal((await get('items/'+id)).description,'Másik piszkozat');await other.close();
+        await visit();await field('description').fill('Piszkozat');let warned=false;
+        page.once('dialog',async d=>{warned=true;await d.dismiss();});
+        await page.locator('.tabs a').first().click({noWaitAfter:true});await page.waitForTimeout(200);
+        assert.ok(warned);assert.equal(await field('description').inputValue(),'Piszkozat');
+        await field('description').fill('Másik piszkozat');await page.locator('.tabs a').first().click();await page.waitForURL(origin+'/leltar');
+        const closing=await browser.newPage();
+        await closing.goto(origin+'/leltar/'+id);
+        await closing.locator('[name=name]').click();
+        await closing.locator('[name=name]').fill('Mentetlen név');
+        const cdp=await closing.context().newCDPSession(closing);
+        await closing.bringToFront();
+        const closeWarning=closing.waitForEvent('dialog');
+        void cdp.send('Page.close').catch(()=>{});
+        await (await closeWarning).dismiss();
+        assert.equal(await closing.locator('[name=name]').inputValue(),'Mentetlen név');
+        await closing.locator('[name=name]').fill(lamp);
+        const closed=closing.waitForEvent('close');
+        await closing.close({runBeforeUnload:true});
+        await closed;
+        console.log('OK: ütközés, piszkozat, navigáció és lapbezárás.');
+        await visit();
+        await page.locator('#picker').setInputFiles({name:'hamis.jpg',mimeType:'image/jpeg',buffer:Buffer.from('bad')});
+        await page.getByRole('button',{name:'Mentés',exact:true}).first().click();await page.getByText('Érvénytelen JPG: hamis.jpg').waitFor();
+        await page.locator('.remove').click();await page.locator('#picker').setInputFiles(files[0]);
+        await page.route('**/api/items',r=>r.abort(),{times:1});
+        await page.getByRole('button',{name:'Mentés',exact:true}).first().click();await page.locator('#message:not([hidden])').waitFor();
+        await save();assert.equal((await get('items/'+id)).photos.length,4);
+        row=await get('items/'+id);
+        await action('','Lomtárba');await action('/lomtar','Végleges törlés');
+        for(const photo of row.photos)for(const ext of ['.jpg','.small.jpg'])assert.ok(!fs.existsSync(path.join(state,'photos',photo.id+ext)));
+        assert.equal((await fetch(origin+'/api/items/'+id)).status,404);
+        console.log('OK: hibás JPG, megszakítás, újrapróbálás és végleges fájltörlés.');
+    }finally{await browser.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});

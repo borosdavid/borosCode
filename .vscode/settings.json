@@ -1,0 +1,15 @@
+{
+  "sqltools.connections": [
+    {
+      "name": "Otthontár · csak olvasás",
+      "driver": "MySQL",
+      "server": "127.0.0.1",
+      "port": 33316,
+      "database": "inventory",
+      "username": "viewer",
+      "askForPassword": true,
+      "previewLimit": 100
+    }
+  ],
+  "java.configuration.updateBuildConfiguration": "automatic"
+}

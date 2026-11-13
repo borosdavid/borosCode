@@ -1,0 +1,39 @@
+services:
+  mysql:
+    image: mysql:9.7.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?}
+      MYSQL_DATABASE: inventory
+      MYSQL_USER: inventory
+      MYSQL_PASSWORD: ${DB_PASSWORD:?}
+      READER_PASSWORD: ${READER_PASSWORD:?}
+    ports: ["127.0.0.1:${DB_PORT:-33316}:3306"]
+    volumes:
+      - db:/var/lib/mysql
+      - ./scripts/reader.sh:/docker-entrypoint-initdb.d/reader.sh:ro
+    healthcheck:
+      test: ["CMD","mysqladmin","ping","-h","localhost"]
+      interval: 3s
+      timeout: 3s
+      retries: 60
+  imaging:
+    build: {context: ., args: {MODULE: imaging}}
+    environment: {BIND_ADDRESS: 0.0.0.0, IMAGE_PORT: "8741"}
+  inventory:
+    build: {context: ., args: {MODULE: inventory}}
+    environment:
+      BIND_ADDRESS: 0.0.0.0
+      WEB_PORT: "8740"
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_PASSWORD: ${DB_PASSWORD:?}
+      IMAGING_URL: http://imaging:8741
+      PHOTO_DIR: /photos
+    ports: ["127.0.0.1:${WEB_PORT:-8740}:8740"]
+    volumes: ["photos:/photos"]
+    depends_on:
+      mysql: {condition: service_healthy}
+      imaging: {condition: service_started}
+volumes:
+  db:
+  photos:

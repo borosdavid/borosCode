@@ -1,0 +1,14 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <parent><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-parent</artifactId><version>4.1.2</version><relativePath/></parent>
+  <groupId>hu.boros</groupId><artifactId>otthon</artifactId><version>1.0.0</version><packaging>pom</packaging>
+  <properties><java.version>21</java.version></properties>
+  <build><plugins>
+    <plugin>
+      <groupId>com.diffplug.spotless</groupId><artifactId>spotless-maven-plugin</artifactId><version>2.46.1</version>
+      <configuration><java><googleJavaFormat><version>1.25.2</version></googleJavaFormat></java></configuration>
+      <executions><execution><id>format-check</id><phase>verify</phase><goals><goal>check</goal></goals></execution></executions>
+    </plugin>
+  </plugins></build>
+  <modules><module>inventory</module><module>imaging</module></modules>
+</project>
