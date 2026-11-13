@@ -4,12 +4,14 @@ Magyar nyelvű, helyi alkalmazás. Első modulja a költözési leltár. A házt
 
 ## Első indítás
 
-1. A projektmappában kattints duplán az **Inditas.cmd** fájlra. A megnyíló böngészőben a **Helyszínek** menüben add meg az első helyszín nevét, és kattints a **Mentés** gombra. Ismételd meg a többi helyszínnel.
+1. A projektmappában kattints duplán az **Inditas.cmd** fájlra. A megnyíló böngészőben a **Beállítások** fülön add meg az első helyszín nevét, és kattints a **Mentés** gombra. Ismételd meg a többi helyszínnel.
 2. A **Tárgyak → Új tárgy** oldalon add meg a tárgy nevét, válassz helyszínt, és válaszd ki a JPG-ket. A képek alatti gombokkal választhatsz borítót vagy kivehetsz egy új képet. A **Mentés** együtt rögzíti az adatlapot és a fotókat.
 3. Az **Eladás** oldalon láthatod a Marketplace-re szánt tárgyakat. A hirdetést kézzel add fel. Az alkalmazásban forintban vezetheted az árakat.
 4. Leállításhoz kattints duplán a **Leallitas.cmd** fájlra. A szolgáltatások a böngésző bezárása után is futnak. Az adatbázis és a képek megmaradnak.
 
 A helyi cím [Otthontár](http://127.0.0.1:8740/leltar). A második indítás megnyitja a már futó példányt. Az első beállításkor működő Docker Compose esetén az indító a konténereket választja. Ezen a gépen előkészítettük a közvetlen windowsos indítást. A kiválasztott módot a gép megjegyzi, így a következő alkalommal is ugyanazt a leltárt látod.
+
+A Beállítások fülön saját tárgyműveleteket adhatsz hozzá egyszerű jelölésként vagy célhelyszínes költöztetésként. A kikapcsolt művelet a korábbi tárgyakon megmarad. Az áthelyezést a tárgy adatlapján tervezheted meg. Az Áthelyezés végrehajtása, majd a Mentés gombbal frissül a tényleges helyszín.
 
 ## MySQL megnyitása VS Code-ban
 

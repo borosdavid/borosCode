@@ -39,6 +39,8 @@ class LedgerTest {
         link,
         null,
         null,
+        null,
+        null,
         null);
   }
 }

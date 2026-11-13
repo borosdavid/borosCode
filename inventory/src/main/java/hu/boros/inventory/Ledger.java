@@ -25,7 +25,9 @@ public class Ledger {
       String link,
       BigDecimal actual,
       LocalDate soldDate,
-      String cover) {}
+      String cover,
+      String actionId,
+      UUID destination) {}
 
   record Place(UUID id, String name) {}
 
@@ -117,6 +119,37 @@ public class Ledger {
   public void save(Draft d, List<MultipartFile> uploads) {
     validate(d);
     var id = d.id().toString();
+    String action = d.actionId();
+    if (action == null) action = d.status().equals("KEEP") ? "KEEP" : "SALE";
+    if (action.isBlank()) action = null;
+    String kind = "";
+    if (action != null) {
+      var choices =
+          db.queryForList(
+              "SELECT kind,CAST(active AS UNSIGNED) AS active FROM item_action WHERE id=? FOR SHARE",
+              action);
+      require(!choices.isEmpty(), "Ismeretlen művelet.");
+      var choice = choices.getFirst();
+      boolean active = ((Number) choice.get("active")).intValue() != 0;
+      if (!active)
+        require(
+            db.queryForObject(
+                    "SELECT COUNT(*) FROM item WHERE id=? AND action_id=?",
+                    Integer.class,
+                    id,
+                    action)
+                > 0,
+            "Ez a művelet már ki van kapcsolva.");
+      kind = choice.get("kind").toString();
+    }
+    require(
+        kind.equals("SALE") == !d.status().equals("KEEP"),
+        "Az eladási állapot és a művelet eltér.");
+    if (kind.equals("MOVE"))
+      require(
+          d.destination() != null && !d.destination().equals(d.location()),
+          "Válassz az aktuálistól eltérő célhelyszínt.");
+    else require(d.destination() == null, "Csak költöztetéshez adható meg célhelyszín.");
     var args =
         new Object[] {
           d.name().strip(),
@@ -127,18 +160,20 @@ public class Ledger {
           d.link(),
           d.actual(),
           d.soldDate(),
+          action,
+          Objects.toString(d.destination(), null),
           id
         };
     if (d.version() == 0) {
       db.update(
-          "INSERT INTO item(name,description,location_id,status,asking,link,actual,sold_date,id,version) VALUES(?,?,?,?,?,?,?,?,?,1)",
+          "INSERT INTO item(name,description,location_id,status,asking,link,actual,sold_date,action_id,destination_id,id,version) VALUES(?,?,?,?,?,?,?,?,?,?,?,1)",
           args);
     } else {
       var params = new ArrayList<>(Arrays.asList(args));
       params.add(d.version());
       changed(
           db.update(
-              "UPDATE item SET name=?,description=?,location_id=?,status=?,asking=?,link=?,actual=?,sold_date=?,version=version+1 WHERE id=? AND version=? AND trashed=0",
+              "UPDATE item SET name=?,description=?,location_id=?,status=?,asking=?,link=?,actual=?,sold_date=?,action_id=?,destination_id=?,version=version+1 WHERE id=? AND version=? AND trashed=0",
               params.toArray()));
     }
     var ids =

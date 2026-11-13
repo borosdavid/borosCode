@@ -29,9 +29,22 @@ public class Web {
   final Ledger ledger;
   final Photos photos;
 
-  Web(Ledger ledger, Photos photos) {
+  private final Actions actions;
+
+  Web(Ledger ledger, Photos photos, Actions actions) {
     this.ledger = ledger;
     this.photos = photos;
+    this.actions = actions;
+  }
+
+  @GetMapping("/actions")
+  Object actions() {
+    return actions.all();
+  }
+
+  @PostMapping("/actions")
+  void actionSettings(@RequestBody Actions.Choice choice) {
+    actions.save(choice);
   }
 
   @GetMapping("/places")
