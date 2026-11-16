@@ -20,3 +20,10 @@ Tedd megbízhatóan használhatóvá a teljes offline Otthontár PWA-t iPhone 12
 - Új, nem szinkronizált tárgyak és eredeti képek biztonságosan exportálhatók; igazolható visszaállítási próba.
 - A szinkronizálás sikere és hibája ellenőrizhető; nem veszít el adatot hálózati ingadozásnál.
 - A kód és az üzemeltetési dokumentáció alkalmas arra, hogy a felhasználó valós iPhone készüléken manuálisan teszteljen.
+
+## Kötelező külön iPhone acceptance-folyamat
+- Dokumentáld a pontos, **egyetlen kanonikus HTTPS URL-t**, amelyről a PWA telepítve és amelyhez az IndexedDB tartozik. Telepítés Safari-ból, iPhone 12 Pro készüléken, Tailscale aktív, majd repülőgép mód/Tailscale kikapcsolás: az alkalmazás offline shell + minden rekord + minden bélyegkép betölthető. Visszakapcsoláskor online teljes kép csak megnyitáskor töltődjön.
+- Ellenőrizd kézzel: app kilövése/újraindítás, iPhone újraindítás, szabad tárhely csökkenése, fotó készítése kamera/galéria útvonalon, HEIC és álló/fekvő orientáció, 20 MiB képhatár, 200 MiB mentési határ, VPN bontása feltöltés közben, konfliktus a PC-ről, verzióváltás után offline adat megmaradása.
+- **Kulcsteszt:** offline készíts 10 tárgyat 20 eredeti fotóval; alkalmazás kilövése után is helyben megmaradjanak. Szinkronnál megszakított válasz és újrapróbálkozás után sem lehet duplikáció, elveszett eredeti vagy hamis „kész” státusz.
+- A backup ne legyen puszta exportgomb: az állomány tartalmazza az unsynced outboxot és fotóblobokat, import teszttel igazold a visszaállíthatóságot. PWA eredetváltás / újratelepítés / iOS storage eviction következményeit magyarázd el a felhasználónak.
+- Ne változtasd meg automatikusan a Windows szerver bootolását, router-, tűzfal- vagy Tailscale-konfigurációját; külön manual lépések és rollback útmutató kell. Különböztesd meg a WebKit által támogatott működést az eszközön még ki nem próbált hipotézisektől.
