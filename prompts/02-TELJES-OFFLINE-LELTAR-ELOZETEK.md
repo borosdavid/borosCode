@@ -1,0 +1,28 @@
+# 02 – Teljes leltár offline, minden fényképből kis előnézet
+
+Olvasd el a `prompts/00-KOZOS-UTASITASOK.md` és `01-PWA-HTTPS-MOBIL-ALAP.md` fájlokat. Elsőként vizsgáld meg a 01-es fázis aktuális eredményét. Ha nincs kész vagy nincs biztonságos HTTPS origin, jelezd az akadályt, és ne állítsd késznek a mobilos megoldást.
+
+## Feladat
+A telefon tárolja helyben a **teljes leltár metaadatait** (helyszínek, tárgyak, műveletek, státuszok, eladás, lomtár, áthelyezések, képlista, sorrend, borító, verziók; a valós adatmodell szerint) és **minden egyes tárgy minden fényképének kisméretű előnézetét**. Az eredeti teljes méretű képek ne legyenek a tömeges offline letöltés részei. Offline minden tárgy és kis fotója megtekinthető legyen, a képek hiányát és a szinkronizálás készültségét pontosan jelezze.
+
+## Tervezési elv
+- IndexedDB és kényelmes, karbantartható adatréteg (pl. Dexie) külön verziózott sémával: `locations`, `items`, `photoMetadata`, `thumbnailBlobs`, `syncState`, későbbi `outbox` struktúra. Használj stabil UUID/azonosítókat.
+- Offline adatforrás elsődlegesen az IndexedDB; ne csak a HTTP-cache-re hagyatkozz. UI renderelés offline adatokból; újratöltés/bezárás után megmarad.
+- Online teljes inicializáló másolat: az összes tárgy, helyszín, státusz, minden képelőnézet letöltése naplózott, megszakítható/folytatható, lapozott/batch munkával. Kihagyás nélküli konzisztencia, nagy leltárnál ne fagyjon meg a böngésző. Állapot: 0..100%, utolsó sikeres szinkron, hiányzó képek, becsült tárhely.
+- Ha a meglévő `GET /api/items?trash=false` nem elegendő (például nem tartalmazza a lomtárat vagy képlista-adatot), új, visszamenőleg kompatibilis olvasó API-t tervezz, ne törj el meglévő végpontokat. Biztosíts konzisztens snapshotot vagy megbízható változáslekérési protokollt, hogy inicializálás alatt sem maradjon el változás.
+- A meglévő `GET /api/photos/{id}/small` végpontot használd, ha megfelelő; vizsgáld meg, hogy maximum 420 px előnézet elég-e. A cél pl. kis JPEG/WebP előnézet, de ne ronts el korábbi képfájlokat és ne duplikálj feleslegesen képeket. A tartalom/típus és orientáció legyen helyes.
+- Képekre és metaadatokra kontrollált concurrency, retry, checksum/integritás (ahol indokolt), quota exceeded és részleges hiba kezelése. Nem sikerült képekkel NE jelenjen meg „teljes offline kész” állapot.
+- Kérj `navigator.storage.persist()` perzisztenciát, ha támogatott, ellenőrizd `navigator.storage.estimate()` segítségével a kvótát; soha ne tekintsd garantáltnak az iOS tartós tárolását. A helyi adatok törlése vagy kvóta problémája legyen egyértelműen jelezve. Későbbi offline írásokhoz maradjon hely.
+
+## Teljes méretű képek megnyitáskor
+- Tárgy megnyitásakor/szerkesztésekor azonnal mutasd az IndexedDB-ben lévő kis képet.
+- Ha a backend valóban elérhető, az éppen megtekintett tárgy képeinek teljes méretű változatát kérd le **igény szerint**, pl. adott kép megnyitásakor (ha a teljes galéria megnyitása ésszerű, a letöltés legyen korlátos). A kliens kis képről váltson nagy felbontásra a betöltés után.
+- Ha a szerver nem elérhető, maradjon a kis előnézet. A teljes méretű kép hiánya ne akadályozza az adatlap szerkesztését.
+- A nagy képek tárolására legfeljebb méretkorlátos, üríthető LRU-cache-t használj. **Nem szabad** azonos cache-szabályokkal kezelni a feltöltésre váró új képek eredetijeit (azokat tilos automatikusan kidobni).
+
+## Elfogadási feltételek
+- Egy online teljes szinkron és offline módra váltás után az **összes tárgy, helyszín, releváns állapot és minden kis előnézet** elérhető a telefonon.
+- 100, 1000 és lehetőség szerint 5000 tételes szimulált leltárnál sincs memóriakifutás, UI-fagyás vagy csendes hiány.
+- Offline újraindítás után is van leltár; teljes képet nem próbál offline lekérni és nem keveri össze az előnézettel.
+- Online adott fotó megtekintésekor a teljes felbontás dinamikusan betöltődik, nem indul tömeges eredetikép-letöltés.
+- A releváns automatikus tesztek lefutnak; manuális iPhone tesztlista elkészül.
