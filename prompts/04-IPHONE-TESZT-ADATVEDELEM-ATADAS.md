@@ -27,3 +27,9 @@ Tedd megbízhatóan használhatóvá a teljes offline Otthontár PWA-t iPhone 12
 - **Kulcsteszt:** offline készíts 10 tárgyat 20 eredeti fotóval; alkalmazás kilövése után is helyben megmaradjanak. Szinkronnál megszakított válasz és újrapróbálkozás után sem lehet duplikáció, elveszett eredeti vagy hamis „kész” státusz.
 - A backup ne legyen puszta exportgomb: az állomány tartalmazza az unsynced outboxot és fotóblobokat, import teszttel igazold a visszaállíthatóságot. PWA eredetváltás / újratelepítés / iOS storage eviction következményeit magyarázd el a felhasználónak.
 - Ne változtasd meg automatikusan a Windows szerver bootolását, router-, tűzfal- vagy Tailscale-konfigurációját; külön manual lépések és rollback útmutató kell. Különböztesd meg a WebKit által támogatott működést az eszközön még ki nem próbált hipotézisektől.
+
+## Regressziós ellenőrzés és fáziskapu
+- A 04-ben **már meglévőnek** kell lennie az 01-es biztonságos kapcsolati/hitelesítési modellnek, a 02-es snapshot+napló rétegnek és a 03-as outbox+idempotens feltöltés+mentés/import rétegnek. Ha bármelyik hiányzik, a 04 nem adhat „kész” átadást; vissza kell jeleznie a hiányzó fázist.
+- A valódi iPhone használatának megkezdése előtt (nem csak az utolsó fázisban) legyen ellenőrzött személyesadat-/fénykép-mentési terv a szerver `.local/personal` vagy Docker köteteinek visszaállítható biztonsági mentésére is. A README szerint a jelenlegi verzióban *nincs külön backup*; a PWA nem helyettesíti ezt.
+- Az 01-es fázis iPhone telepítési és HTTPS-próbája legyen dokumentált, a 02-ben az offline teljes leltár kézi ellenőrzése, a 03-ban az offline új fotó és visszatöltés ellenőrzése; a 04 záró átvételi teszt, nem az első iPhone-próba.
+- Az első négy feladatban szereplő „szinkron” szót pontosan használd: 02 = online read-side letöltés/inkrementális frissítés; 03 = valódi kétirányú offline szerkesztés és felküldés. A UI állapot ne állítsa, hogy minden szinkronizált, ha helyi függő művelet maradt.
