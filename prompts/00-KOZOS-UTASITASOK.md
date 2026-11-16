@@ -19,3 +19,10 @@
 
 ## Ajánlott futtatás
 A fájlokat a sorrendjükben add át Codexnek. Egy fázis után ellenőrizd a változásokat, teszteld, és csak azután indítsd a következőt. A promptok **nem végrehajtandók automatikusan** attól, hogy egy mappában léteznek.
+
+## Kötelező architekturális döntések (pontosítás, 2026-11-16)
+- **Egységes HTTPS origin:** a telepített PWA végig ugyanazon `https://<host>.ts.net` eredetről használja a felületet és az API-t. A `127.0.0.1`, LAN-IP vagy másik HTTPS host nem felcserélhető: külön origin, külön IndexedDB/Service Worker; ne vezess be csendes hostváltást, ami „eltünteti” a leltárt. A Tailscale Serve a localhoston maradó 8740-es webszolgáltatás elé tehető, Funnel nélkül; a beállítás kézi, felhasználói jóváhagyást igényel. Az iPhone Tailscale-kapcsolata csak az online szakaszhoz kell; a korábban feltöltött PWA offline VPN nélkül is nyíljon meg.
+- **Adatvesztés elleni garancia:** az iOS IndexedDB-t az operációs rendszer törölheti; a perzisztencia-kérés nem garancia. A nem szinkronizált módosításokhoz ellenőrizhető export-visszaállítási terv kell, még a széles körű használat előtt. Soha ne jelents 100% kész állapotot a metaadatok és az összes elvárt előnézet ellenőrzése nélkül.
+- **Jogosultsági határok:** VPN-hozzáférés önmagában nem feltétlen alkalmazásszintű hitelesítés. Ellenőrizd a többfelhasználós/egyetlen háztartás jogosultsági modellt, és védd a PWA-ból elérhető adatokat, képeket és szinkron végpontokat. Offline helyi adatok érzékenyek, automatikus felhőmentésük ne történjen.
+- **Szinkron minden írási útvonalból:** a desktop webes módosítások, tárgy-/fotóváltozások, eladási státusz, műveletek és lomtár is generáljon konzisztenst változásnaplót; a mobil API önmagában történő naplózása hibás.
+- **Konkrét viselkedés ütközéskor:** soha ne írja felül a szerver változatát néma last-write-wins; az offline helyi módosítás és eredeti fotó megőrzendő a konfliktus kézi feloldásáig.
