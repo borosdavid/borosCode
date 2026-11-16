@@ -11,6 +11,16 @@ Ebben a mappában gyűjtjük a ChatGPT-vel előkészített, később a Codexnek 
 
 A `SABLON.md` egy új feladat kiindulópontja, **nem végrehajtandó fejlesztési kérés**.
 
+## Fejlesztési sorrend
+
+0. **00A-HIBERNATE-JPA-ATALLAS.md** – JdbcTemplate → Hibernate / Spring Data JPA refaktor, a mobilos fejlesztések előtt.
+1. **01-PWA-HTTPS-MOBIL-ALAP.md** – mobil és biztonságos elérés.
+2. **02-TELJES-OFFLINE-LELTAR-ELOZETEK.md** – offline olvasás.
+3. **03-OFFLINE-MODOSITAS-KAMERA-SZINKRON.md** – offline írás és szinkron.
+4. **04-IPHONE-TESZT-ADATVEDELEM-ATADAS.md** – teszt és átadás.
+
+A `00-KOZOS-UTASITASOK.md` szabályai minden fázisra érvényesek. A fázisok nem indulnak el automatikusan.
+
 ## Alapelvek
 
 - Egy fájl lehetőleg egy jól körülhatárolt feladatot írjon le.
