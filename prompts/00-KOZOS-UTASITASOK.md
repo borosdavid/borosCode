@@ -17,6 +17,9 @@
 - Akadály vagy feloldatlan termékdöntés esetén írd le és kérdezz, mielőtt destruktív vagy biztonságilag jelentős módosítást végzel.
 - Minden fázis végén: megváltoztatott fájlok, teszteredmények, kézi iOS tesztlista, ismert kockázatok, következő fázis előfeltételei. Ne állítsd, hogy valódi iPhone-on teszteltél, ha nem történt meg.
 
+## Hibernate/JPA előfeltétel
+Az újonnan hozzáadott `prompts/00A-HIBERNATE-JPA-ATALLAS.md` a 01–04-es iOS/PWA fázisok **előtt** futtatandó, külön perzisztencia-refaktor. Ha már megtörtént, ellenőrizd a Hibernate/JPA végállapotot és a teszteket, ne végezd el újra. A 01–04-es promptok régi `JdbcTemplate` / `Ledger` / `Photos` hivatkozásai **kiinduló történeti állapotot** írnak le: a Codex a 00A utáni tényleges JPA entitás-, repository- és service-rétegből induljon, ne állítsa vissza a JDBC-t. A meglévő Flyway migrációk továbbra sem módosíthatók.
+
 ## Ajánlott futtatás
 A fájlokat a sorrendjükben add át Codexnek. Egy fázis után ellenőrizd a változásokat, teszteld, és csak azután indítsd a következőt. A promptok **nem végrehajtandók automatikusan** attól, hogy egy mappában léteznek.
 
