@@ -37,3 +37,7 @@ A felhasználó 2026. november 17-i döntése alapján a `prompts/` és `roadmap
 
 Ez fejlesztői munkarend, nem folyamatos háttérszinkron.
 
+
+## Feladatok nyomon követése
+
+A promptok és roadmapek egységes életciklusa: Tervezett → Fejlesztés alatt → Tesztelhető → Elfogadott. Az adatlapot és a bizonyítékokat a main ág [projekt/STATUSZOK.md](https://github.com/borosdavid/borosCode/blob/main/projekt/STATUSZOK.md) szabályai szerint, feladatkezdéskor és állapotváltozáskor frissítsd. A nem igazolt asztali munka nem kész megvalósítás; a puszta dokumentációfrissítés nem tesztkiadás.
