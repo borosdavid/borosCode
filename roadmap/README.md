@@ -68,7 +68,7 @@ A sorrend irányadó, nem végleges ütemterv. A részletes tervek önálló Mar
 - Docker Compose, Tailscale/SSH, monitoring, külső mentések és visszaállítási tesztek.
 - Részletes koncepció: [AI-FEJLESZTES-ES-SZERVERAUTOMATIZALAS.md](AI-FEJLESZTES-ES-SZERVERAUTOMATIZALAS.md)
 
-Az új pontok sorszáma nem kötött megvalósítási sorrend: a közös kezdőképernyő az önálló modulok belépési kerete lehet. Az új termékirány nem módosítja a jelenleg következő, D-007 szerint Debian-szerverre pontosított távoli hozzáférési feladatot.
+Az új pontok sorszáma nem kötött megvalósítási sorrend: a közös kezdőképernyő az önálló modulok belépési kerete lehet. Az új termékirány nem módosítja a jelenleg következő távoli hozzáférési feladatot: D-011 szerint átmenetileg a bekapcsolt Windows-gép a tesztszerver, a D-007 szerinti dedikált Debian későbbre kerül.
 
 ## Tervezési státuszok
 

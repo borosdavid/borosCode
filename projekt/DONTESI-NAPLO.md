@@ -12,11 +12,11 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 | D-004 | Közös csempés alkalmazásgyűjtő, önálló modulokkal | Elfogadott távlati termékirány | 2026-11-17 |
 | D-005 | Státuszok, projektállapot és címkézett tesztátadás | Elfogadott munkarend | 2026-11-17 |
 | D-006 | Állandó szerver végleges gépe és hozzáférése | Részben feloldva D-007-tel; telepítési és üzemeltetési részletek nyitottak | 2026-11-17 |
-| D-007 | Dedikált Debian-szerver, fejlesztés Windowsról és iPhone-ról | Elfogadott irány; telepítés még nem igazolt | 2026-11-17 |
-
+| D-007 | Dedikált Debian-szerver, fejlesztés Windowsról és iPhone-ról | Hosszú távon elfogadott; D-011 szerint későbbre halasztva | 2026-11-17 |
 | D-008 | Felhasználónév/jelszó és egyenlő alkalmazásjogok | Elfogadott követelmény; dev-megvalósítás ellenőrzött alapokkal, átadás folyamatban | 2026-11-17 |
 | D-009 | Közös távoli hozzáférés: Tailscale/SSH és privát GitHub-műveletsor | Kidolgozott javaslat; telepítés/kapcsolat nem igazolt | 2026-11-17 |
 | D-010 | Hibernate/JPA a meglévő Flyway-sémán, változatlan külső szerződéssel | Elfogadott architekturális irány; dev-megvalósítás ellenőrizve, felhasználói elfogadás nyitott | 2026-11-17 |
+| D-011 | Átmeneti Windows-tesztszerver a Debian telepítése előtt | Elfogadott; kód dev-ben, helyi aktiválás/élő próba hátravan | 2026-11-17 |
 
 ## D-001 – Fejlesztési és tesztágak
 
@@ -96,6 +96,8 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 
 ## D-007 – Dedikált Debian-szerver és távoli fejlesztés
 
+**Későbbi pontosítás:** D-011 a Debian telepítését későbbre halasztja; a következő 01B kör célpontja átmenetileg a Windows-gép. Az alábbi eredeti hosszú távú döntést előzményként megőrizzük.
+
 **Döntési állapot:** Elfogadott irány, 2026-11-17. A D-006 gépszerepekre és javasolt alapösszeállításra vonatkozó nyitott részét feloldja; az üzemeltetési részleteket nem zárja le.
 
 **Döntés:** a meglévő laptop kizárólag szerverfeladatot kap. Tervezett alapja Debian 13/Xfce, Docker Engine és Compose, Tailscale/SSH és privát HTTPS. Az alkalmazásszolgáltatások, a MySQL és a tartós képtárolás ezen a gépen futnak majd, automatikus indulással és külső, visszaállítható mentéssel. Az Xfce a szükség szerinti helyi beállítást segítheti; nem teszi a szervert napi fejlesztőgéppé.
@@ -134,6 +136,8 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 
 ## D-009 – Közös távoli hozzáférés megoldási javaslata
 
+**Későbbi pontosítás:** D-011 szerint a szűk műveleti csatorna első implementációja Windowsra készült. A Debian/SSH rész későbbi cél marad; élő kapcsolat még nem igazolt.
+
 **Döntési állapot:** kidolgozott javaslat, 2026-11-17. A közös hozzáférés célját a felhasználó kérte; az itt választott konkrét műveletsor még nem telepített és nem kipróbált rendszer.
 
 **Javaslat:** Dávid Windowsról/iPhone-ról Tailscale + saját SSH-kulcs segítségével adminisztrál. A ChatGPT a meglévő GitHub fájlíró/olvasó képességével egy külön privát vezérlőrepóban engedélyezett kéréseket ad át; a Debianon kifelé kapcsolódó, korlátozott helyi ügynök hajtja végre és szűrt eredményt ad vissza.
@@ -159,6 +163,22 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 **Bizonyíték:** [00A feladat](../prompts/00A-HIBERNATE-JPA-ATALLAS.md), eredeti [JPA-commit](https://github.com/borosdavid/borosCode/commit/4ab60617c225714ba9cfdd7a19aa5d6fc0e0caea), [dev összeillesztés](https://github.com/borosdavid/borosCode/commit/dae1224627a983217296ffe2dd47a339caacdb59), [újrafuttatott ellenőrzések](https://github.com/borosdavid/borosCode/blob/dae1224627a983217296ffe2dd47a339caacdb59/docs/jpa-dev-integracio.md).
 
 **Következmény és korlát:** 24 Java-teszt és 7 Windowsos acceptance csoport sikeres. A külön, változatlan PWA offline deep-link próba Edge alatt sikertelen; oka nyitott. Docker- és iPhone-próba nincs igazolva. Nem készült tesztági kiadás vagy elfogadási címke; a prompt aktív marad.
+
+## D-011 – Átmeneti Windows-tesztszerver
+
+**Döntési állapot:** Elfogadott, 2026-11-17. A D-007 azonnali Debian-telepítésre és a következő 01B célpontjára vonatkozó részét felváltja; a dedikált Debian-szerepet későbbre halasztja.
+
+**Döntés:** a jelenlegi Windows fejlesztőgép átmenetileg tesztszerver is, amíg be van kapcsolva. Natív, izolált acceptance profil, privát Tailscale HTTPS, külön privát GitHub-műveleti csatorna és korlátozott helyi Windows-ügynök készül. Az alkalmazás session/fiókvédelme megmarad. A személyes profil nem tesztcélpont.
+
+**Indok:** a felhasználónak most nincs ideje a Debian-laptop beállítására; a fejlesztés és eszközös tesztek haladjanak addig is.
+
+**Alternatívák:** várakozás a Debianra; külön VPS/új hardver. Egyikre sincs szükség a most kért ideiglenes teszthez.
+
+**Következmény:** a Windows alvása/kikapcsolása megszünteti az online tesztelérést. Nincs gépébresztés, automatikus energia-/tűzfalállítás vagy állandó szerverüzem ígérve. A telepített HTTPS-origin Debianra költözése külön adat-/PWA-migrációs kérdés. SSH, systemd/Compose, külső mentés és a laptop hardverfelmérése későbbre marad.
+
+**Bizonyíték:** a felhasználó utasítása: „a debian szervert egyelőre hagyjuk későbbre … csináljuk meg átmenetileg a szervert ezen a gépen, tesztelni tudunk rajta, amíg be van kapcsolva”. Az „ezen a gépen” a projekt Windows fejlesztőgépére értendő, nem az itteni felhős futtatókörnyezetre.
+
+**Megvalósítás és korlát:** dev [cf191426810ded4ef4b362d56c35735165321cb4](https://github.com/borosdavid/borosCode/commit/cf191426810ded4ef4b362d56c35735165321cb4), 71 sikeres PowerShell assertion Linux/PS 7.5.13 alatt. A valódi Windows/DPAPI/CIM/MySQL, privát repo és innen adott status-válasz, valamint Tailscale/iPhone HTTPS még helyi aktiválást és próbát igényel. Nincs tesztági kiadás vagy élő szerverigazolás. [Részletes leírás](https://github.com/borosdavid/borosCode/blob/cf191426810ded4ef4b362d56c35735165321cb4/docs/windows-tesztszerver-01b.md).
 
 ## Új döntés vagy módosítás
 

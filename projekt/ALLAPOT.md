@@ -5,7 +5,7 @@
 ## Most hol tartunk?
 
 - Elfogadott alkalmazáskövetelmény (D-008): felhasználónév/jelszó, azonos teljes alkalmazás-hozzáférés minden aktív fióknak. A belépés a dev ágon elkészült: [`815dcb2`](https://github.com/borosdavid/borosCode/commit/815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c); a valódi adatbázisos és eszközös átadás még hátravan.
-- A közös távoli hozzáférés konkrét terve elkészült (D-009): felhasználói Tailscale/SSH, külön privát GitHub-műveletsor és korlátozott Debian-ügynök. Élő kapcsolat még nincs.
+- D-011: a Debian telepítése későbbre kerül; átmenetileg a bekapcsolt Windows fejlesztőgép a tesztszerver. A 01B Windows-segédprogramok és privát GitHub-ügynök a dev ágon elkészültek ([cf19142](https://github.com/borosdavid/borosCode/commit/cf191426810ded4ef4b362d56c35735165321cb4)); 71 PowerShell assertion sikeres. Élő Windows/Tailscale/vezérlési kapcsolat még nincs igazolva.
 
 - A helyi PWA-alap a `dev` ágon van; a telefonról megnyitható, védett HTTPS-elérés még nincs igazolva.
 - A teljes offline leltár, a tartós offline szerkesztés és a kétirányú szinkron még további fejlesztés.
@@ -15,14 +15,14 @@
 
 ## Következő teendő és akadályok
 
-1. A korábban kijelölt 01B feladat előkészítése: a dedikált Debian-szerver hardverének/telepítésének felmérése és hitelesített kapcsolat kialakítása Windowsról, iPhone-ról és a használt ChatGPT-környezetből.
+1. A 01B Windows-tesztszerver helyi aktiválása: friss dev build, natív tesztprofil és fiók, Tailscale Windows/iPhone HTTPS, külön privát műveleti repo és helyi DPAPI-token. Innen valódi status-válasz, majd a vezérlési próbák. A Debian hardverfelmérése/telepítése most nem előfeltétel.
 2. A JPA megvalósítása és dev-be mentése elkészült. Külön tesztágas átadás még nincs; a dev meglévő PWA offline hibájának kivizsgálása és a Docker-futtatás ellenőrzése hátravan.
 3. Az 01-es fázis hozzáférésvédelmének és telefonos HTTPS-elérésének befejezése, majd tesztkiadás.
 4. Ezután a teljes offline olvasás (02), offline írás/szinkron (03), végső iPhone-próbák (04).
 
-**Elfogadott gépszerepek (D-007, 2026-11-17):** a Debian 13/Xfce laptop kizárólag szerver; tervezett alapja Docker Engine/Compose, Tailscale/SSH és privát HTTPS. A fejlesztés Windowsról és iPhone-ról történik. A Windows helyi fejlesztést/buildet/tesztet szolgál; az iPhone fejlesztések kezdeményezését és követését, valamint PWA-próbákat. Az iPhone-ról indított munka tényleges végrehajtási helyét és a telepítési csatornát még igazolni kell.
+**Hosszú távú gépszerepek (D-007; D-011 szerint későbbre halasztva):** a Debian 13/Xfce laptop kizárólag szerver; tervezett alapja Docker Engine/Compose, Tailscale/SSH és privát HTTPS. A fejlesztés Windowsról és iPhone-ról történik. A Windows helyi fejlesztést/buildet/tesztet szolgál; az iPhone fejlesztések kezdeményezését és követését, valamint PWA-próbákat. Az iPhone-ról indított munka tényleges végrehajtási helyét és a telepítési csatornát még igazolni kell.
 
-**Nyitva marad:** a laptop hardvere és kompatibilitása, a helyi első telepítés, jogosultságok, mentési célhely és a valóban használható távoli vezérlési kapcsolat. A kiválasztott összeállítás még nem kész telepítés. Tailscale vagy azonos ChatGPT-fiók önmagában nem ad ebből a beszélgetésből géphozzáférést.
+**Most szükséges:** a Windows helyi indítása és eszközös ellenőrzése, valamint a privát vezérlőrepó létrehozása/csatlakoztatása és az innen működő kapcsolat igazolása. **Későbbre marad:** a laptop hardvere/telepítése, Debian-jogosultságok és a külső mentés. A kiválasztott összeállítás még nem kész telepítés. Tailscale vagy azonos ChatGPT-fiók önmagában nem ad ebből a beszélgetésből géphozzáférést.
 
 ## Végrehajtási feladatok
 
@@ -31,7 +31,7 @@
 | [00A – JPA](../prompts/00A-HIBERNATE-JPA-ATALLAS.md) | Fejlesztés alatt | Kód elkészült és dev-be feltöltve; 24 Java-teszt és 7 Windowsos csoport sikeres; külön tesztátadás/elfogadás még nincs |
 | [01 – PWA és HTTPS](../prompts/01-PWA-HTTPS-MOBIL-ALAP.md) | Fejlesztés alatt | Helyi PWA kész; Windows/Edge offline deep-link próba sikertelen, hozzáférés és valódi iPhone-átadás hiányzik |
 | [01A – alkalmazásfiókok](../prompts/01A-FELHASZNALOI-FIOKOK.md) | Fejlesztés alatt | Fiókok/session, CSRF és fiókváltási védelem dev-be feltöltve; 18 Java-teszt/4 böngészős csoport sikeres; valódi MySQL és HTTPS/iPhone-próbák hátravan |
-| [01B – távoli vezérlés](../prompts/01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md) | Tervezett | Debian-szerver és Windows/iPhone fejlesztési szerepek eldöntve; telepítés és kapcsolat még nem igazolt |
+| [01B – Windows-tesztszerver és vezérlés](../prompts/01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md) | Fejlesztés alatt | Kód dev cf19142; 71 PowerShell assertion sikeres; valós Windows/HTTPS/privát repo és innen működő vezérlés még hiányzik |
 | [02 – offline leltár](../prompts/02-TELJES-OFFLINE-LELTAR-ELOZETEK.md) | Tervezett | Előfeltétel a JPA-állapot és a védett elérés rendezése |
 | [03 – offline szerkesztés/szinkron](../prompts/03-OFFLINE-MODOSITAS-KAMERA-SZINKRON.md) | Tervezett | A 02-es konzisztens olvasási/változásnapló-alapjára épül |
 | [04 – iPhone és átadás](../prompts/04-IPHONE-TESZT-ADATVEDELEM-ATADAS.md) | Tervezett | Előző fázisok és elérhető eszközös tesztkörnyezet szükséges |
@@ -51,7 +51,7 @@ A dokumentációs feladat kezdetén az alábbi távoli állapotokat olvastuk. Ez
 
 - [PWA-riport](https://github.com/borosdavid/borosCode/blob/6824ba30bcaa634cc8d96bef134d32774c4f5e75/docs/pwa-01.md): korábbi, 2026-11-17-i 10 sikeres Java-teszt és 3 sikeres böngészős tesztcsoport. Ebben a dokumentációs feladatban ezeket nem futtattuk újra.
 - A korábbi [Ledger](https://github.com/borosdavid/borosCode/blob/6824ba30bcaa634cc8d96bef134d32774c4f5e75/inventory/src/main/java/hu/boros/inventory/Ledger.java) és [inventory/pom.xml](https://github.com/borosdavid/borosCode/blob/6824ba30bcaa634cc8d96bef134d32774c4f5e75/inventory/pom.xml) még JdbcTemplate-et használt. Ezt a történeti állapotot a fenti JPA-commit felváltja; [architektúra és önálló fázisriport](https://github.com/borosdavid/borosCode/blob/dae1224627a983217296ffe2dd47a339caacdb59/docs/jpa-atallas.md).
-- A PWA-riport szerint a Tailscale/proxyforgalom jelenleg 403-at kap; a jelenlegi hozzáférési szűrő nem kész távoli hitelesítés.
+- A korábbi PWA-riport proxyforgalomra 403-at jelzett. A 01A ezt explicit natív HTTPS-origin és belépési védelemmel bővítette; a 01B a Windows/Tailscale beállítót adja hozzá. A valódi eszközös proxypróba még szükséges.
 - A Windows teljes acceptance és a natív, izolált MySQL-integráció most újra lefutott: [dev integrációs riport](https://github.com/borosdavid/borosCode/blob/dae1224627a983217296ffe2dd47a339caacdb59/docs/jpa-dev-integracio.md). A külön PWA offline próba nem sikeres; Docker-futtatás, valódi iPhone-próba és Debian-szerverkapcsolat továbbra sem igazolt.
 
 ## Hol mit keresünk?
@@ -73,7 +73,7 @@ Tesztkiadások: [verziózás és átadási eljárás](TESZTVERZIOK.md), [átadá
 
 Döntések és nyitott javaslatok: [döntési napló](DONTESI-NAPLO.md). A D-006 gépszerepekre és alapösszeállításra vonatkozó részét D-007 feloldotta. A hardver, jogosultságok, mentés és tényleges vezérlési kapcsolat részletei továbbra is tisztázandók.
 
-A jogosultsági és vezérlési pontosítások: [D-008/D-009 a naplóban](DONTESI-NAPLO.md), [távoli hozzáférési terv](SZERVER-TAVOLI-HOZZAFERES.md). A külön privát vezérlőrepó és az ügynök még nincs létrehozva/telepítve. Az alkalmazásfiók nem szerveradminisztrációs fiók.
+A jogosultsági és vezérlési pontosítások: [D-008/D-009 a naplóban](DONTESI-NAPLO.md), [távoli hozzáférési terv](SZERVER-TAVOLI-HOZZAFERES.md). A külön privát vezérlőrepó még nincs igazoltan létrehozva/csatlakoztatva; a 01B Windows-ügynök kódja dev-be került, de helyi telepítése/élő próbája hátravan. Az alkalmazásfiók nem szerveradminisztrációs fiók.
 
 ## Legutóbbi fejlesztés – 01A, 2026-11-17
 
@@ -81,4 +81,12 @@ A JPA/PWA `dae1224` kódjára épített fiókfejlesztés: [815dcb2cacd55b5477ae8
 
 Maven verify és 18 Java-teszt sikeres; a PWA fixture 4 csoportja Headless Chromium 131 alatt sikeres. A korábban jelzett Windows/Edge offline hibát ez nem zárja le. A módosított MySQL/Windows harness lefordult, de a valódi MySQL V3-migráció/karbantartás, Windows helper és acceptance, Docker, Tailscale/HTTPS és iPhone még nem volt ellenőrizhető. A natív explicit HTTPS-proxykonfiguráció tesztelve van szimulált kérésekkel; a Docker távoli proxy-topológiája külön szervertelepítési feladat.
 
-Részletes, kódhoz kötött riport és fióklétrehozás: [01A átadási leírás](https://github.com/borosdavid/borosCode/blob/815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c/docs/fiokok-01a.md). A `teszt` ág és a kiadási címkék változatlanok. Következő gyakorlati lépés a valódi izolált adatbázisos/eszközös ellenőrzés, valamint a 01B szerverkapcsolat előkészítése; a 02/03 offline fázisok még nem indultak el.
+Részletes, kódhoz kötött riport és fióklétrehozás: [01A átadási leírás](https://github.com/borosdavid/borosCode/blob/815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c/docs/fiokok-01a.md). A `teszt` ág és a kiadási címkék változatlanok. Következő gyakorlati lépés a valódi izolált adatbázisos/eszközös ellenőrzés és az alábbi 01B Windows-kód helyi aktiválása; a 02/03 offline fázisok még nem indultak el.
+
+## Legutóbbi fejlesztés – 01B Windows, 2026-11-17
+
+A 01A `815dcb2` dev-kódjára épülő [cf191426810ded4ef4b362d56c35735165321cb4](https://github.com/borosdavid/borosCode/commit/cf191426810ded4ef4b362d56c35735165321cb4) elkészíti az átmeneti natív Windows-tesztszerver indítását/állapotát/leállítását/újraindítását, a build-commit/JAR-hashek ellenőrzését, a Tailscale Serve HTTPS-beállítót és a DPAPI-védett, privát GitHub-kéréseket kezelő helyi ügynököt. Az alkalmazás leállítása a MySQL-t, személyes profilt, fotókat és a vezérlőt megtartja; a Stop-Process nem igazolt kulturált JVM-leállítás. A diagnostics jelenleg szűrt health/verzióösszesítés, nem nyersnapló-hozzáférés. A vezérlő kézzel indított előtérfolyamat, nem automatikus szolgáltatás.
+
+71 sikeres assertion PowerShell 7.5.13/Linux alatt: parser, séma/cél/lejárat, lock/napló/replay/crash/timeout, eredményszűrés, valódi Git/buildjegyzék és módosított JAR/forrás, mock GitHub/HTTPS/tesztfolyamatok. Ez nem Windows-eszközteszt. Java-kód és migráció ebben a fázisban nem változott; Maven/01A teszteket most nem futtattuk újra.
+
+[Helyi aktiválási parancsok és a hiányzó élő próbák](https://github.com/borosdavid/borosCode/blob/cf191426810ded4ef4b362d56c35735165321cb4/docs/windows-tesztszerver-01b.md). A Windows bekapcsolt/ébren lévő állapota és az elindított ügynök szükséges az online vezérléshez. A privát repo létrehozását/csatlakoztatását, helyi tokent és Tailscale-bejelentkezést ez a felhős munkamenet nem helyettesíti. A 01B aktív marad; nincs új tesztágas kiadás vagy címke. A D-011 döntés azonnali Debian-telepítés helyett átmeneti Windows-tesztet rögzít; az offline 02/03 továbbra is következő külön fejlesztés.

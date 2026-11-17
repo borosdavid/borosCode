@@ -1,71 +1,43 @@
-# 01B – Dedikált Debian-szerver távoli elérése és vezérlése, Windows/iPhone fejlesztéssel
+# 01B – Átmeneti Windows-tesztszerver és távoli vezérlés
 
-> **Státusz:** Tervezett  
-> **Pontosítás / akadály:** D-007 alapján a Debian-laptop dedikált szerver, a fejlesztés Windowsról és iPhone-ról történik. A hardver, a telepítés és a tényleges vezérlési kapcsolat még nem igazolt.  
-> **Megvalósítás:** Nincs igazolt megvalósítási commit.  
-> **Ellenőrzés:** A terv/feladatleírás létezése ellenőrizve; implementációs teszt nincs igazolva.  
-> **Felhasználói teszt:** Nincs átadva; elfogadás nincs igazolva.  
+> **Státusz:** Fejlesztés alatt
+> **Pontosítás / akadály:** D-011 szerint a Debian telepítése későbbre kerül; most a bekapcsolt Windows fejlesztőgép a tesztszerver. Az élő Windows/Tailscale/privát GitHub-kapcsolat még nincs aktiválva/igazolva.
+> **Megvalósítás:** dev [`cf19142`](https://github.com/borosdavid/borosCode/commit/cf191426810ded4ef4b362d56c35735165321cb4).
+> **Ellenőrzés:** 71 sikeres PowerShell assertion Linux/PowerShell 7.5.13 alatt: parser, protokoll, tartós műveleti napló, Git/buildjegyzék, mock vezérlés/GitHub/HTTPS. Nem valódi Windows-eszközteszt.
+> **Felhasználói teszt:** Nincs átadva; Windows PowerShell 5.1, DPAPI/ACL, natív MySQL/Java, élő GitHub és iPhone HTTPS hátravan.
 > **Frissítve:** 2026-11-17. [Státuszszabályok](../projekt/STATUSZOK.md).
 
+## Cél és elfogadott változás
 
-## Cél
+A felhasználó 2026-11-17-i utasítása alapján egyelőre a Windows fejlesztőgépen fusson izolált tesztszerver, amíg a gép be van kapcsolva. A Debian-laptop dedikált szerepe megmarad hosszú távú tervként; a mostani feladatnak nem előfeltétele a laptop hardverfelmérése vagy telepítése. A Windows elalvása/kikapcsolása az online elérést megszünteti; ébresztés és folyamatos üzem külön feladat.
 
-A felhasználó következő feladata: a dedikált Debian-laptopon futó Otthontár szerveroldali alkalmazásának és naplóinak elérése, valamint a Windowsról és iPhone-ról kezdeményezett fejlesztési munka követése; a szerver indítása, leállítása és újraindítása ebből a ChatGPT-beszélgetési környezetből is. A telefonos PWA HTTPS-elérése is erre a működő szerverkapcsolatra épüljön.
+A [közös promptszabályok](00-KOZOS-UTASITASOK.md), [munkarend](../AGENTS.md), [D-011 döntés](../projekt/DONTESI-NAPLO.md) és [aktuális hozzáférési terv](../projekt/SZERVER-TAVOLI-HOZZAFERES.md) követendő. Más asztali beszélgetés belső állapotát nem látjuk automatikusan; commitok és riportok jelentik a közös ellenőrzési pontot.
 
-Ez előkészített feladat, nem már kiépített hozzáférés. Az első otthoni telepítés és fiók/eszköz-hitelesítés helyi közreműködést igényelhet. Bekapcsolt, elérhető Debian-szerver kell; kikapcsolt gép távoli ébresztése külön feladat. A Windows-fejlesztőgép kikapcsolása ne állítsa le a szervert.
+## Első megvalósítási kör
 
-A feladat a [D-007 döntést](../projekt/DONTESI-NAPLO.md) követi: Debian 13/Xfce, Docker Engine/Compose, Tailscale/SSH és privát HTTPS a tervezett alap. Az iPhone-ról kezdeményezett fejlesztés végrehajtási/build helyét külön igazold; ne feltételezz iPhone-on futó helyi buildet. A fájl korábbi Windowsos neve a meglévő hivatkozások miatt megmarad, a célpontot a jelenlegi tartalom határozza meg.
+1. A natív Windows `acceptance` tesztprofil rögzített kezelése: status/diagnostics/start/stop/restart. Személyes adatbázist, fotókat, Docker-köteteket ne érintsen; adatmásolás vagy profilváltás ne legyen automatikus.
+2. A helyi build sikeres tesztje után commit és JAR-hashek rögzítése, indulás előtt forrás/build ellenőrzése. Ne töltsön le és futtasson Gitből kapott kódot, shellt vagy tetszőleges refet.
+3. Kölcsönös kizárás, tartós műveleti napló, UUID, rövid lejárat és sémaellenőrzés. Végrehajtás előtt tartós executing jelölés, utána succeeded/failed/unknown/rejected. Bizonytalan műveletet ne ismételjen vakon; az eredmény publikálása külön újrapróbálható.
+4. A 01A session/belépési védelemre épülő privát HTTPS Tailscale Serve segítségével, csak a loopback tesztwebre. Nincs Funnel, routerport-nyitás, publikus MySQL/imaging/admin-végpont. Valódi DNS-nevet használjon; meglévő Serve-konfigurációt ne írjon felül.
+5. Külön privát GitHub-repót olvasó, helyben telepített ügynök a ChatGPT-kérésekhez; a nyilvános alkalmazásrepóba ne kerüljenek műveleti kérések/eredmények. Token helyben, Windows-fiókhoz kötött DPAPI-val és ACL-lel; kezdetben csak olvasó mód, később helyi explicit módosításengedély. Az ügynök normál felhasználóként fusson.
+6. Pontos indítási, csatlakozási, hibakeresési és visszavonási leírás a dev kód mellett. Az itteni felhős környezet nem azonos a Windows-géppel: csak a valódi kapcsolatból származó eredmény bizonyít távoli vezérlést.
 
-## Kiválasztott tervezési irány és előfeltételek
+A dev implementáció az alkalmazás-JVM-eket Windows Stop-Process segítségével állítja le; a MySQL-t futva hagyja. Ez nem igazolt graceful shutdown. A diagnostics egyelőre a health/verzióösszesítést adja, nyersnapló-export nélkül. Az ügynök kézzel indított előtérbeli folyamat, nem automatikusan telepített Windows-szolgáltatás.
 
-Kövesd a [konkrét távoli hozzáférési tervet](../projekt/SZERVER-TAVOLI-HOZZAFERES.md). Dávid közvetlen Tailscale/SSH-hozzáférése és a ChatGPT számára külön privát GitHub-műveletsor készülhet; a helyi ügynök csak rögzített műveleteket fogyaszthat, nem Gitből letöltött kódot. A privát repo javasolt neve még nem létrejött szolgáltatás. Az ügynök implementációja a dev ágra kerül majd; a terv nem aktivál vezérlést.
+## Helyi aktiválás és még szükséges próbák
 
-A kezdeti körben status/diagnostics/start/stop/restart készül, csak izolált tesztkörnyezetre. A kódbuild, telepítés és nyers naplóhozzáférés követelménye külön későbbi ütem; ennek lezárásáig a tágabb 01B feladat aktív marad. Általános shell-végrehajtást vagy self-hosted CI-runnert ne telepíts automatikusan a személyes szerverre.
+A részletes parancsok és korlátok: [Windows 01B útmutató a megvalósító commitban](https://github.com/borosdavid/borosCode/blob/cf191426810ded4ef4b362d56c35735165321cb4/docs/windows-tesztszerver-01b.md).
 
-A védett telefonos alkalmazáselérés előtt a [01A fiókfeladat](01A-FELHASZNALOI-FIOKOK.md) készüljön el: minden aktív bejelentkezett felhasználó egyenlő alkalmazásjogot kap, szerveradmin-jogot nem.
+- A friss dev munkapéldányból helyi Build.ps1, TestServer start, tesztfiók létrehozása és MySQL V3/fiókpróba; személyes adatok megőrzése.
+- Tailscale Windows/iPhone bejelentkezés és a gép valós HTTPS-nevének beállítása; belépés/fotós tárgyművelet mindkét eszközről. A hálózati VPN nem helyettesíti az alkalmazásbelépést.
+- Külön privát műveleti repo létrehozása és GitHub-csatlakozóhoz rendelése. E környezetben új repo létrehozására nincs eszköz; token és első Windows-indítás helyben szükséges.
+- Először innen beadott, egyedi status-kérésre a valódi gép válasza; csak azután helyi módosításengedély és start → health/verzió → ismételt start → restart → health → stop próba.
+- Hibás/lejárt/átírt/ismételt kérések, párhuzamosság, GitHub-írásütközés, elvesző kapcsolat, folyamatindítási timeout és tokenvisszavonás élő próbája. Siker helyett ismeretlen eredményt kell jelezni, ha nincs visszaigazolás.
 
-## Első lépés: igazolt kapcsolat
+Kikapcsolt gépnél, hiányzó tailnet-/repo-hozzáférésnél nincs kész szerverkapcsolat. Ne adj kitalált működő URL-t, és ne jelents teljes 01B-lezárást pusztán a mockokból.
 
-- Vizsgáld meg az aktuális dev ágat, az AGENTS.md-t, a közös promptutasításokat, az indító/leállító PowerShell-szkripteket és a docs/pwa-01.md korlátait.
-- Mérd fel a Debian-laptop hardverét, jelenlegi rendszerét és a választott összeállítás kompatibilitását. Készíts konkrét helyi telepítési tervet; meglévő adatok törlését vagy lemezformázást külön jóváhagyás nélkül ne végezz.
-- A Windows-fejlesztőgépen őrizd meg a helyi profilokat és a még nem pusholt JPA-fejlesztést. A PowerShell-szkriptek a Windows fejlesztési folyamatot szolgálják; a Debian-szerverhez a tényleges Compose/szolgáltatáskezelésre építs.
-- Ellenőrizd, az aktuális ChatGPT-környezet milyen tényleges eszközzel tud hitelesített kérést vagy távoli feladatot végrehajtani. A Tailscale a telefon, a Windows és a Debian-szerver között önmagában NEM kapcsolja a ChatGPT futtatókörnyezetét a tailnethez, és nem ad távoli parancsvégrehajtást.
-- Először bizonyíts egy minimális, csak olvasó állapotlekérést a valódi Debian-szerverről ebbe a környezetbe. Enélkül ne jelents kész távoli hozzáférést. Ha nincs megfelelő eszköz/csatlakozó, a hiányzó kapcsolatot és a helyi lépést nevezd meg pontosan; ne adj nem működő vagy kitalált URL-t.
-- Válassz támogatott, hitelesített vezérlési csatornát. Lehet meglévő megfelelő távoli eszköz vagy helyi, kifelé kapcsolódó végrehajtó. A döntés a tényleges elérhetőségen alapuljon; ne építs automatikusan tetszőleges parancsot futtató publikus HTTP-végpontot.
+## Későbbi bővítések
 
-## Elvárt műveletek
+A teljes 01B körben hátravan a kulturált leállítás igazolása, előre engedélyezett szűrt hibakivonat, ellenőrzött build/teszt riportok megosztása, szükség szerint automatizált indulás és külön telepítési folyamat. Ezek nem jelentenek általános shell-jogot. A Debian-migrációnál újra igazolandó a szolgáltatáskezelés, tartós tárolás, külső mentés/visszaállítás és az állandó privát HTTPS origin; a mostani natív PowerShell-indító nem vihető át változtatás nélkül Linuxra.
 
-1. Állapot: elérhető-e a gép, fut-e inventory/imaging/adatbázis, mely profilban, milyen verzióval/commitból, mi a health állapot.
-2. Indítás, kulturált leállítás és újraindítás a Debianon ellenőrzött Docker Compose/szolgáltatáskezelésre építve. Alapértelmezésként izolált tesztprofilt használj; a személyes példányt soha ne váltsd át csendben. Ismételt indítás ne hozzon létre párhuzamos példányt.
-3. Visszakereshető műveletazonosító, időpont, folyamat/szolgáltatás-állapot, kilépési kód és érthető hiba. Legyen időkorlát, kölcsönös kizárás az ütköző műveletekre, és kapcsolatvesztés után lekérdezhető eredmény. A siker ne csupán a parancs elküldését jelentse: health ellenőrzés kell.
-4. Korlátozott, releváns alkalmazás/build/tesztnapló olvasása. Ne exportálj titkot, személyes adatot vagy a gépek teljes fájlrendszerét; a nyilvános repóba ilyen napló nem kerülhet.
-5. A kijelölt dev/teszt commitból ellenőrzött buildtermék előállítása a Windows fejlesztőgépen vagy igazolt távoli buildkörnyezetben, majd biztonságos telepítése és indítása a Debian-szerveren, a futó verzió pontos jelzésével. A laptop dedikált szerver, ne tedd napi fejlesztői munkakörnyezetté. Ne legyen automatikus destruktív adatbázis-visszaállítás vagy séma-downgrade.
-6. Fejlesztési állapotmegosztás: commitok, módosított fájlok, elvégzett és blokkolt tesztek, futó feladatok, utolsó ellenőrzött eredmény. A megosztható, személyes adatot nem tartalmazó összefoglaló kerüljön közös helyre. A másik asztali ChatGPT-beszélgetés belső állapota nem válik automatikusan láthatóvá: az ottani munkát kifejezett riportolással/naplózással kell követhetővé tenni.
-
-## Tartós szerverüzem
-
-- A Docker és az alkalmazás induljon újraindítás után; hálózati táplálás mellett a fedéllecsukás és az üresjárat ne altassa el a szervert.
-- A személyes és tesztadatbázis/képtároló legyen elkülönítve; a lemez és a fotók tartós tárolását igazold.
-- Legyen a laptopon kívüli adatbázis- és fotómentés, ellenőrzött visszaállítással. A célhely és jogosultságok még eldöntendők; ne válassz automatikusan fizetős tárhelyet.
-- A Windows és iPhone fejlesztési munkafolyamat Git-commitokkal és riportokkal kapcsolódjon a szerver telepített verziójához.
-
-## HTTPS és jogosultság
-
-- Különítsd el a PWA felhasználói hozzáférését a szerver adminisztratív vezérlésétől. Az alkalmazás megnyitása ne adjon szerveradminisztrációs jogosultságot.
-- A jelenlegi LocalAccessFilter távoli/proxy blokkolását csak megvalósított, ellenőrzött felhasználónév/jelszó + session alapú alkalmazásbelépésre és megbízható proxykezelésre cseréld. Ne kapcsold ki pusztán a link működéséért.
-- A Debian oldali végrehajtó csak előre meghatározott műveleteket fogadjon, minimális jogosultsággal, visszavonható hitelesítéssel. Ne legyen tetszőleges shell-parancs, fájlútvonal vagy Git-ref korlátlan átadása. Titkok a helyi biztonságos konfigurációban legyenek, ne repóban, naplóban vagy chatben.
-- Ne nyiss nyilvános MySQL/imaging/admin/shell portot. A Debian-szerver privát telefonos eléréséhez Tailscale Serve és megbízható HTTPS használható, Funnel nélkül; az aktuális telepített súgót ellenőrizd. A ChatGPT vezérlési csatornáját ettől külön igazold.
-- Önállóan futó, állandó távoli felügyeletet ne ígérj: az interaktív chatből kiadott műveletet, a helyi tartós szolgáltatást és az esetleges későbbi ütemezést egyértelműen különítsd el.
-
-## Elfogadási próba
-
-- Ebből a ChatGPT-környezetből lekérhető a valódi Debian tesztpéldány állapota és egy ártalmatlan, azonosítható tesztnapló.
-- Innen indítunk egy leállított tesztpéldányt, megvárjuk a sikeres health ellenőrzést, ellenőrizzük a commitot, majd újraindítjuk és leállítjuk.
-- Ismételt indítás, egyidejű művelet, kieső gép, lejárt/hibás hitelesítés és sikertelen build érthető, igazolt eredményt ad. Jogosulatlan vezérlés elutasítva.
-- A telefonról megnyitható HTTPS-cím valós alkalmazást szolgál ki megfelelő jogosultsággal; telefonos megnyitás külön ellenőrzendő.
-- Az asztali munka végén készített tesztösszefoglaló innen elérhető, de nincs állítás más beszélgetés automatikus teljes láthatóságáról.
-- A személyes adatbázis/fotók/profil megmaradnak; a kezdeti próbák izolált tesztadatokon történnek.
-
-## Mentés és átadás
-
-Minden fejlesztést automatikusan commitolj/pusholj a dev ágra az AGENTS.md szerint. A teszt ágra csak valóban kipróbálható verzió kerülhet, pontos Debian-telepítési, Windows/iPhone-csatlakozási, indítási és visszavonási útmutatóval. A végén add meg az ellenőrzött HTTPS-címet, a ténylegesen működő távoli műveleteket, a még helyi beavatkozást igénylő lépéseket és a teszteredményeket.
+A 02/03 offline fázisok külön feladatok. A 01B a hiányzó élő elfogadási feltételek miatt aktív marad, nem kerül a kesz mappába. Minden fejlesztés dev-be, a tervek külön mainbe; tesztági kiadás csak a munkarendi feltételek teljesülésekor, kitöltött átadási lappal és címkével.

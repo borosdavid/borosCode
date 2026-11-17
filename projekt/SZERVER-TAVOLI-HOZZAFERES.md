@@ -1,112 +1,68 @@
-# Közös távoli szerverhozzáférés – konkrét terv
+# Közös távoli szerverhozzáférés
 
-**Állapot:** kidolgozott javaslat, 2026-11-17; nincs telepítve vagy élő kapcsolattal igazolva. A gépszerepeket D-007, az alkalmazásbelépést D-008 rögzíti a [döntési naplóban](DONTESI-NAPLO.md).
+**Frissítve:** 2026-11-17. D-011 alapján az első célpont a Windows fejlesztőgép, amíg be van kapcsolva; a D-007 szerinti dedikált Debian-szerver későbbi lépés. A kód dev-be került, az élő kapcsolat még nem igazolt.
 
-## Három külön jogosultság
+## Jelenlegi megoldás és jogosultságok
 
 | Szerep | Kapcsolat | Jogosultság |
 |---|---|---|
-| Alkalmazásfelhasználó | Tailscale + privát HTTPS + alkalmazásbeli felhasználónév/jelszó | Minden alkalmazásmodul és közös adat, azonos jogosultsággal |
-| Dávid mint gépüzemeltető | Tailscale + saját SSH-kulcs, Windows/iPhone SSH-kliens | Szerveradminisztráció saját Linux-fiókkal és szükség szerinti sudo-val |
-| ChatGPT-munkamenet | GitHub-csatlakozó → privát műveleti repó → kifelé kapcsolódó szerverügynök | Csak engedélyezett állapotlekérés, diagnosztika és alkalmazásvezérlés |
+| Alkalmazásfelhasználó | Tailscale + privát HTTPS + alkalmazásbeli felhasználónév/jelszó | Azonos teljes alkalmazásjog a közös tesztadatokon |
+| Dávid mint gépüzemeltető | Saját Windows-fiók, helyi PowerShell-segédek | Build, fiókkarbantartás, tesztindítás és helyi konfiguráció |
+| ChatGPT-munkamenet | GitHub-csatlakozó → külön privát műveleti repo → kifelé kapcsolódó Windows-ügynök | Öt rögzített művelet az izolált natív tesztprofilon |
 
-A ChatGPT nem kap közös emberi jelszót, saját alkalmazásfiókot vagy általános root SSH-kulcsot. Az alkalmazásban azonos jogosultságok nem jelentenek azonos szerverüzemeltetési jogot.
+Nincs Windows SSH vagy általános távoli asztal automatikusan telepítve. A későbbi Debianhoz Tailscale/SSH és saját kulcsok tervezettek. A hálózati és alkalmazásbelépés külön védelem, az alkalmazásfiók nem szerveradmin-fiók.
 
-## A felhasználó közvetlen hozzáférése
+## Elkészült fejlesztés
 
-- Tailscale a Debian-laptopon, Windowson és iPhone-on; az eszközökhöz szűk hozzáférési szabályok.
-- A PWA a Debianon futó Tailscale Serve mögött, állandó privát HTTPS originről nyílik. A konkrét hostnevet a telepítés adja, itt nincs kitalált működő cím.
-- A Debian OpenSSH-szolgáltatása csak a kijelölt privát elérési útvonalon legyen használható, a tűzfalon és a Tailscale-szabályokon is ellenőrizve. Windows és iPhone külön, visszavonható SSH-kulcsot kap; root SSH-belépés és jelszavas SSH helyett saját adminfiók.
-- iPhone-ról egy SSH-kliens kell a közvetlen konzolhoz. Az alkalmazás megnyitásához Safari/PWA és Tailscale elég; a két feladat külön marad.
-- A routeren nem kell nyilvános adminisztrációs portot továbbítani. A helyi első konfiguráláskor ténylegesen próbáljuk ki az elérhetőséget és a kizáródás elkerülését.
+A dev [`cf191426810ded4ef4b362d56c35735165321cb4`](https://github.com/borosdavid/borosCode/commit/cf191426810ded4ef4b362d56c35735165321cb4) tartalmazza:
 
-## Miért nem pusztán Tailscale vagy GitHub Actions?
+- `TestServer.ps1`: rögzített `.local/acceptance`, 18740/18741/43316, kizárólag natív mód. A leállítás csak azonosított teszt-JVM-eket kezel; MySQL és személyes adatok megmaradnak. A Stop-Process nem igazolt kulturált JVM-leállítás.
+- `Write-BuildInfo.ps1` és a sikeres Build.ps1 végén jegyzék: commit, inventory/imaging SHA-256, változatlan alkalmazásforrások ellenőrzése. Nincs Git-alapú önfrissítés vagy távoli build/deploy.
+- `Configure-TestHttps.ps1`: Tailscale Serve a `127.0.0.1:18740` előtt, a tényleges helyi DNS-névvel. Funnel elutasítása, meglévő 443 szolgáltatás megőrzése. Nem nyit publikus routerportot.
+- `Configure-RemoteControl.ps1` / `Run-RemoteControl.ps1`: külön privát GitHub-repóra rögzített ügynök; normál Windows-felhasználó, DPAPI+ACL tokenvédelem, csak olvasó alapmód. Kézi indítású előtérfolyamat, 30 másodperces lekérdezési szünettel; nincs Windows-szolgáltatás vagy boot-feladat telepítve.
 
-Az itteni ChatGPT-futtatókörnyezet nem automatikusan tagja a felhasználó tailnetjének. Az elérhető GitHub-csatlakozó fájl-/commitírást és -olvasást támogat; új `workflow_dispatch` indításához jelenleg nincs közvetlen eszköz. Workflow-újrafuttatás nem megfelelő új parancsok továbbítására.
+A `status` és `diagnostics` engedélyezett health/verzióösszesítés, nyersnapló nélkül. `start`, `stop`, `restart` csak helyi módosításengedély után. A diagnosztika nem SQL-integritási teszt: a DB-jelző TCP-portellenőrzés. A hashek a profilba másolt JAR-okat azonosítják, nem a JVM memóriáját tanúsítják.
 
-A `borosdavid/borosCode` repo a 2026-11-17-i GitHub-lekérdezés szerint **nyilvános**. Személyes szerverre közvetlenül kötött általános self-hosted Actions runner helyett szűk műveletsort fogyasztó ügynököt javaslunk. Az ügynök sem branchből letöltött scriptet, sem PR-kódot nem futtat.
+## Miért kell külön vezérlőrepó?
 
-## ChatGPT → GitHub → Debian vezérlési csatorna
+A ChatGPT-környezet nem lesz automatikusan tailnet-tag, és azonos ChatGPT-fiókkal sem lát másik asztali munkamenetbe. Az elérhető GitHub-csatlakozó fájl-/commitírásra és -olvasásra alkalmas; új workflow_dispatch indítására és repo létrehozására ebben a munkamenetben nincs eszköz.
 
-Külön **privát vezérlőrepó** szükséges, javasolt név `borosdavid/otthontar-ops`. Ez még nincs létrehozva vagy csatlakoztatva. A meglévő alkalmazásrepo láthatóságát nem változtatjuk meg.
+A `borosdavid/borosCode` alkalmazásrepo nyilvános. Műveleti kérést/eredményt, szervernaplót vagy tokent oda nem teszünk. Külön privát repo szükséges, például `borosdavid/otthontar-ops`; a név javaslat, a repo nincs igazoltan létrehozva/csatlakoztatva. Az ügynök minden körben ellenőrzi a privát jelleget, és kérésből nem enged repo-/branch-/gépcélváltást.
 
-A vezérlőrepóban:
+## Protokoll és hibakezelés
 
-- `requests/<uuid>.json`: egy változtathatatlan, rövid életű műveleti kérelem.
-- `results/<uuid>.json`: ugyanahhoz az azonosítóhoz tartozó, méretkorlátos, szűrt technikai eredmény.
-- `protocol-version`: a megengedett adatséma verziója; a fájl önmagában nem telepít új protokollt a szerverre.
+- `requests/<UUID-v4>.json`, pontosan hét mező: schema_version=1, request_id, server_id, environment=teszt, operation, created_at, expires_at. UTC Z idő, legfeljebb 10 perces élettartam, 4096 UTF-8 bájt. Nincs shell, útvonal, URL, titok vagy szabad argumentum.
+- A kérésjegyzék és a tartalom ugyanabból a rögzített main commitból olvasódik. Maximum 100 aktív kérésfájl, körönként 5 új feldolgozás; archiválás kézi.
+- Tartós helyi napló és fájlzár. Végrehajtás előtt executing, utána succeeded/failed/unknown/rejected. Az executing állapot megszakadása unknown; sem ismételt kérés, sem eredményírási ütközés nem futtatja újra a műveletet.
+- `results/<UUID>.json`: csak engedélyezett bool health-jelzők, commit/hash, időpont és rögzített hibakód. Nincs nyersnapló, tárgyadat, jelszó, cookie vagy token. A privát repo sem titoktároló.
+- Start-alfolyamatra 150 másodperces határ; utána unknown, vak folyamatfaölés nélkül. PID+indulásidő jelző tiltja az újabb módosítást, míg ugyanaz az indító él. Élő, de health nélküli JVM mellett start helyett explicit restart szükséges. A régi helyi Start.ps1-et ne futtassuk párhuzamosan a vezérlővel.
+- A bizalmi határ a privát repo tényleges írási joga. A helyi fine-grained token csak az egy ops repó Contents read/write jogát kapja; ez repo-szintű jog, nem csak a results mappára korlátozott. A helyi Windows-fiókhoz tartozó kódot az ügynök nem sandboxolja.
 
-A szerveren telepített systemd-szolgáltatás csak kifelé, HTTPS-en kérdezi le a privát repót, kezdetben például 30 másodpercenként. Sikeresen kiépített rendszerben a kérelem rendszerint a következő lekérdezéskor felvehető; a végrehajtás időtartama ettől különbözik. GitHub- vagy internetkieséskor új kérést nem hajt végre; a futó alkalmazás ettől működik tovább.
+A kérelem commitolása csak sorba állítás. Sikerhez az azonosítóhoz tartozó valós eredményt kell visszaolvasni. Válaszhiányból nem következik sem siker, sem kikapcsolt gép. A folyamatos helyi ügynök nem jelent folyamatos ChatGPT-háttérmunkát.
 
-Folyamat:
+## Aktiválás és elfogadás
 
-1. A felhasználó itt kér egy engedélyezett műveletet.
-2. A ChatGPT egyedi azonosítóval, célkörnyezettel és lejárattal kérelmet commitol a **privát** vezérlőrepóba.
-3. A szerver ellenőrzi a repót, ágat, tényleges GitHub-hozzáférési határt, szerverazonosítót, szigorú sémát, lejáratot, ismétlést és a saját helyi műveletengedélyeit.
-4. A helyileg telepített, root tulajdonú vezérlő egy rögzített műveletet végez, majd health/állapotellenőrzést futtat.
-5. Az ügynök szűrt eredményt ír vissza; a ChatGPT ugyanazt az azonosítót olvassa és az eredményt közli.
+A konkrét parancsok, séma, leállítás/visszavonás és tesztlista a [verzióhoz kötött Windows-útmutatóban](https://github.com/borosdavid/borosCode/blob/cf191426810ded4ef4b362d56c35735165321cb4/docs/windows-tesztszerver-01b.md).
 
-A kérés feltöltése csak „sorba állítva”, nem „végrehajtva”. Nincs folyamatos ChatGPT-háttérmunka; az ügynök viszont önálló helyi szolgáltatásként működik.
+1. A Windows munkapéldány friss dev kódjából helyi build/tesztindítás; külön tesztfiók és valódi MySQL/fiókpróba.
+2. Tailscale-bejelentkezés Windows/iPhone eszközökön, HTTPS-konfigurálás és alkalmazás-újraindítás; tényleges telefonos belépés/fotópróba. Nincs előre kitalált HTTPS-cím.
+3. Privát ops repo létrehozása, GitHub-csatlakozó jogosultsága, helyi DPAPI-tokenbekérés és normál felhasználói ügynökindítás, először csak olvasó módban.
+4. Innen status-kérés valós válasszal, majd helyi módosításengedély után start/health/verzió/restart/stop. Személyes profil ellenőrzése változatlanságra.
+5. Lejárat, jogosultság-visszavonás, hálózati kiesés, ismétlés/ütközés/timeout élő próbája.
 
-## Első változat műveletei
+**Igazolt:** 71 sikeres PowerShell assertion Linux/PowerShell 7.5.13 alatt, a parser/protokoll/napló/buildjegyzék és mock GitHub/HTTPS/folyamatkezelés körében. **Még nincs igazolva:** Windows PowerShell 5.1, tényleges DPAPI/ACL/CIM/Java/MySQL, létrehozott privát repo, innen működő vezérlés vagy iPhone HTTPS. Ezért a 01B Fejlesztés alatt, nem átadott tesztkiadás.
 
-| Művelet | Tartalom | Korlát |
-|---|---|---|
-| status | inventory/imaging/adatbázis futása, health és kiadásazonosító | Nem kérdez le személyes leltárt |
-| diagnostics | Rögzített hibakódok, health, szabad tárhely és engedélyezett technikai összesítés | Nincs nyers alkalmazásnapló vagy tetszőleges fájlolvasás |
-| start | A kijelölt alkalmazáskörnyezet indítása | A már futó példányt nem duplikálja |
-| stop | A kijelölt alkalmazáskörnyezet rendezett leállítása | Nem állítja le a gépet, Tailscale-t, SSH-t vagy a vezérlőügynököt |
-| restart | A kijelölt alkalmazáskörnyezet újraindítása | Megszakított műveletet nem ismétel vakon |
+## Üzem és későbbi Debian
 
-Első aktiváláskor csak az izolált **teszt** környezet vezérelhető. Az éles személyes környezetet Dávid később, kifejezetten helyi engedélyezéssel vonhatja be. A tesztparancs ne érhessen el közös adatbázist vagy személyes képkötetet.
+A Windows kikapcsolása/alvása megszünteti az online elérést; az ügynök terminálját nyitva kell tartani. A kód nem változtat energiasémát, tűzfalat, routert vagy rendszerindítást. A tesztalkalmazás leállítása nem kapcsolja ki a gépet vagy a vezérlőt. A token, tailnet-eszköz és alkalmazásfiók külön visszavonható.
 
-A teljes naplót Dávid SSH-val helyben olvassa. AI-elemzéshez csak előre engedélyezett, szükséges és szűrt kivonat kerül a privát csatornára. A Git-előzmény tartós: a privát repo sem titoktároló, jelszó/token/cookie vagy személyes tárgyadat ide sem írható.
+A dedikált Debian-szerver, kulcsos SSH, systemd/Compose alapú indulás, kulturált leállítás, külső mentés és ellenőrzött visszaállítás későbbi feladat marad. A mostani Windows natív PowerShell-indítót nem nevezzük Debian-megoldásnak. A migrációs HTTPS-origin és a PWA helyi tárhelyének átvezetése külön figyelmet igényel.
 
-Telepítés, upgrade, mentés-visszaállítás, adatbázis-migráció, gépújraindítás és tetszőleges shell **nem része az első csatornának**. Ellenőrzött kiadások telepítése későbbi bővítés: helyileg jóváhagyott, változatlan release-azonosítóval és rollback-tervvel; nem tetszőleges Git-refből futtatott kóddal.
+## Hivatalos háttérforrások
 
-## Protokoll és végrehajtási határok
+- [Tailscale Serve](https://tailscale.com/docs/reference/tailscale-cli/serve)
+- [Windows Serve példák](https://tailscale.com/docs/reference/examples/serve)
+- [Microsoft DPAPI / ConvertFrom-SecureString](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.security/convertfrom-securestring)
+- [GitHub repository contents API](https://docs.github.com/en/rest/repos/contents)
 
-Példa szerkezet, nem végrehajtandó kérelem:
-
-```json
-{
-  "schema_version": 1,
-  "request_id": "<uuid>",
-  "server_id": "<helyileg-engedelyezett-azonosito>",
-  "environment": "teszt",
-  "operation": "status",
-  "created_at": "<UTC ISO-8601>",
-  "expires_at": "<UTC ISO-8601, legfeljebb 10 perc mulva>"
-}
-```
-
-- Nincs parancssor, script, URL, útvonal, jelszó, változólista vagy szabad szöveges shellargumentum. Ismeretlen mező/érték elutasítandó; méretkorlát például 4 KiB.
-- A JSON-ban állított felhasználónév nem hitelesítés. A bizalmi határ a privát repóhoz való tényleges GitHub-írási hozzáférés. Csak a tulajdonos és az általa engedélyezett integráció írhat; ha további írók vannak, aktiválás előtt újra kell értékelni a modellt.
-- A repó és branch nem váltható át kérésből. Az ügynök kódja és privilegizált segédprogramja nincs automatikusan frissítve a vezérlőrepóból.
-- Az ügynök külön Linux-fiókkal fut; nincs általános sudo, Docker-csoporttagság vagy Docker socket hozzáférés. Csak root tulajdonú, szűken engedélyezett segédprogramot hívhat, amely rögzített környezetekre és műveletekre validál. A Compose- és környezeti fájlokat az ügynök nem módosíthatja.
-- A szerveren tárolt külön GitHub App/fine-grained hozzáférés csak a privát vezérlőrepóhoz kapjon szükséges tartalomjogot, lejárattal és visszavonhatósággal. Ennek repo-szintű írási joga nem pusztán eredményfájlokra korlátozott; ezt a korlátot dokumentálni kell. Token csak helyi védett konfigurációban legyen.
-- UUID-alapú helyi tartós feldolgozási napló, lejárati és óraellenőrzés, kölcsönös kizárás, műveleti időkorlát és bounded eredményméret kell.
-- Az állapotátmenetek: received → executing → succeeded/failed/unknown/rejected. A végrehajtás előtti tartós executing jelölés és a gépleállás miatti bizonytalan eredmény kezelendő; nem ígérünk elosztott „pontosan egyszer” végrehajtást. A bizonytalan restart helyett állapotot kérdezünk.
-- Ütköző GitHub-fájlírásnál friss SHA-val szabályos újrapróbálás; nincs force push. A feldolgozott kérelem utólagos átírása nem új művelet.
-- A visszavonás módja: helyi ügynök leállítása, GitHub-hozzáférés visszavonása és tailnet-eszköz/kulcs külön visszavonása. A közvetlen SSH-vészút az ügynöktől független marad.
-
-## Telepítési lépések és elfogadás
-
-1. Laptop hardver és Debian állapot felmérése; első helyi telepítés és kulcsos SSH/Tailscale kapcsolat.
-2. A külön privát vezérlőrepó létrehozása a felhasználó fiókjában, a GitHub-csatlakozó hozzáférésének beállítása. A repo létezése, privát jellege és innen történő írás/olvasás ténylegesen ellenőrzendő.
-3. Ügynök, szűk segédprogram, elkülönített tesztpéldány és helyi tokenbeállítás. Előbb szimulált, majd csak olvasó élő próba.
-4. Innen beadott status-kérelemre a valódi Debian-gép válaszol, azonosítóval és ellenőrizhető kiadásinformációval.
-5. Izolált tesztpéldány start → health → restart → health → stop próbája, változatlan személyes adatokkal.
-6. Hibás/lejárt/ismételt kérelmek, ismeretlen művelet, párhuzamosság, áramszünet utáni unknown, GitHub-kiesés és jogosultság-visszavonás próbája.
-7. Alkalmazásfiókok és a proxyhoz illő szerveroldali védelem elkészülte után védett telefonos HTTPS-próba. A hálózati hozzáférés nem helyettesíti az alkalmazásbelépést.
-
-**Most hiányzik:** laptop hardveradata és telepítése, a privát vezérlőrepó és jogosultsága, valamint az ügynök implementációja/éles próbája. Ez a dokumentum tervezési eredmény; élő szerverhozzáférést nem hoz létre.
-
-## Ellenőrzött háttérforrások
-
-- [Tailscale SSH feletti normál SSH](https://tailscale.com/docs/reference/ssh-over-tailscale)
-- [Tailscale Serve](https://tailscale.com/docs/features/tailscale-serve)
-- [GitHub self-hosted runner biztonság](https://docs.github.com/en/actions/reference/security/secure-use)
-- [GitHub repository contents REST API](https://docs.github.com/en/rest/repos/contents)
-
-A GitHub-alapú, szűk műveletsor saját rendszerterv; nem kész GitHub/OpenAI távoli adminisztrációs szolgáltatás. A fájlírási képességet a projekt korábbi commitjai igazolják; a külön privát repo elérését a telepítéskor még ellenőrizni kell.
+A GitHub-műveletsor saját, korlátozott protokoll, nem kész GitHub/OpenAI távoli adminisztrációs szolgáltatás. Az élő kapcsolat csak a fenti végponttól végpontig tartó próbával igazolható.

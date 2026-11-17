@@ -26,9 +26,9 @@ A teljesen elkészült feladatok leírásai a **[kesz/](kesz/README.md)** almapp
 
 A `00-KOZOS-UTASITASOK.md` szabályai minden fázisra érvényesek. A fázisok nem indulnak el automatikusan.
 
-## Következő feladat – dedikált Debian-szerver elérése
+## Következő feladat – átmeneti Windows-tesztszerver
 
-**[01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md](01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md)** – a dedikált Debian-szerver állapotának és naplóinak elérése ChatGPT-ből, a Windows/iPhone fejlesztési riportok követése, biztonságos indítás/leállítás/újraindítás, majd a telefonos HTTPS-elérés igazolása. A felhasználó ezt jelölte ki következő feladatként, az offline fázisok előtt. Egyelőre előkészített feladat; a kapcsolat még nincs kiépítve.
+**[01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md](01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md)** – D-011 szerint átmenetileg a bekapcsolt Windows fejlesztőgép a tesztszerver; Debian későbbre kerül. Az izolált natív indítás, privát HTTPS-beállító és GitHub-műveleti ügynök dev-ben elkészült; 71 PowerShell assertion sikeres. A valódi Windows/Tailscale/iPhone és innen indított vezérlési próba még szükséges; Fejlesztés alatt, nem lezárt fázis. Ezt követi a 02/03 offline fejlesztés.
 
 ## Alapelvek
 
@@ -48,4 +48,4 @@ Minden végrehajtandó prompt az [egységes státuszszabályokat](../projekt/STA
 
 Aktuális összefoglaló: [projektállapot](../projekt/ALLAPOT.md).
 
-A 01B konkrét megoldási terve: [közös távoli szerverhozzáférés](../projekt/SZERVER-TAVOLI-HOZZAFERES.md). A javaslat külön kezeli a felhasználó SSH-elérését, a ChatGPT korlátozott műveleti csatornáját és az alkalmazásfiókokat.
+A 01B konkrét megoldási terve: [közös távoli szerverhozzáférés](../projekt/SZERVER-TAVOLI-HOZZAFERES.md). A javaslat külön kezeli a felhasználó helyi Windows-kezelését (később Debian SSH), a ChatGPT korlátozott műveleti csatornáját és az alkalmazásfiókokat.
