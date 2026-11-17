@@ -21,6 +21,13 @@ Nyisd le az inventory adatbázist, majd a Tables csomópontot. Az item táblán 
 
 ## Felépítés
 
+Az Inventory perzisztenciarétege **Hibernate ORM + Spring Data JPA**, a meglévő
+MySQL-sémán. A séma egyetlen módosítója a Flyway; a Hibernate induláskor kizárólag
+ellenőriz (`ddl-auto=validate`). A REST-válaszok külön DTO-kból készülnek, a
+verziófeltételes mentés és a 409-es ütközésjelzés megmaradt. Az entitások,
+repositoryk, fotótranzakciók és a kompatibilitási döntések leírása:
+[JPA-átállás](docs/jpa-atallas.md).
+
 A Thymeleaf közös oldalkeretet és a leltár sablonját szolgálja ki. A böngésző helyben őrzi a még szerkesztett mezőket és képeket. A Mentés a leltárszolgáltatásnak küldi el az űrlapot. A szolgáltatás egy MySQL-tranzakcióban ellenőrzi az adatlap verzióját és rögzíti az összetartozó adatokat. A külön imaging szolgáltatás HTTP-n fogadja a JPEG-et, ellenőrzi, és visszaad egy legfeljebb 420 pixeles előnézetet. Ennek a szolgáltatásnak nincs saját tartós adata. A leltárszolgáltatás tárolja mindkét fájlt és a hozzájuk tartozó azonosítót. Egy JPG legfeljebb 20 MiB, a teljes mentés legfeljebb 200 MiB lehet. Végleges törléskor az adatbázisban tartós törlési sor készül a képfájlokhoz. Átmeneti fájlhiba esetén a takarítás újraindítás után is folytatódik.
 
 ```mermaid
@@ -59,6 +66,22 @@ A hibás kérés 400, hiányzó tétel 404, ütközés 409, túl nagy feltölté
 Új modulhoz az inventory/src/main/resources/templates/layout.html fájl főnavigációjához adj menüpontot, és hozz létre saját Thymeleaf-mappát az inventory sablonmappája mellett. Új útvonalat és vezérlőt külön Java-csomagban adj hozzá. Egy önálló üzleti szolgáltatás az imaging példájához hasonló Maven-modult, saját belépési pontot és compose.yaml szolgáltatásbejegyzést kaphat. Saját adattulajdon esetén külön séma és hozzáférés kell. A meglévő adatmodellt az inventory/src/main/resources/db/migration alatt következő sorszámú Flyway-migrációval bővítsd. A már lefutott V1 fájlt hagyd érintetlenül.
 
 ## Verziók és ellenőrzések
+
+A 00A átálláskor feloldott JPA-verziók: Spring Boot 4.1.2, Spring Data JPA 4.1.2,
+Hibernate ORM 7.4.13.Final, a Spring Boot függőségkezeléséből. A Java 21 célszint,
+az imaging HTTP-szolgáltatás és a Windows/Docker indítás konfigurációja megmaradt.
+
+Az új adatbázisos regressziós ellenőrzés:
+`powershell -ExecutionPolicy Bypass -File scripts/Test-Persistence.ps1`.
+Ez saját ideiglenes MySQL-példányt, véletlen loopback portot, külön
+`inventory_jpa_test` sémát és ideiglenes fotómappát használ; a személyes leltárhoz
+nem kapcsolódik. Mavenben a `mysql-it` profil futtatja a Failsafe integrációs
+teszteket. A sima `mvn verify` továbbra is az egységteszteket, a csomagolást és a
+formázásellenőrzést futtatja. Részletek és tényleges eredmények:
+[tesztjegyzőkönyv](docs/jpa-teszteredmenyek.md).
+
+A 2026-11-17-i dev összeillesztés újrafuttatott ellenőrzéseit és a nyitott PWA
+offline próbát a [JPA dev integrációs riport](docs/jpa-dev-integracio.md) rögzíti.
 
 2026. november 13-án a Maven-build Spring Boot 4.1.2-t, Thymeleaf 3.1.5.RELEASE-t, Flyway 12.4.0-t és MySQL Connector/J 9.7.0-t oldott fel. A kapcsolt függőségeket a Spring Boot szülőprojekt rögzíti. A MySQL 9.7.4 LTS-vonalat a hosszabb támogatás miatt választottuk. A natív indító ezen a gépen a projekt saját JDK 25.0.5 LTS példányát használja. A Java 21 célszint a gépen telepített JDK-val és az újabb JDK-kkal is használható. A Docker-build a támogatott Maven 3.9.16 image-et használja. Források: [Spring Boot kiadás](https://spring.io/blog/2026/10/23/spring-boot-4-1-2-available-now/), [kompatibilitás](https://docs.spring.io/spring-boot/system-requirements.html), [MySQL kiadások](https://dev.mysql.com/doc/relnotes/mysql/9.7/en/), [Maven kiadások](https://maven.apache.org/docs/history.html), [Java kiadások](https://www.oracle.com/en/java/technologies/java-se-glance.html).
 

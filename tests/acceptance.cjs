@@ -32,7 +32,7 @@ const start = (...args) => execFileSync('powershell.exe',['-NoProfile','-Executi
     }
     async function place(name){
         await page.goto(origin+'/leltar/beallitasok');
-        const form=page.locator('form').first();
+        const form=page.locator('#places form').first();
         await form.locator('input').fill(name);
         const response=page.waitForResponse(r=>r.url().endsWith('/api/places')&&r.request().method()==='POST');
         await form.locator('button').click();assert.ok((await response).ok());
@@ -169,7 +169,7 @@ const start = (...args) => execFileSync('powershell.exe',['-NoProfile','-Executi
         await closed;
         console.log('OK: ütközés, piszkozat, navigáció és lapbezárás.');
         await visit();
-        await page.locator('#picker').setInputFiles({name:'hamis.jpg',mimeType:'image/jpeg',buffer:Buffer.from('bad')});
+        await page.locator('#picker').setInputFiles({name:'hamis.jpg',mimeType:'image/jpeg',buffer:Buffer.from([0xff,0xd8,0xff,0xd9])});
         await page.getByRole('button',{name:'Mentés',exact:true}).first().click();await page.getByText('Érvénytelen JPG: hamis.jpg').waitFor();
         await page.locator('.remove').click();await page.locator('#picker').setInputFiles(files[0]);
         await page.route('**/api/items',r=>r.abort(),{times:1});

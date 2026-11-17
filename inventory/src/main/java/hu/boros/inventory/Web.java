@@ -90,9 +90,7 @@ public class Web {
     var path = photos.path(id.toString(), size.equals("small"));
     if (!Set.of("small", "original").contains(size)
         || !Files.exists(path)
-        || photos.db.queryForObject(
-                "SELECT COUNT(*) FROM photo WHERE id=?", Integer.class, id.toString())
-            == 0) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        || !photos.exists(id.toString())) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     return new FileSystemResource(path);
   }
 
