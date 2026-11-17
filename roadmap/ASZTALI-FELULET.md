@@ -14,6 +14,10 @@ Az Otthontár asztali böngészős felületének funkcionális és vizuális tov
 - Reszponzív kialakítás, billentyűzetes használat és akadálymentesség (WCAG-szempontok).
 - Következetes betöltési, mentési, hiba- és szinkronstátuszok.
 
+## Kapcsolat a közös kezdőképernyővel
+
+A [csempés alkalmazásgyűjtő](ALKALMAZASGYUJTO-KEZDOKEPERNYO.md) weben is alapértelmezett belépési felület lesz. Ez közös web/iOS/Android termékirány; az itt tervezett asztali dizájncsiszolás ehhez igazodik, miközben az Otthontár és a többi modul saját felülete megmarad.
+
 ## Korlátok
 - Nem indokolt pusztán dizájn okán lecserélni a működő Thymeleaf/JavaScript frontend teljes technológiai alapját.
 - A felület módosítása ne veszélyeztesse a meglévő adatokat és API-szerződéseket.

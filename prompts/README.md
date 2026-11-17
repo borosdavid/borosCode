@@ -11,6 +11,10 @@ Ebben a mappában gyűjtjük a ChatGPT-vel előkészített, később a Codexnek 
 
 A `SABLON.md` egy új feladat kiindulópontja, **nem végrehajtandó fejlesztési kérés**.
 
+## Elkészült leírások
+
+A teljesen elkészült feladatok leírásai a **[kesz/](kesz/README.md)** almappába kerülnek automatikusan, a fejlesztés lezárásakor. A részben elkészült vagy blokkolt feladatok itt maradnak. Áthelyezéskor a státuszokat, az indexeket és az érintett hivatkozásokat is frissítjük; a részletes szabályokat a gyökér [AGENTS.md](../AGENTS.md) tartalmazza.
+
 ## Fejlesztési sorrend
 
 0. **00A-HIBERNATE-JPA-ATALLAS.md** – JdbcTemplate → Hibernate / Spring Data JPA refaktor, a mobilos fejlesztések előtt.
@@ -21,6 +25,10 @@ A `SABLON.md` egy új feladat kiindulópontja, **nem végrehajtandó fejlesztés
 
 A `00-KOZOS-UTASITASOK.md` szabályai minden fázisra érvényesek. A fázisok nem indulnak el automatikusan.
 
+## Következő feladat – Windows-hozzáférés
+
+**[01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md](01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md)** – a valódi Windows-szerver állapotának, naplóinak és fejlesztési riportjainak elérése ChatGPT-ből, biztonságos indítás/leállítás/újraindítás, majd a telefonos HTTPS-elérés igazolása. A felhasználó ezt jelölte ki következő feladatként, az offline fázisok előtt. Egyelőre előkészített feladat; a kapcsolat még nincs kiépítve.
+
 ## Alapelvek
 
 - Egy fájl lehetőleg egy jól körülhatárolt feladatot írjon le.
@@ -28,3 +36,7 @@ A `00-KOZOS-UTASITASOK.md` szabályai minden fázisra érvényesek. A fázisok n
 - A meglévő személyes adatokat, képeket, helyi konfigurációt és Docker-köteteket meg kell őrizni.
 - Meglévő Flyway-migrációt ne módosítson; ha kell, készítsen újat.
 - Módosítás után a Codex számoljon be a változtatásokról és az elvégzett tesztekről.
+
+## Közös dokumentáció mindhárom ágon
+
+A `prompts/` és `roadmap/` tartalma közös a `dev`, `teszt` és `main` ágakon, a `kesz/` almappákkal együtt. Módosításkor külön dokumentációs commitban mindhárom ágon frissítjük. A tervek és státuszok a teljes projektre vonatkoznak; a megvalósítás ágát és commitját külön jelöljük. Az azonos dokumentáció nem jelent azonos alkalmazáskódot vagy tesztkiadást. Részletes munkarend: [AGENTS.md](../AGENTS.md).

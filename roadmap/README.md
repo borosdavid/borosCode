@@ -11,7 +11,11 @@ Az itt szereplő ötletek **nem automatikus fejlesztési megbízások**. Egy hos
 
 ## Kiinduló cél
 
-Az Otthontár kezdetben egy magyar nyelvű, Windows-gépen futó, Java/Spring Boot alapú költözési leltár. Hosszabb távon olyan háztartási alkalmazássá bővíthető, amely több eszközről is használható, és a költözés után is hasznos marad.
+Az Otthontár kezdetben egy magyar nyelvű, Windows-gépen futó, Java/Spring Boot alapú költözési leltár. Hosszabb távon több eszközön használható, különféle funkciókat összefogó alkalmazásgyűjtővé bővülne. Weben, iOS-en és Androidon közös, csempés kezdőképernyő nyílna meg, ahonnan az Otthontár leltár, a naptár, a sport- és táplálkozásnapló, a játékok és a későbbi modulok érhetők el. Az Otthontár így a közös megoldás egyik önálló modulja maradna.
+
+## Elkészült leírások
+
+A teljesen elkészült feladatok leírásai a **[kesz/](kesz/README.md)** almappába kerülnek automatikusan, a fejlesztés lezárásakor. A részben elkészült vagy blokkolt feladatok itt maradnak. Áthelyezéskor a státuszokat, az indexeket és az érintett hivatkozásokat is frissítjük; a részletes szabályokat a gyökér [AGENTS.md](../AGENTS.md) tartalmazza.
 
 ## Tervterületek és prioritások
 
@@ -46,6 +50,26 @@ A sorrend irányadó, nem végleges ütemterv. A részletes tervek önálló Mar
 - **Önálló üzleti modul és architektúra**, nem a költözési leltár funkcióinak összekeverése
 - Részletes terv: [SPORT-ES-TAPLALKOZAS.md](SPORT-ES-TAPLALKOZAS.md)
 
+### 7. Közös alkalmazásgyűjtő és csempés kezdőképernyő
+- Weben, iOS-en és Androidon alapértelmezett kezdőképernyő, csempékről indítható önálló funkciókkal.
+- Kezdeti modulok: Otthontár, Naptár, Sport- és táplálkozásnapló, Snake; később további funkciók.
+- Közös navigáció és arculat, elkülönített moduladatok és működés; a meglévő leltár megőrzése.
+- Részletes terv: [ALKALMAZASGYUJTO-KEZDOKEPERNYO.md](ALKALMAZASGYUJTO-KEZDOKEPERNYO.md)
+
+### 8. Snake játék közös ranglistával
+- Teljesen helyben futó játékmenet weben és az alkalmazásokban; már telepítve offline is használható.
+- Közös szerveres leaderboard, online eredménybeküldéssel és ranglistalekéréssel.
+- A ranglista elérhetetlensége nem akadályozza a játékot; a feltöltés és pontellenőrzés részletei még tervezendők.
+- Részletes terv: [SNAKE.md](SNAKE.md)
+
+### 9. AI-támogatott fejlesztés és otthoni szerverautomatizálás – távlati terv
+- Mobilról kezdeményezhető Codex-fejlesztés, GitHub PR-ek, automatikus build és tesztelés.
+- Privát, minimális jogosultságú Linux-szerverdiagnosztika; GitHub Actions-alapú, jóváhagyott telepítések.
+- Docker Compose, Tailscale/SSH, monitoring, külső mentések és visszaállítási tesztek.
+- Részletes koncepció: [AI-FEJLESZTES-ES-SZERVERAUTOMATIZALAS.md](AI-FEJLESZTES-ES-SZERVERAUTOMATIZALAS.md)
+
+Az új pontok sorszáma nem kötött megvalósítási sorrend: a közös kezdőképernyő az önálló modulok belépési kerete lehet. Az új termékirány nem módosítja a jelenleg következő Windows-hozzáférési feladatot.
+
 ## Tervezési státuszok
 
 - **Ötlet** – még nem döntöttük el, hogy szükséges-e.
@@ -62,4 +86,8 @@ A sorrend irányadó, nem végleges ütemterv. A részletes tervek önálló Mar
 4. A megvalósítási sorrendet az egymásra épülő követelmények és a felhasználói prioritások határozzák meg.
 5. A hosszú távú elképzeléseket különválasztjuk az azonnal végrehajtható Codex-feladatoktól.
 
-Roadmap létrehozva és bővítve: 2026-11-16.
+Roadmap létrehozva: 2026-11-16. Legutóbbi bővítés: 2026-11-17 – közös alkalmazásgyűjtő, Snake és AI-támogatott szerverautomatizálás.
+
+## Közös dokumentáció mindhárom ágon
+
+A `prompts/` és `roadmap/` tartalma közös a `dev`, `teszt` és `main` ágakon, a `kesz/` almappákkal együtt. Módosításkor külön dokumentációs commitban mindhárom ágon frissítjük. A tervek és státuszok a teljes projektre vonatkoznak; a megvalósítás ágát és commitját külön jelöljük. Az azonos dokumentáció nem jelent azonos alkalmazáskódot vagy tesztkiadást. Részletes munkarend: [AGENTS.md](../AGENTS.md).
