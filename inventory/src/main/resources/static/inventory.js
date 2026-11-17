@@ -9,7 +9,7 @@ let actions = [], places = [], dirty = () => false;
 function warn(e) {message.textContent=e.message || String(e); message.hidden=false; message.scrollIntoView({block:'nearest'});}
 function esc(v) {return String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 async function api(path, options) {
-    const res=await fetch('/api/'+path, options);
+    const res=await fetch('/api/'+path, {...options, cache:'no-store', headers:{...options?.headers, 'X-Otthontar-Request':'1'}});
     const raw=await res.text();
     if(!res.ok) {
         let detail;
@@ -166,9 +166,10 @@ function editor(item) {
         const host=form.querySelector('#gallery');host.replaceChildren();
         for(const r of rows){
             const figure=document.createElement('figure');
-            figure.innerHTML=(r.file?'':'<a target="_blank" rel="noopener" href="/api/photos/'+esc(r.key)+'/original">')+'<img alt="'+esc(r.label)+'" src="'+esc(r.src)+'">'+(r.file?'':'</a>')+'<figcaption>'+esc(r.label)+'</figcaption><button type="button" class="cover">'+(r.key===cover?'Borítókép':'Legyen borítókép')+'</button>'+(r.file?' <button class="remove" type="button">Kivétel</button>':'');
+            figure.innerHTML=(r.original?'':'<a target="_blank" rel="noopener" href="/api/photos/'+esc(r.key)+'/original">')+'<img alt="'+esc(r.label)+'" src="'+esc(r.src)+'">'+(r.original?'':'</a>')+'<figcaption>'+esc(r.label)+'</figcaption><button type="button" class="cover">'+(r.key===cover?'Borítókép':'Legyen borítókép')+'</button>'+(r.original?' <button class="remove" type="button">Kivétel</button>':'');
+            if(r.error){const error=document.createElement('p');error.setAttribute('role','alert');error.textContent=r.error;figure.append(error);figure.querySelector('.cover').disabled=true;}
             figure.querySelector('.cover').onclick=()=>{cover=r.key;gallery();};
-            if(r.file) figure.querySelector('.remove').onclick=()=>{pending=pending.filter(p=>p!==r);URL.revokeObjectURL(r.src);gallery();};
+            if(r.original) figure.querySelector('.remove').onclick=()=>{pending=pending.filter(p=>p!==r);URL.revokeObjectURL(r.src);gallery();};
             host.append(figure);
         }
     }
@@ -178,10 +179,21 @@ function editor(item) {
     fields.location.onchange=()=>{if(fields.destination.value===fields.location.value)fields.destination.value='';visibility();};
     fields.destination.onchange=visibility;
     form.querySelector('[data-complete]').onclick=()=>{fields.location.value=fields.destination.value;fields.destination.value='';fields.actionId.value='';visibility();};
-    form.querySelector('#picker').onchange=e=>{
-        for(const file of e.target.files) pending.push({key:crypto.randomUUID(),file,label:file.name,src:URL.createObjectURL(file)});
-        e.target.value='';gallery();
-    };
+    let preparing = false;
+    async function selectPhotos(e) {
+        const files = [...e.target.files];
+        preparing = true; form.inert = true;
+        try {
+            for (const original of files) {
+                const entry = {key:crypto.randomUUID(),original,label:original.name,src:URL.createObjectURL(original)};
+                pending.push(entry); // retain original even if conversion fails
+                try { entry.file = await OtthontarPhotos.prepare(original); }
+                catch (err) { entry.error = err.message; warn(err); }
+            }
+        } finally { e.target.value=''; preparing=false;form.inert=false;gallery(); }
+    }
+    form.querySelector('#picker').onchange=selectPhotos;
+    form.querySelector('#camera').onchange=selectPhotos;
     async function conflict() {
         const fresh=await api('items/'+id);
         const panel=form.querySelector('#conflict');panel.hidden=false;
@@ -205,6 +217,8 @@ function editor(item) {
     }
     form.onsubmit=async e=>{
         e.preventDefault();message.hidden=true;
+        if(preparing)return;
+        if(pending.some(p=>p.error)){warn(new Error('A hibás képet vedd ki, vagy válassz helyette JPEG-et. A többi mező és fotó megmarad.'));return;}
         const draft=Object.fromEntries(keys.map(k=>[k,fields[k].value]));
         Object.assign(draft,{id,version,cover:pending.some(p=>p.key===cover)?'new:'+pending.findIndex(p=>p.key===cover):cover});
         for(const k of ['asking','actual','soldDate'])if(!draft[k])draft[k]=null;
@@ -213,6 +227,7 @@ function editor(item) {
         if(kind!=='SALE') draft.status='KEEP';
         if(draft.status==='KEEP')Object.assign(draft,{link:'',asking:null});
         if(draft.status!=='SOLD')Object.assign(draft,{actual:null,soldDate:null});
+        try{OtthontarPhotos.validateTotal(pending.map(p=>p.file),new Blob([JSON.stringify(draft)]).size);}catch(err){warn(err);return;}
         const data=new FormData();data.append('draft',new Blob([JSON.stringify(draft)],{type:'application/json'}));
         pending.forEach(p=>data.append('files',p.file));
         form.inert=true;

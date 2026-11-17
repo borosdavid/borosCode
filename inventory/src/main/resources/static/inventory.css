@@ -15,3 +15,10 @@
     .actionlist .place { flex-wrap:wrap; }
 }
 #sale-dialog{width:min(380px,90vw);border:1px solid #aabbb0;border-radius:10px;color:inherit;padding:24px}#sale-dialog::backdrop{background:#172d2566}#sale-dialog label,#sale-dialog .actions{margin-top:16px}#sale-dialog h2{margin:0}
+
+/* Mobile PWA: safe areas, readable fields, touch targets and wrapping. */
+body{padding-bottom:env(safe-area-inset-bottom)}header{padding-top:env(safe-area-inset-top)}
+button,.button,.tabs a,summary{min-height:44px}input,select,textarea{min-height:44px;font-size:16px}
+.card h2,.card p,figcaption{overflow-wrap:anywhere}.card>a{display:inline-flex;align-items:center;min-height:44px}
+.gallery figure{min-width:0}.gallery button{margin-top:8px}.pwa-info{font-size:14px;color:#3f644e;margin-top:16px}.pwa-info p{margin:8px 0}
+@media(max-width:600px){header{flex-wrap:wrap;gap:8px;padding-bottom:12px;padding-top:max(12px,env(safe-area-inset-top))}.tabs{gap:12px;margin-top:16px}.cards,.gallery,fieldset{grid-template-columns:minmax(0,1fr)}.heading>*{max-width:100%}.bar label{min-width:0;width:100%}.place{flex-wrap:wrap}.place input{flex:1 1 180px}.card button{margin:4px 0}.actions{gap:8px}}
