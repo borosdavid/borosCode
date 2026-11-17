@@ -63,3 +63,5 @@ Feladatkezdéskor és érdemi állapotváltozáskor az adatlapok után ezt az ol
 Kapcsolódás: [státuszszabályok](STATUSZOK.md). Az oldal frissítése a fejlesztő feladata; nincs automatikus időzített háttérfigyelés.
 
 Tesztkiadások: [verziózás és átadási eljárás](TESZTVERZIOK.md), [átadási sablon](sablonok/TESZTATADAS.md). 2026-11-17-én nem volt Git-tag vagy GitHub Release; új alkalmazás-tesztkiadást a mostani dokumentációs feladat nem hozott létre.
+
+Döntések és nyitott javaslatok: [döntési napló](DONTESI-NAPLO.md). A D-006 szerveres kérdés nyitott; a jelenlegi dokumentációs munkát nem akadályozza, a szerver telepítése előtt tisztázandó.

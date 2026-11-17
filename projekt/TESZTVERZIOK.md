@@ -40,6 +40,8 @@ A tesztkiadás nem felhasználói elfogadás. Az elfogadás dátumát és vissza
 A következő Bash-példa egy már ellenőrzött, tiszta munkafát és helyi `teszt` ágat feltételez. A változókat tényleges értékekkel töltsd ki; a folyamat nem teszteli és nem emeli át automatikusan az alkalmazást.
 
 ```bash
+set -euo pipefail
+
 git fetch origin main dev teszt --tags
 test_version='teszt-ÉÉÉÉ.HH.NN.1'
 source_dev_sha='TELJES_ELLENORZOTT_DEV_COMMIT'

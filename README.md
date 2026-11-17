@@ -67,3 +67,5 @@ A böngészős átadási próba Windows alatt a tests/acceptance.cjs fájlban va
 ## Projekttervek és aktuális állapot
 
 A központi [projektállapot](https://github.com/borosdavid/borosCode/blob/main/projekt/ALLAPOT.md), a [promptok](https://github.com/borosdavid/borosCode/tree/main/prompts) és a [roadmap](https://github.com/borosdavid/borosCode/tree/main/roadmap) hiteles forrása a `main`. A tervekben jelzett készültség eltérhet ennek az ágnak az alkalmazáskódjától; a fenti futtatási és műszaki leírás az adott ág kódját követi.
+
+Központi [projektirányítási oldalak és sablonok](https://github.com/borosdavid/borosCode/tree/main/projekt).
