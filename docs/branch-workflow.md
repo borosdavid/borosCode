@@ -3,8 +3,8 @@
 | Ág | Szerep | Mikor frissül? |
 |---|---|---|
 | dev | Folyamatban lévő és elkészült fejlesztések közös ága | Minden elvégzett fejlesztés automatikus commitjával és pushával |
-| teszt | A felhasználó által kipróbálható verzió | Csak kész scope, sikeres releváns ellenőrzések és átadási tesztleírás után |
-| main | A jelenlegi főág | A mostani áglétrehozás nem változtatja meg |
+| teszt | A felhasználó által kipróbálható alkalmazáskód | Kód: csak kész scope és átadási ellenőrzések után; közös dokumentáció: minden módosításkor |
+| main | A jelenlegi főág | Alkalmazáskód külön kiadáskor; közös dokumentáció minden módosításkor |
 
 A szabályokat a gyökér `AGENTS.md` is rögzíti a későbbi fejlesztési munkákhoz. A `dev` ág automatikus mentése a fejlesztő feladata, nem a munkakönyvtár minden fájlváltozását figyelő háttérfolyamat.
 
@@ -21,3 +21,9 @@ A szabályokat a gyökér `AGENTS.md` is rögzíti a későbbi fejlesztési munk
 2. Fejlessz, végezd el az adott változáshoz szükséges ellenőrzéseket, majd automatikusan commitolj és pusholj a `dev` ágra.
 3. Ha a felhasználói próba minden előfeltétele megvan, adj át pontos tesztleírást, és a kiválasztott, ellenőrzött `dev` állapotot emeld a `teszt` ágra. Ne vigyél át vele későbbi, még félkész fejlesztést.
 4. Az átemelés lehetőleg fast-forward legyen; eltérő ágaknál vizsgáld meg és fésüld össze az eltérést. Soha ne állítsd vissza kényszerrel a távoli ágat.
+
+## Közös dokumentáció mindhárom ágon
+
+A `prompts/` és `roadmap/` tartalma közös a `dev`, `teszt` és `main` ágakon, a `kesz/` almappákkal együtt. Módosításkor külön dokumentációs commitban mindhárom ágon frissítjük. A tervek és státuszok a teljes projektre vonatkoznak; a megvalósítás ágát és commitját külön jelöljük. Az azonos dokumentáció nem jelent azonos alkalmazáskódot vagy tesztkiadást. Részletes munkarend: [AGENTS.md](../AGENTS.md).
+
+A dokumentációt alkalmazáskód átemelése nélkül frissítjük. A következő fejlesztések lépései az alkalmazáskódra vonatkoznak; a dokumentáció szinkronizálása nem tesztkiadás.
