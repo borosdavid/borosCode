@@ -13,6 +13,12 @@ class LocalAccessFilterTest {
 
   private Result request(String method, String path, Map<String, String> requestHeaders)
       throws Exception {
+    return request(new LocalAccessFilter(), method, path, requestHeaders);
+  }
+
+  private Result request(
+      LocalAccessFilter filter, String method, String path, Map<String, String> requestHeaders)
+      throws Exception {
     var headers = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
     headers.put("Host", "127.0.0.1:8740");
     headers.putAll(requestHeaders);
@@ -29,6 +35,7 @@ class LocalAccessFilterTest {
                       case "getMethod" -> method;
                       case "getRequestURI" -> path;
                       case "getScheme" -> "http";
+                      case "getRemoteAddr" -> headers.getOrDefault("Peer", "127.0.0.1");
                       case "getServerName" -> headers.get("Host").split(":")[0];
                       case "getHeader" -> headers.get((String) args[0]);
                       case "getHeaderNames" -> Collections.enumeration(headers.keySet());
@@ -46,7 +53,7 @@ class LocalAccessFilterTest {
                   else throw new UnsupportedOperationException(call.getName());
                   return null;
                 });
-    new LocalAccessFilter().doFilterInternal(request, response, (req, res) -> allowed[0] = true);
+    filter.doFilterInternal(request, response, (req, res) -> allowed[0] = true);
     return new Result(allowed[0], status[0], responseHeaders);
   }
 
@@ -86,5 +93,76 @@ class LocalAccessFilterTest {
                 "/api/items",
                 Map.of("X-Otthontar-Request", "1", "Origin", "http://127.0.0.1:8740"))
             .allowed());
+  }
+
+  @Test
+  void explicitHttpsHostRequiresLoopbackProxyAndPreservesOriginChecks() throws Exception {
+    var filter = new LocalAccessFilter("https://home.ts.net", true, "127.0.0.1");
+    var headers =
+        Map.of(
+            "Host", "home.ts.net", "X-Forwarded-Proto", "https", "X-Forwarded-For", "100.64.0.1");
+    assertTrue(request(filter, "GET", "/leltar", headers).allowed());
+    assertEquals(403, request(filter, "GET", "/actuator/health", headers).status());
+    assertEquals(
+        403,
+        request(filter, "GET", "/leltar", Map.of("Host", "home.ts.net", "Peer", "192.168.0.2"))
+            .status());
+    assertEquals(
+        403,
+        request(
+                filter,
+                "GET",
+                "/leltar",
+                Map.of("Host", "home.ts.net", "X-Forwarded-Proto", "http"))
+            .status());
+    assertEquals(
+        403,
+        request(filter, "GET", "/leltar", Map.of("Host", "home.ts.net", "Forwarded", "proto=https"))
+            .status());
+    assertTrue(
+        request(
+                filter,
+                "POST",
+                "/api/places",
+                Map.of(
+                    "Host",
+                    "home.ts.net",
+                    "X-Otthontar-Request",
+                    "1",
+                    "Origin",
+                    "https://home.ts.net"))
+            .allowed());
+    assertEquals(
+        403,
+        request(
+                filter,
+                "POST",
+                "/api/places",
+                Map.of(
+                    "Host",
+                    "home.ts.net",
+                    "X-Otthontar-Request",
+                    "1",
+                    "Origin",
+                    "https://other.ts.net"))
+            .status());
+  }
+
+  @Test
+  void publicOriginFailsClosedForUnsafeConfiguration() {
+    for (String origin :
+        List.of(
+            "http://home.ts.net",
+            "https://home.ts.net/path",
+            "https://user@home.ts.net",
+            "https://home.ts.net:8443"))
+      assertThrows(
+          IllegalArgumentException.class, () -> new LocalAccessFilter(origin, true, "127.0.0.1"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new LocalAccessFilter("https://home.ts.net", false, "127.0.0.1"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new LocalAccessFilter("https://home.ts.net", true, "0.0.0.0"));
   }
 }

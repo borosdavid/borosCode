@@ -13,6 +13,7 @@ $env:DB_PORT=if($TestRun){'43316'}else{'33316'}
 $url='http://127.0.0.1:'+$env:WEB_PORT
 $env:IMAGING_URL='http://127.0.0.1:'+$env:IMAGE_PORT
 $env:PHOTO_DIR=Join-Path $state 'photos'
+if(!$env:PUBLIC_ORIGIN -and !$env:SESSION_COOKIE_SECURE){$env:SESSION_COOKIE_SECURE='false'}
 $secretFile=Join-Path $state 'access.json'
 function Secret { [guid]::NewGuid().ToString('N')+[guid]::NewGuid().ToString('N') }
 if(!(Test-Path $secretFile)){

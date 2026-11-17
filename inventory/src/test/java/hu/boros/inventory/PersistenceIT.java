@@ -33,7 +33,10 @@ class PersistenceIT {
   @TempDir static Path photoRoot;
 
   static final HttpClient http =
-      HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();
+      HttpClient.newBuilder()
+          .cookieHandler(new CookieManager(null, CookiePolicy.ACCEPT_ALL))
+          .connectTimeout(Duration.ofSeconds(3))
+          .build();
   static final AtomicInteger imagingStatus = new AtomicInteger(200);
   static final AtomicInteger imagingCalls = new AtomicInteger();
   static final String legacyPlace = UUID.randomUUID().toString();
@@ -43,6 +46,10 @@ class PersistenceIT {
   static ConfigurableApplicationContext context;
   static ObjectMapper json;
   static String origin;
+  static String csrfHeader;
+  static String csrfToken;
+  static String accountId;
+  static final String accountPassword = UUID.randomUUID().toString();
   static String databaseUrl;
   static String databaseUser;
   static String databasePassword;
@@ -134,6 +141,7 @@ class PersistenceIT {
             .run(
                 "--server.port=0",
                 "--server.address=127.0.0.1",
+                "--server.servlet.session.cookie.secure=false",
                 "--spring.datasource.url=" + databaseUrl,
                 "--spring.datasource.username=" + databaseUser,
                 "--spring.datasource.password=" + databasePassword,
@@ -147,6 +155,40 @@ class PersistenceIT {
     context.getBean(ScheduledAnnotationBeanPostProcessor.class).destroy();
     json = context.getBean(ObjectMapper.class);
     origin = "http://127.0.0.1:" + context.getEnvironment().getProperty("local.server.port");
+    try {
+      var accounts = context.getBean(AccountRepository.class);
+      if (accounts.findByUsername("persistence-test").isEmpty())
+        accounts.saveAndFlush(
+            new AccountEntity(
+                "persistence-test",
+                context
+                    .getBean(org.springframework.security.crypto.password.PasswordEncoder.class)
+                    .encode(accountPassword)));
+      var token =
+          json.readTree(
+              http.send(
+                      HttpRequest.newBuilder(URI.create(origin + "/auth/csrf")).GET().build(),
+                      HttpResponse.BodyHandlers.ofByteArray())
+                  .body());
+      var login =
+          http.send(
+              HttpRequest.newBuilder(URI.create(origin + "/login"))
+                  .header("Accept", "application/json")
+                  .header("Content-Type", "application/x-www-form-urlencoded")
+                  .header(token.get("headerName").asText(), token.get("token").asText())
+                  .POST(
+                      HttpRequest.BodyPublishers.ofString(
+                          "username=persistence-test&password=" + accountPassword))
+                  .build(),
+              HttpResponse.BodyHandlers.ofByteArray());
+      assertStatus(204, login);
+      var session = get("/api/session");
+      csrfHeader = session.get("headerName").asText();
+      csrfToken = session.get("token").asText();
+      accountId = session.get("id").asText();
+    } catch (Exception ex) {
+      throw new IllegalStateException("Test account login failed", ex);
+    }
   }
 
   @BeforeEach
@@ -684,6 +726,8 @@ class PersistenceIT {
             .timeout(Duration.ofSeconds(15))
             .header("Content-Type", "multipart/form-data; boundary=" + boundary)
             .header("X-Otthontar-Request", "1")
+            .header(csrfHeader, csrfToken)
+            .header("X-Otthontar-User", accountId)
             .POST(HttpRequest.BodyPublishers.ofByteArray(body.toByteArray()))
             .build(),
         HttpResponse.BodyHandlers.ofByteArray());
@@ -703,7 +747,11 @@ class PersistenceIT {
     var builder =
         HttpRequest.newBuilder(URI.create(origin + route)).timeout(Duration.ofSeconds(15));
     if (body != null) builder.header("Content-Type", "application/json");
-    if (method.equals("POST")) builder.header("X-Otthontar-Request", "1");
+    if (method.equals("POST"))
+      builder
+          .header("X-Otthontar-Request", "1")
+          .header(csrfHeader, csrfToken)
+          .header("X-Otthontar-User", accountId);
     return http.send(
         builder
             .method(

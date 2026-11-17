@@ -92,3 +92,7 @@ A böngészős átadási próba Windows alatt a tests/acceptance.cjs fájlban va
 Elkészült a telepíthető PWA helyi alapja, az offline tájékoztató, a mobilos fotóválasztás és az előnézetek EXIF-tájolása. **A távoli/telefonos éles elérés még zárt:** a jelenlegi hozzáférési modell csak localhostot fogad, a proxykéréseket elutasítja. A [PWA átadási útmutató](docs/pwa-01.md) tartalmazza az állapotot, teszteket, kézi HTTPS/telepítési tervet és a valódi iPhone ellenőrzőlistáját. A teljes offline leltár a 02-es, az offline írás/szinkron a 03-as fázis része.
 
 Az API-t közvetlenül író helyi eszközöknek mostantól `X-Otthontar-Request: 1` fejlécet kell küldeniük; a webfelület ezt automatikusan hozzáadja.
+
+## Alkalmazásfiókok – 01A fejlesztési állapot
+
+A leltár használatához felhasználónév/jelszó szükséges, minden aktív fiók azonos közös hozzáféréssel. Nincs alapjelszó: az első fiókot helyben kell létrehozni a friss JAR `account create` módjával vagy Windowson a `scripts/Account.ps1` helperrel. A [fiókok leírása és ellenőrzési riportja](docs/fiokok-01a.md) tartalmazza a profilválasztást, a belépést, a közvetlen API-kliensek új CSRF-/fiókfejléceit, az explicit HTTPS-proxyfeltételeket és a még hátralévő valódi MySQL/Windows/Docker/iPhone-próbákat. A helyi hozzáférési szűrőről szóló korábbi leírást e pontban ez a riport pontosítja; távoli elérés alapból továbbra sincs bekapcsolva.

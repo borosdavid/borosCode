@@ -1,5 +1,7 @@
 # 01 – PWA és mobilos alapok
 
+> Történeti PWA-alapriport. A későbbi 01A fiókfejlesztés bevezette a sessionalapú belépést és az explicit natív HTTPS-proxykonfigurációt; az aktuális hozzáférési/API-szerződés és a még nyitott próbák: [fiókok 01A](fiokok-01a.md). Az alábbi régi „nincs login” állítások a 01A előtti auditot írják le.
+
 ## Állapot és kiindulás
 
 A munka a `ce9fdd6` GitHub-állapotból készült. A tegnapi JPA-átállás itt még nem volt elérhető; a Ledger, Photos, Web, inventory/pom.xml és a Flyway migrációk változatlanok. A perzisztencia-refaktorral a közös felületi módosításokat és az új hozzáférési szűrőt össze kell fésülni. Az imaging modulban kizárólag a JPEG-előnézet EXIF-tájolása bővült, az eredeti JPEG bájtjai megmaradnak.

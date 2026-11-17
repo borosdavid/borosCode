@@ -29,6 +29,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?}
       IMAGING_URL: http://imaging:8741
       PHOTO_DIR: /photos
+      # This compose profile publishes HTTP on host loopback only. Remote TLS needs a separate deployment.
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
     ports: ["127.0.0.1:${WEB_PORT:-8740}:8740"]
     volumes: ["photos:/photos"]
     depends_on:

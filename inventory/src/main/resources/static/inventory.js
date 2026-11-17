@@ -9,9 +9,12 @@ let actions = [], places = [], dirty = () => false;
 function warn(e) {message.textContent=e.message || String(e); message.hidden=false; message.scrollIntoView({block:'nearest'});}
 function esc(v) {return String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 async function api(path, options) {
-    const res=await fetch('/api/'+path, {...options, cache:'no-store', headers:{...options?.headers, 'X-Otthontar-Request':'1'}});
+    const writing = options?.method && !['GET','HEAD','OPTIONS'].includes(options.method.toUpperCase());
+    const authHeaders = writing ? await AccountAuth.writeHeaders() : {};
+    const res=await fetch('/api/'+path, {...options, cache:'no-store', headers:{...options?.headers, ...authHeaders, 'X-Otthontar-Request':'1'}});
     const raw=await res.text();
     if(!res.ok) {
+        if(res.status===401)AccountAuth.expired();
         let detail;
         try { detail=JSON.parse(raw).detail; } catch {}
         const error=new Error(detail || 'A művelet sikertelen ('+res.status+'). Próbáld újra.');
@@ -240,9 +243,16 @@ function editor(item) {
     };
 }
 (async()=>{
+    await AccountAuth.init();
     [places,actions]=await Promise.all([api('places'),api('actions')]);
     document.querySelectorAll('.tabs a').forEach(a=>{if(a.pathname===location.pathname)a.setAttribute('aria-current','page');});
     if(['helyszinek','beallitasok'].includes(page))showPlaces();
     else if(['targyak','eladas','koltoztetes','lomtar'].includes(page))await list();
     else editor(page==='uj'?{}:await api('items/'+page));
 })().catch(warn);
+document.querySelector('#logout-form')?.addEventListener('submit',event=>{
+    if(dirty()&&!confirm('A nyitott, még nem mentett módosítások és fotók elvesznek. Biztosan kijelentkezel?'))event.preventDefault();
+});
+document.addEventListener('otthontar-reauthenticated',()=>{
+    warn(new Error('Újra bejelentkeztél. A piszkozat megmaradt; a mentést kézzel indítsd újra.'));
+});

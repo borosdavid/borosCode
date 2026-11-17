@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bejelentkezés · Otthontár</title><link rel="stylesheet" href="/inventory.css">
+</head><body><main><h1>Bejelentkezés az Otthontárba</h1>
+<p th:if="${param.error}" role="alert">Sikertelen bejelentkezés. Ellenőrizd az adatokat; túl sok próbálkozás után várj 15 percet.</p>
+<p th:if="${param.logout}" role="status">Kijelentkeztél.</p>
+<form th:action="@{/login}" method="post">
+<label>Felhasználónév<input name="username" autocomplete="username" maxlength="64" required autofocus></label>
+<label>Jelszó<input name="password" type="password" autocomplete="current-password" required></label>
+<button class="primary">Bejelentkezés</button></form>
+<p>A fiókokat a szerver üzemeltetője hozza létre. Minden bejelentkezett fiók ugyanazokhoz a közös adatokhoz fér hozzá.</p>
+</main></body></html>
