@@ -1,5 +1,13 @@
 # 03 – Offline szerkesztés, iPhone kamera, biztonságos kétirányú szinkronizáció
 
+> **Státusz:** Tervezett  
+> **Pontosítás / akadály:** A teljes offline olvasási és változásnapló-alapra épül; tartós offline szerkesztés és szinkron még nincs igazolva.  
+> **Megvalósítás:** Nincs igazolt megvalósítási commit.  
+> **Ellenőrzés:** A terv/feladatleírás létezése ellenőrizve; implementációs teszt nincs igazolva.  
+> **Felhasználói teszt:** Nincs átadva; elfogadás nincs igazolva.  
+> **Frissítve:** 2026-11-17. [Státuszszabályok](../projekt/STATUSZOK.md).
+
+
 Olvasd el a `prompts/00-KOZOS-UTASITASOK.md`, `01-PWA-HTTPS-MOBIL-ALAP.md` és `02-TELJES-OFFLINE-LELTAR-ELOZETEK.md` fájlokat. A valós szerveroldali `Ledger.Draft`, fotókezelés, tranzakciók, verziószámok és migrációk ellenőrzése kötelező.
 
 ## Cél

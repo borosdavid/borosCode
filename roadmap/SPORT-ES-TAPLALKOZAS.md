@@ -1,6 +1,13 @@
 # Külön fejlesztési ág: sportolás- és táplálkozásnapló
 
-**Státusz:** hosszú távú terv / megvalósíthatósági vizsgálat szükséges
+> **Státusz:** Tervezett  
+> **Pontosítás / akadály:** Távlati terv; megvalósíthatósági vizsgálat és részletes döntések szükségesek.  
+> **Megvalósítás:** Nincs igazolt megvalósítási commit.  
+> **Ellenőrzés:** A terv/feladatleírás létezése ellenőrizve; implementációs teszt nincs igazolva.  
+> **Felhasználói teszt:** Nincs átadva; elfogadás nincs igazolva.  
+> **Frissítve:** 2026-11-17. [Státuszszabályok](../projekt/STATUSZOK.md).
+
+
 **Függetlenség:** az Otthontár meglévő leltármoduljától **különálló fejlesztésként**, önálló domainmodellel, szerveroldali logikával és felülettel; megvizsgálható, hogy azonos portálon és közös hitelesítéssel jelenjen-e meg.
 
 ## Cél

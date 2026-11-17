@@ -1,6 +1,13 @@
 # Költözési és eladási eseménynaptár
 
-**Státusz:** tervezett
+> **Státusz:** Tervezett  
+> **Pontosítás / akadály:** A részletes cél a dokumentumban szerepel; a megvalósítás még nincs igazolva.  
+> **Megvalósítás:** Nincs igazolt megvalósítási commit.  
+> **Ellenőrzés:** A terv/feladatleírás létezése ellenőrizve; implementációs teszt nincs igazolva.  
+> **Felhasználói teszt:** Nincs átadva; elfogadás nincs igazolva.  
+> **Frissítve:** 2026-11-17. [Státuszszabályok](../projekt/STATUSZOK.md).
+
+
 **Cél:** az Otthontárban követhető legyen, hogy melyik költözési, eladási vagy más tárgyhoz kapcsolódó esemény mikor **fog történni**, illetve mikor **történt meg**.
 
 ## Funkcióelképzelések

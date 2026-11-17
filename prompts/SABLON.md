@@ -1,6 +1,13 @@
 # [Feladat rövid címe]
 
-> Állapot: tervezet. Ez a fájl csak külön Codex-utasításra végrehajtandó.
+> **Státusz:** Tervezett  
+> **Pontosítás / akadály:** [Nyitott döntés vagy előfeltétel; ha nincs, írd le.]  
+> **Megvalósítás:** [Ág és commit-hivatkozás, vagy nincs igazolt commit.]  
+> **Ellenőrzés:** [Dátum, ellenőrzött commit, teszteredmény és riport.]  
+> **Felhasználói teszt:** [Nincs átadva / folyamatban / elfogadva; tesztverzió és visszajelzés.]  
+> **Frissítve:** [ÉÉÉÉ-HH-NN]. [Státuszszabályok](../projekt/STATUSZOK.md).
+
+Ez a sablon csak külön Codex-utasításra végrehajtandó feladat készítéséhez használható.
 
 ## Cél
 [Mi a felhasználói igény? Milyen problémát oldunk meg?]

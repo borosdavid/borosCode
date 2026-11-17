@@ -1,5 +1,13 @@
 # 01B – Windows-szerver távoli elérése és vezérlése ChatGPT-ből
 
+> **Státusz:** Tervezett  
+> **Pontosítás / akadály:** A távoli kapcsolat nincs igazolva. A Windows-fejlesztőgép és a tervezett Linux-üzemi szerver szerepét a szerveres szálban tisztázni kell; a meglévő feladatot nem tekintjük automatikusan Linuxra átírtnak.  
+> **Megvalósítás:** Nincs igazolt megvalósítási commit.  
+> **Ellenőrzés:** A terv/feladatleírás létezése ellenőrizve; implementációs teszt nincs igazolva.  
+> **Felhasználói teszt:** Nincs átadva; elfogadás nincs igazolva.  
+> **Frissítve:** 2026-11-17. [Státuszszabályok](../projekt/STATUSZOK.md).
+
+
 ## Cél
 
 A felhasználó következő feladata: a Windows-gépen futó Otthontár szerveroldali alkalmazásának, naplóinak és az ott végzett fejlesztési munka állapotának elérése; a szerver indítása, leállítása és újraindítása ebből a ChatGPT-beszélgetési környezetből is. A telefonos PWA HTTPS-elérése is erre a működő szerverkapcsolatra épüljön.

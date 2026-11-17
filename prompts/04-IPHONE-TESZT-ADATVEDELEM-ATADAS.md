@@ -1,5 +1,13 @@
 # 04 – iPhone használhatóság, adatintegritás, offline mentés és átadás
 
+> **Státusz:** Tervezett  
+> **Pontosítás / akadály:** Az előző fázisok és a valódi iPhone/HTTPS-környezet elkészülte szükséges.  
+> **Megvalósítás:** Nincs igazolt megvalósítási commit.  
+> **Ellenőrzés:** A terv/feladatleírás létezése ellenőrizve; implementációs teszt nincs igazolva.  
+> **Felhasználói teszt:** Nincs átadva; elfogadás nincs igazolva.  
+> **Frissítve:** 2026-11-17. [Státuszszabályok](../projekt/STATUSZOK.md).
+
+
 Olvasd el a `prompts/00-KOZOS-UTASITASOK.md` és az 01–03 feladatokat. Ez záró, tesztelési és megerősítési fázis: ne írj újra működő modult indokolatlanul.
 
 ## Feladat

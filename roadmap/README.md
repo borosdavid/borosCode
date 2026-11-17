@@ -72,11 +72,7 @@ Az új pontok sorszáma nem kötött megvalósítási sorrend: a közös kezdők
 
 ## Tervezési státuszok
 
-- **Ötlet** – még nem döntöttük el, hogy szükséges-e.
-- **Vizsgálat alatt** – megvalósíthatóság, költség, kockázatok és alternatívák tisztázása.
-- **Tervezett** – a cél eldőlt, de a részletes specifikáció még nem készült el.
-- **Prompt elkészült** – a megvalósítás Codex-promptja külön, a `prompts/` mappában van.
-- **Fejlesztés alatt / elkészült** – csak tényleges kód- és tesztellenőrzés alapján jelölhető.
+A megvalósítás egységes sorrendje: **Tervezett → Fejlesztés alatt → Tesztelhető → Elfogadott**. Részletek és kötelező bizonyítékok: [státuszszabályok](../projekt/STATUSZOK.md). Az ötlet, a vizsgálati igény és a hiányzó előfeltétel az adatlap pontosítás/akadály mezőjébe kerül. A „prompt elkészült” önmagában nem jelent megkezdett implementációt.
 
 ## Elvek
 

@@ -1,5 +1,13 @@
 # 00A – Áttérés Hibernate ORM + Spring Data JPA használatára
 
+> **Státusz:** Tervezett  
+> **Pontosítás / akadály:** Az asztali JPA-munka eredménye nem igazolt a távoli dev ágon; ott jelenleg JdbcTemplate-alapú Ledger látható. Előbb az asztali állapotot kell biztonságosan ellenőrizni és feltölteni.  
+> **Megvalósítás:** Nincs igazolt JPA-megvalósítási commit.  
+> **Ellenőrzés:** Nincs igazolt JPA-tesztriport.  
+> **Felhasználói teszt:** Nincs átadva; elfogadás nincs igazolva.  
+> **Frissítve:** 2026-11-17. [Státuszszabályok](../projekt/STATUSZOK.md).
+
+
 > **Futtatási sorrend:** az iOS/PWA fejlesztési fázisok (01–04) előtt, külön, ellenőrizhető refaktorálásként. A `prompts/00-KOZOS-UTASITASOK.md` adatmegőrzési, biztonsági és ellenőrzési szabályai erre is érvényesek. **Ez a fájl önmagában nem végrehajtási utasítás.**
 
 ## Cél

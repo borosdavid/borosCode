@@ -1,6 +1,13 @@
 # AI-támogatott fejlesztés és otthoni szerverautomatizálás
 
-**Státusz:** hosszú távú terv, megvalósíthatóság vizsgálandó  
+> **Státusz:** Tervezett  
+> **Pontosítás / akadály:** Távlati terv; megvalósíthatósági vizsgálat és részletes döntések szükségesek.  
+> **Megvalósítás:** Nincs igazolt megvalósítási commit.  
+> **Ellenőrzés:** A terv/feladatleírás létezése ellenőrizve; implementációs teszt nincs igazolva.  
+> **Felhasználói teszt:** Nincs átadva; elfogadás nincs igazolva.  
+> **Frissítve:** 2026-11-17. [Státuszszabályok](../projekt/STATUSZOK.md).
+
+
 **Rögzítve:** 2026-11-17  
 **Kapcsolódás:** Otthontár Java/Spring Boot backend, iOS PWA és későbbi Android-verzió; otthoni, állandóan működő Linux-szerver
 

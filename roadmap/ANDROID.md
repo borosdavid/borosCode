@@ -1,6 +1,13 @@
 # Android-verzió az iOS Otthontár után
 
-**Státusz:** tervezett, hosszabb távú
+> **Státusz:** Tervezett  
+> **Pontosítás / akadály:** A részletes cél a dokumentumban szerepel; a megvalósítás még nincs igazolva.  
+> **Megvalósítás:** Nincs igazolt megvalósítási commit.  
+> **Ellenőrzés:** A terv/feladatleírás létezése ellenőrizve; implementációs teszt nincs igazolva.  
+> **Felhasználói teszt:** Nincs átadva; elfogadás nincs igazolva.  
+> **Frissítve:** 2026-11-17. [Státuszszabályok](../projekt/STATUSZOK.md).
+
+
 **Sorrend:** az iOS PWA offline-first használatának és szinkronizációjának stabilizálása után
 
 ## Cél

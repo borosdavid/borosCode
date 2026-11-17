@@ -1,6 +1,13 @@
 # Snake – helyi játék közös szerveres ranglistával
 
-**Státusz:** ötlet; a felhasználó által megadott új funkciópélda
+> **Státusz:** Tervezett  
+> **Pontosítás / akadály:** Ötlet; részletes specifikáció és megvalósítás nincs.  
+> **Megvalósítás:** Nincs igazolt megvalósítási commit.  
+> **Ellenőrzés:** A terv/feladatleírás létezése ellenőrizve; implementációs teszt nincs igazolva.  
+> **Felhasználói teszt:** Nincs átadva; elfogadás nincs igazolva.  
+> **Frissítve:** 2026-11-17. [Státuszszabályok](../projekt/STATUSZOK.md).
+
+
 **Felületek:** web, iOS és Android
 **Rögzítve:** 2026-11-17
 

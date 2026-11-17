@@ -1,5 +1,13 @@
 # 02 – Teljes leltár offline, minden fényképből kis előnézet
 
+> **Státusz:** Tervezett  
+> **Pontosítás / akadály:** Előfeltétel a JPA-állapot rendezése és a biztonságos elérés; teljes offline leltár még nincs igazolva.  
+> **Megvalósítás:** Nincs igazolt megvalósítási commit.  
+> **Ellenőrzés:** A terv/feladatleírás létezése ellenőrizve; implementációs teszt nincs igazolva.  
+> **Felhasználói teszt:** Nincs átadva; elfogadás nincs igazolva.  
+> **Frissítve:** 2026-11-17. [Státuszszabályok](../projekt/STATUSZOK.md).
+
+
 Olvasd el a `prompts/00-KOZOS-UTASITASOK.md` és `01-PWA-HTTPS-MOBIL-ALAP.md` fájlokat. Elsőként vizsgáld meg a 01-es fázis aktuális eredményét. Ha nincs kész vagy nincs biztonságos HTTPS origin, jelezd az akadályt, és ne állítsd késznek a mobilos megoldást.
 
 ## Feladat

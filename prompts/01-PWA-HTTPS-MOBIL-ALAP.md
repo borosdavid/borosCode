@@ -1,5 +1,13 @@
 # 01 – iPhone-kompatibilis PWA és biztonságos elérés
 
+> **Státusz:** Fejlesztés alatt  
+> **Pontosítás / akadály:** A helyi PWA-alap elkészült; a biztonságos telefonos HTTPS-hozzáférés és a teljes fázis elfogadása még hiányzik.  
+> **Megvalósítás:** dev; [PWA-fejlesztés](https://github.com/borosdavid/borosCode/commit/54b86ec0dfa9886a4026aa2d43f6c83d8cdf89e3).  
+> **Ellenőrzés:** A 2026-11-17-i [dev riport](https://github.com/borosdavid/borosCode/blob/6824ba30bcaa634cc8d96bef134d32774c4f5e75/docs/pwa-01.md) szerint 10 Java-teszt és 3 böngészős tesztcsoport sikeres. Ebben a dokumentációs munkában nem futtattuk újra.  
+> **Felhasználói teszt:** Nincs átadva; elfogadás nincs igazolva.  
+> **Frissítve:** 2026-11-17. [Státuszszabályok](../projekt/STATUSZOK.md).
+
+
 Olvasd el a `prompts/00-KOZOS-UTASITASOK.md` közös szabályait és a gyökér `README.md`-t. Dolgozz a tényleges kód alapján.
 
 ## Feladat

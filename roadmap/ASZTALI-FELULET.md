@@ -1,6 +1,13 @@
 # Asztali böngészős felület bővítése és dizájncsiszolás
 
-**Státusz:** távolabbi jövő
+> **Státusz:** Tervezett  
+> **Pontosítás / akadály:** A részletes cél a dokumentumban szerepel; a megvalósítás még nincs igazolva.  
+> **Megvalósítás:** Nincs igazolt megvalósítási commit.  
+> **Ellenőrzés:** A terv/feladatleírás létezése ellenőrizve; implementációs teszt nincs igazolva.  
+> **Felhasználói teszt:** Nincs átadva; elfogadás nincs igazolva.  
+> **Frissítve:** 2026-11-17. [Státuszszabályok](../projekt/STATUSZOK.md).
+
+
 **Prioritás:** az alapfunkciók, mobilos hozzáférés és adatbiztonság után
 
 ## Cél
