@@ -88,7 +88,7 @@ const start = (...args) => execFileSync('powershell.exe',['-NoProfile','-Executi
         assert.ok((await moved).ok());
         await moveCard.waitFor({state:'detached'});
         assert.equal((await get('items/'+id)).action_id,null);
-        const repeat=await fetch(origin+'/api/items/'+id+'/move?version='+planned.version,{method:'POST'});
+        const repeat=await fetch(origin+'/api/items/'+id+'/move?version='+planned.version,{method:'POST',headers:{'X-Otthontar-Request':'1'}});
         assert.equal(repeat.status,409);
         await visit();
         planned=await get('items/'+id);assert.equal(planned.location_id,locations[1]);assert.equal(planned.destination_id,null);
