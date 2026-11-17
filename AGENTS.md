@@ -14,15 +14,18 @@ A felhasználó 2026. november 17-i utasítása:
 - A tesztkiadáshoz dokumentáld a forrás `dev` commitot és az ellenőrzések eredményét. A felhasználónak jelezd az ágat és a tesztelés módját.
 - A `main` ágra nem kerül automatikusan alkalmazásfejlesztés ettől a munkarendtől. A közös tervezési dokumentációra az alábbi kivétel érvényes.
 
-## Közös promptok és roadmapek
+## Promptok, roadmapek és verzióhoz kötött dokumentáció
 
-A felhasználó 2026. november 17-i pontosítása alapján a `prompts/` és `roadmap/` közös projektdokumentáció: tartalmuk azonos legyen a `dev`, `teszt` és `main` ágon, beleértve a `kesz/` archívumokat és indexeket.
+A felhasználó 2026. november 17-i döntése alapján a `prompts/` és `roadmap/` hiteles, aktuális forrása a `main` ág, beleértve a `kesz/` archívumokat és indexeket. Ez felváltja a korábbi, mindhárom ágra kötelező dokumentációszinkront.
 
-- A dokumentáció módosítását, új fájljait és áthelyezéseit külön dokumentációs commitban, automatikusan vezesd át mindhárom ágra. Ez az `AGENTS.md` és a `docs/branch-workflow.md` kapcsolódó munkarendi szabályaira is vonatkozik.
-- A dokumentáció frissítéséhez nem szükséges kész alkalmazásverzió vagy felhasználói teszt. A kész terv vagy prompt nem jelent kész implementációt.
-- Csak a dokumentáció változásait vidd át; emiatt ne merge-öld a teljes `dev` ágat a `teszt` vagy `main` ágba. A kód kiadási feltételei továbbra is érvényesek.
-- Mindhárom távoli ágat ellenőrizd. Önálló dokumentációs módosításokat tartalmilag fésülj össze, ne írj felül újabb terveket vak könyvtármásolással. Rögzítsd, ha a szinkron valamelyik ágon nem sikerült.
-- A státuszoknál add meg, melyik ágon és mely commitban készült el a megvalósítás; a közös dokumentációból ne következzen, hogy ugyanaz a funkció mindhárom ág kódjában elérhető.
+- Új terveket, promptokat, státuszokat és archiválásokat kizárólag a `main` ágon szerkessz és commitolj/pusholj, külön dokumentációs commitban. Ehhez nem szükséges kész alkalmazásverzió vagy újabb megerősítés.
+- A `dev` és `teszt` ágakon meglévő példányok maradhatnak, és normál Git-összevonással frissülhetnek, de nem hiteles források. Nem kell őket törölni vagy automatikusan szinkronizálni.
+- Feladatkezdéskor frissítsd a távoli `main` és a munkához használt ág állapotát. A promptot és közös utasításait az `origin/main` megfelelő commitjából olvasd (például `git show origin/main:prompts/<feladat>.md`), és rögzítsd a felhasznált `main` commitot a fejlesztési/átadási riportban. Ehhez ne merge-öld a teljes `main` ágat a munkádba.
+- Fejlesztés közben felmerülő tervpontosítást külön, tiszta munkafán vagy dokumentációs commitban ments a `main` ágra; ne keverd bele az alkalmazáskódot, és ne veszítsd el a helyi fejlesztést.
+- A tervek státuszai a teljes projektre vonatkoznak. Add meg a megvalósítás ágát és commitját, az ellenőrzések eredményét és a felhasználói teszt állapotát. A `main` tervei előrébb járhatnak az ottani alkalmazáskódnál.
+- A műszaki dokumentáció (például telepítés, API, konfiguráció, architektúra), a teszteredmények és az átadási útmutatók a hozzájuk tartozó kódot követik: a `dev` ágon készülnek, a kóddal együtt kerülnek a `teszt`, majd külön kiadáskor a `main` ágra. A gyökér `README.md` futtatási állításai is az adott ág kódját írják le.
+- Az `AGENTS.md` és a `docs/branch-workflow.md` közös munkarendi szabályait minden használt ágon tartsd aktuálisan, kizárólag a szabályváltozások átvitelével. E kivétel nem jelenti az összes dokumentáció szinkronizálását.
+- A távoli ág változásakor ellenőrizd és fésüld össze az új módosításokat; ne használj force push-t vagy vak könyvtármásolást. A `main` tervmódosításai miatt ne emelj át félkész alkalmazáskódot.
 
 Ez fejlesztői munkarend, nem folyamatos háttérszinkron.
 
@@ -41,7 +44,7 @@ A felhasználó kérése alapján a teljesen elkészült folyamatok leírásait 
 - `prompts/<feladat>.md` → `prompts/kesz/<feladat>.md`
 - `roadmap/<terv>.md` → `roadmap/kesz/<terv>.md`
 
-Ezt a feladat lezárásának részeként végezd el külön kérés nélkül, a dokumentációt külön commitban szinkronizáld mindhárom ágra; a hozzá tartozó fejlesztést a `dev` ágra commitold/pushold. Ez fejlesztői munkarend, nem időzített háttérfolyamat.
+Ezt a feladat lezárásának részeként végezd el külön kérés nélkül, a dokumentáció áthelyezését és indexfrissítését külön commitban a `main` ágra mentsd; a hozzá tartozó fejlesztést a `dev` ágra commitold/pushold. Ez fejlesztői munkarend, nem időzített háttérfolyamat.
 
 Áthelyezés előtt ellenőrizd a tényleges kódot, az adott feladat elfogadási feltételeit és a szükséges teszteredményeket. A részben elkészült, blokkolt, még nem hozzáférhető vagy kötelező elfogadási próbára váró feladat leírása az aktív mappában maradjon; rögzítsd, mi hiányzik. A pusztán elkészített prompt nem kész megvalósítás. Roadmap-tervet csak a teljes leírt cél teljesülésekor archiválj; részfeladat befejezésekor frissítsd a státuszt, de a tágabb terv maradjon aktív.
 
