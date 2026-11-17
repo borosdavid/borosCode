@@ -1,10 +1,10 @@
 # 00A – Áttérés Hibernate ORM + Spring Data JPA használatára
 
-> **Státusz:** Tervezett  
-> **Pontosítás / akadály:** Az asztali JPA-munka eredménye nem igazolt a távoli dev ágon; ott jelenleg JdbcTemplate-alapú Ledger látható. Előbb az asztali állapotot kell biztonságosan ellenőrizni és feltölteni.  
-> **Megvalósítás:** Nincs igazolt JPA-megvalósítási commit.  
-> **Ellenőrzés:** Nincs igazolt JPA-tesztriport.  
-> **Felhasználói teszt:** Nincs átadva; elfogadás nincs igazolva.  
+> **Státusz:** Fejlesztés alatt  
+> **Pontosítás / akadály:** A JPA-kód elkészült, ellenőrizve és feltöltve a dev ágra. Külön tesztágas átadás és felhasználói elfogadás még nincs; a Docker-futtatás nem ellenőrzött, a dev meglévő PWA offline próbája nyitott.  
+> **Megvalósítás:** dev; [ellenőrzött összeillesztés](https://github.com/borosdavid/borosCode/commit/dae1224627a983217296ffe2dd47a339caacdb59), benne az eredeti [JPA-commit](https://github.com/borosdavid/borosCode/commit/4ab60617c225714ba9cfdd7a19aa5d6fc0e0caea).  
+> **Ellenőrzés:** 2026-11-17-én újrafuttatva: Maven verify, 10 egységteszt + 14 izolált MySQL-integráció és mind a 7 Windowsos acceptance csoport sikeres. A külön mock PWA-próbából 2 csoport sikeres, az offline deep-link csoport Edge alatt timeouttal leállt; [pontos dev riport](https://github.com/borosdavid/borosCode/blob/dae1224627a983217296ffe2dd47a339caacdb59/docs/jpa-dev-integracio.md).  
+> **Felhasználói teszt:** Nincs átadva a teszt ágon; felhasználói elfogadás nincs igazolva.  
 > **Frissítve:** 2026-11-17. [Státuszszabályok](../projekt/STATUSZOK.md).
 
 

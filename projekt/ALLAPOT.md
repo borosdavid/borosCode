@@ -9,14 +9,14 @@
 
 - A helyi PWA-alap a `dev` ágon van; a telefonról megnyitható, védett HTTPS-elérés még nincs igazolva.
 - A teljes offline leltár, a tartós offline szerkesztés és a kétirányú szinkron még további fejlesztés.
-- A távoli `dev` ágon a JPA-átállás nem látható; az esetleges Windows-oldali helyi eredményt innen nem tudjuk ellenőrizni.
+- A JPA-átállás a `dev` ágon igazolt és feltöltött: [`dae1224627a983217296ffe2dd47a339caacdb59`](https://github.com/borosdavid/borosCode/commit/dae1224627a983217296ffe2dd47a339caacdb59). Az újrafuttatott Maven/24 Java-teszt és a 7 Windowsos acceptance csoport sikeres; a külön PWA offline deep-link próba Edge alatt sikertelen, kivizsgálása nyitott.
 - A `teszt` ág jelenlegi alkalmazáskódja induló alapállapot, nem átadott PWA-tesztkiadás.
-- A mostani státuszrendezés dokumentációs változás; nem indítottunk alkalmazást, nem módosítottunk személyes adatot, nem futtattunk új alkalmazásteszteket.
+- A JPA-megvalósítás és az újrafuttatott alkalmazástesztek a dev-hez tartoznak. A main ezen frissítése csak dokumentáció és státusz; nem emeli át az alkalmazáskódot vagy a dev-et a teszt ágra.
 
 ## Következő teendő és akadályok
 
 1. A korábban kijelölt 01B feladat előkészítése: a dedikált Debian-szerver hardverének/telepítésének felmérése és hitelesített kapcsolat kialakítása Windowsról, iPhone-ról és a használt ChatGPT-környezetből.
-2. A Windows-fejlesztőgépen esetleg meglévő JPA-munka biztonságos ellenőrzése, mentése és összefésülése. Az offline fázisok előtt ezt rendezni kell.
+2. A JPA megvalósítása és dev-be mentése elkészült. Külön tesztágas átadás még nincs; a dev meglévő PWA offline hibájának kivizsgálása és a Docker-futtatás ellenőrzése hátravan.
 3. Az 01-es fázis hozzáférésvédelmének és telefonos HTTPS-elérésének befejezése, majd tesztkiadás.
 4. Ezután a teljes offline olvasás (02), offline írás/szinkron (03), végső iPhone-próbák (04).
 
@@ -28,8 +28,8 @@
 
 | Feladat | Státusz | Igazolt eredmény / következő feltétel |
 |---|---|---|
-| [00A – JPA](../prompts/00A-HIBERNATE-JPA-ATALLAS.md) | Tervezett | Távoli megvalósítás nem igazolt; a helyi Windows-munka ellenőrzendő |
-| [01 – PWA és HTTPS](../prompts/01-PWA-HTTPS-MOBIL-ALAP.md) | Fejlesztés alatt | Helyi PWA kész; hozzáférés és valódi iPhone-átadás hiányzik |
+| [00A – JPA](../prompts/00A-HIBERNATE-JPA-ATALLAS.md) | Fejlesztés alatt | Kód elkészült és dev-be feltöltve; 24 Java-teszt és 7 Windowsos csoport sikeres; külön tesztátadás/elfogadás még nincs |
+| [01 – PWA és HTTPS](../prompts/01-PWA-HTTPS-MOBIL-ALAP.md) | Fejlesztés alatt | Helyi PWA kész; Windows/Edge offline deep-link próba sikertelen, hozzáférés és valódi iPhone-átadás hiányzik |
 | [01A – alkalmazásfiókok](../prompts/01A-FELHASZNALOI-FIOKOK.md) | Tervezett | Felhasználónév/jelszó és egyenlő jogok eldöntve; implementáció kell a védett HTTPS-átadás előtt |
 | [01B – távoli vezérlés](../prompts/01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md) | Tervezett | Debian-szerver és Windows/iPhone fejlesztési szerepek eldöntve; telepítés és kapcsolat még nem igazolt |
 | [02 – offline leltár](../prompts/02-TELJES-OFFLINE-LELTAR-ELOZETEK.md) | Tervezett | Előfeltétel a JPA-állapot és a védett elérés rendezése |
@@ -47,11 +47,12 @@ A dokumentációs feladat kezdetén az alábbi távoli állapotokat olvastuk. Ez
 | dev | [`6824ba30bcaa634cc8d96bef134d32774c4f5e75`](https://github.com/borosdavid/borosCode/commit/6824ba30bcaa634cc8d96bef134d32774c4f5e75) | A helyi PWA-kód és riport jelen van |
 | main | [`040dad1f0f1f24ab33d824257e8b3e9a03a3f8b7`](https://github.com/borosdavid/borosCode/commit/040dad1f0f1f24ab33d824257e8b3e9a03a3f8b7) | Központi tervek és munkarend |
 | teszt | [`75ab347af6813290047232d45454190c43992655`](https://github.com/borosdavid/borosCode/commit/75ab347af6813290047232d45454190c43992655) | Alapállapot; önmagában nem tesztkiadás |
+| dev – JPA összeillesztés | [`dae1224627a983217296ffe2dd47a339caacdb59`](https://github.com/borosdavid/borosCode/commit/dae1224627a983217296ffe2dd47a339caacdb59) | A korábbi PWA és a JPA együtt; a Windowsos újrafuttatás bizonyítékai és nyitott PWA-próba a kód melletti riportban |
 
 - [PWA-riport](https://github.com/borosdavid/borosCode/blob/6824ba30bcaa634cc8d96bef134d32774c4f5e75/docs/pwa-01.md): korábbi, 2026-11-17-i 10 sikeres Java-teszt és 3 sikeres böngészős tesztcsoport. Ebben a dokumentációs feladatban ezeket nem futtattuk újra.
-- [Ledger](https://github.com/borosdavid/borosCode/blob/6824ba30bcaa634cc8d96bef134d32774c4f5e75/inventory/src/main/java/hu/boros/inventory/Ledger.java) és [inventory/pom.xml](https://github.com/borosdavid/borosCode/blob/6824ba30bcaa634cc8d96bef134d32774c4f5e75/inventory/pom.xml): JdbcTemplate és JDBC starter; ez alapján a távoli JPA-átállás nem igazolt.
+- A korábbi [Ledger](https://github.com/borosdavid/borosCode/blob/6824ba30bcaa634cc8d96bef134d32774c4f5e75/inventory/src/main/java/hu/boros/inventory/Ledger.java) és [inventory/pom.xml](https://github.com/borosdavid/borosCode/blob/6824ba30bcaa634cc8d96bef134d32774c4f5e75/inventory/pom.xml) még JdbcTemplate-et használt. Ezt a történeti állapotot a fenti JPA-commit felváltja; [architektúra és önálló fázisriport](https://github.com/borosdavid/borosCode/blob/dae1224627a983217296ffe2dd47a339caacdb59/docs/jpa-atallas.md).
 - A PWA-riport szerint a Tailscale/proxyforgalom jelenleg 403-at kap; a jelenlegi hozzáférési szűrő nem kész távoli hitelesítés.
-- A Windows teljes acceptance, a Docker/MySQL-integráció, a valódi iPhone-próba és a működő szerverkapcsolat ebben a feladatban nem volt ellenőrizhető.
+- A Windows teljes acceptance és a natív, izolált MySQL-integráció most újra lefutott: [dev integrációs riport](https://github.com/borosdavid/borosCode/blob/dae1224627a983217296ffe2dd47a339caacdb59/docs/jpa-dev-integracio.md). A külön PWA offline próba nem sikeres; Docker-futtatás, valódi iPhone-próba és Debian-szerverkapcsolat továbbra sem igazolt.
 
 ## Hol mit keresünk?
 

@@ -1,9 +1,9 @@
 # 01 – iPhone-kompatibilis PWA és biztonságos elérés
 
 > **Státusz:** Fejlesztés alatt  
-> **Pontosítás / akadály:** A helyi PWA-alap elkészült; a biztonságos telefonos HTTPS-hozzáférés és a teljes fázis elfogadása még hiányzik.  
+> **Pontosítás / akadály:** A helyi PWA-alap elkészült; a biztonságos telefonos HTTPS-hozzáférés és a teljes fázis elfogadása még hiányzik. A Windows/Edge offline deep-link regresszió 2026-11-17-i újrafuttatása timeouttal leállt; kivizsgálás szükséges.  
 > **Megvalósítás:** dev; [PWA-fejlesztés](https://github.com/borosdavid/borosCode/commit/54b86ec0dfa9886a4026aa2d43f6c83d8cdf89e3).  
-> **Ellenőrzés:** A 2026-11-17-i [dev riport](https://github.com/borosdavid/borosCode/blob/6824ba30bcaa634cc8d96bef134d32774c4f5e75/docs/pwa-01.md) szerint 10 Java-teszt és 3 böngészős tesztcsoport sikeres. Ebben a dokumentációs munkában nem futtattuk újra.  
+> **Ellenőrzés:** A korábbi [PWA-riport](https://github.com/borosdavid/borosCode/blob/6824ba30bcaa634cc8d96bef134d32774c4f5e75/docs/pwa-01.md) 10 Java-tesztet és 3 sikeres böngészős csoportot közölt. A 2026-11-17-i Windowsos JPA-összeillesztés után újrafuttatva: 24 Java-teszt és 7 teljes alkalmazás-acceptance csoport sikeres; a külön PWA mock tesztben 2 csoport sikeres, az offline deep-link csoport sikertelen. A PWA-források nem változtak az összeillesztésben; [új dev riport](https://github.com/borosdavid/borosCode/blob/dae1224627a983217296ffe2dd47a339caacdb59/docs/jpa-dev-integracio.md).  
 > **Felhasználói teszt:** Nincs átadva; elfogadás nincs igazolva.  
 > **Frissítve:** 2026-11-17. [Státuszszabályok](../projekt/STATUSZOK.md).
 

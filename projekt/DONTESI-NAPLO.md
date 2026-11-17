@@ -16,6 +16,7 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 
 | D-008 | Felhasználónév/jelszó és egyenlő alkalmazásjogok | Elfogadott követelmény; implementáció nincs | 2026-11-17 |
 | D-009 | Közös távoli hozzáférés: Tailscale/SSH és privát GitHub-műveletsor | Kidolgozott javaslat; telepítés/kapcsolat nem igazolt | 2026-11-17 |
+| D-010 | Hibernate/JPA a meglévő Flyway-sémán, változatlan külső szerződéssel | Elfogadott architekturális irány; dev-megvalósítás ellenőrizve, felhasználói elfogadás nyitott | 2026-11-17 |
 
 ## D-001 – Fejlesztési és tesztágak
 
@@ -144,6 +145,20 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 **Korlát:** külön privát vezérlőrepó és annak csatlakoztatása, helyi ügynök, szűk jogosultság és élő próba még szükséges. A kezdő műveletek status/diagnostics/start/stop/restart, izolált tesztkörnyezeten. Ez nem teljes értékű távoli shell vagy kész telepítési csatorna.
 
 **Részletek:** [távoli hozzáférési terv](SZERVER-TAVOLI-HOZZAFERES.md). A D-006 vezérlési kérdésére ez konkrét javaslatot ad; a telepítéshez szükséges hardver, mentési célhely és helyi beállítások továbbra is nyitottak.
+
+## D-010 – Hibernate/JPA perzisztenciaréteg
+
+**Döntési állapot:** Elfogadott architekturális irány a felhasználó 00A végrehajtási kéréséből; a megvalósítás felhasználói elfogadása külön, még nyitott lépés. Rögzítve: 2026-11-17.
+
+**Döntés:** az Inventory adatkezelése Hibernate ORM + Spring Data JPA alapú. Flyway marad a sémaváltoztatás egyetlen eszköze; Hibernate csak validál. Az explicit REST DTO-k, az induló 1-es és feltételesen növelt tárgyverzió, a 409-es ütközésjelzés és a tartós fotótörlési sor megmaradnak. Személyes adat nem tesztcélpont.
+
+**Indok:** a felhasználó tanulási és hosszú távú karbantarthatósági célú, új funkció nélküli perzisztencia-refaktort kért, adat- és API-kompatibilitással.
+
+**Megfontolt alternatívák:** a kézi JdbcTemplate-adatelérés megtartása; automatikus Hibernate-sémamódosítás; eltérő verziószámozás. Az utóbbi kettő sértené a megadott adatmegőrzési és kompatibilitási feltételeket. A konkrét verziófeltételes JPQL és fájlkompenzáció indokait a kód melletti műszaki leírás rögzíti.
+
+**Bizonyíték:** [00A feladat](../prompts/00A-HIBERNATE-JPA-ATALLAS.md), eredeti [JPA-commit](https://github.com/borosdavid/borosCode/commit/4ab60617c225714ba9cfdd7a19aa5d6fc0e0caea), [dev összeillesztés](https://github.com/borosdavid/borosCode/commit/dae1224627a983217296ffe2dd47a339caacdb59), [újrafuttatott ellenőrzések](https://github.com/borosdavid/borosCode/blob/dae1224627a983217296ffe2dd47a339caacdb59/docs/jpa-dev-integracio.md).
+
+**Következmény és korlát:** 24 Java-teszt és 7 Windowsos acceptance csoport sikeres. A külön, változatlan PWA offline deep-link próba Edge alatt sikertelen; oka nyitott. Docker- és iPhone-próba nincs igazolva. Nem készült tesztági kiadás vagy elfogadási címke; a prompt aktív marad.
 
 ## Új döntés vagy módosítás
 
