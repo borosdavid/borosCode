@@ -41,3 +41,7 @@ Hozd létre a meglévő Otthontár alkalmazás telepíthető, mobilbarát PWA-al
 - Ezt a modellt dokumentáld, teszteld, és ne tegyél közzé állapotot módosító API-kat kontroll nélkül. Ha jóváhagyásra vár a hozzáférési modell, a fázis csak helyi fejlesztéssel fejezhető be, **távoli éles használat nélkül**.
 - A kamera előkészítése az 01-ben **online feltöltést** jelent; még nem offline fotózást. Az offline mentés/outbox eredeti-fotó megőrzéssel a 03-as fázis feladata.
 - Same-origin URL-eknél `/api/...` gyökérhez viszonyított útvonal lehet, nem kell minden relatív útvonalnak a PWA `/leltar` alkönyvtára alá esnie. Ellenőrizd a Service Worker tényleges scope-ját: ha `/api` fetch-eket is elfog, azok ne kerüljenek automatikus statikus shell cache-be.
+
+## Kötelező fiókpontosítás – D-008, 2026-11-17
+
+A hozzáférési modell eldőlt: felhasználónév/jelszó szükséges; minden aktív bejelentkezett felhasználó minden alkalmazásfunkcióhoz és közös adathoz hozzáfér. Az API-k és képek is védettek. A Tailscale önmagában nem helyettesíti ezt. A részletes [01A feladat](01A-FELHASZNALOI-FIOKOK.md) az 01-es fázis telefonos átadásának előfeltétele. Az offline session/cache/fiókváltás szerződését a 02/03-as fázisban is tartsd meg. A tervezés önmagában nem kész hitelesítés.

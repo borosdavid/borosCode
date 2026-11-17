@@ -37,3 +37,7 @@ A fájlokat a sorrendjükben add át Codexnek. Egy fázis után ellenőrizd a v�
 - A 02-es fázis végéig a telefon leltára **csak olvasható offline**; a 03-as fázistól lép életbe a helyi szerkesztés. A 02-es fázisban ne ígérjen offline szerkesztést vagy szinkronizált feltöltést a felület.
 - A kétirányú szinkronizáció közös modellje az összes meglévő írási útvonalat lefedi (tárgyak, helyszínek, egyedi műveletek, képek, eladás, lomtár/purge); a 02-es és 03-as fázis ugyanazt a cursor/verzió/tombstone szerződést használja.
 - A **teljes offline leltár** minden tárgy metaadatait és minden kép kis előnézetét jelenti, nem minden eredeti kép offline tárolását. A szerveren tárolt eredeti csak az adott kép megtekintésekor, online kérhető le; a nem szinkronizált új fotók feltöltendő eredeti példánya kivétel, offline kötelezően megőrzendő.
+
+## Elfogadott alkalmazásjogosultság – 2026-11-17
+
+D-008 alapján minden felhasználó felhasználónév/jelszó segítségével jelentkezik be; minden aktív bejelentkezett fiók azonos teljes alkalmazás-hozzáférést kap a közös adatokhoz. A részletes szerződés: [01A fiókok](01A-FELHASZNALOI-FIOKOK.md). Külön alkalmazásadmin-szerepet, külön felhasználói leltárat vagy VPN-only hitelesítést ne vezess be ettől eltérően. Az alkalmazásjog nem ad SSH/Linux/GitHub-jogot. A későbbi offline adatkezeléskor a kijelentkezést/fiókváltást és a nem szinkronizált adatok megőrzését is kövesd.

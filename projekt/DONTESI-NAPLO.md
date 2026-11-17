@@ -14,6 +14,9 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 | D-006 | Állandó szerver végleges gépe és hozzáférése | Részben feloldva D-007-tel; telepítési és üzemeltetési részletek nyitottak | 2026-11-17 |
 | D-007 | Dedikált Debian-szerver, fejlesztés Windowsról és iPhone-ról | Elfogadott irány; telepítés még nem igazolt | 2026-11-17 |
 
+| D-008 | Felhasználónév/jelszó és egyenlő alkalmazásjogok | Elfogadott követelmény; implementáció nincs | 2026-11-17 |
+| D-009 | Közös távoli hozzáférés: Tailscale/SSH és privát GitHub-műveletsor | Kidolgozott javaslat; telepítés/kapcsolat nem igazolt | 2026-11-17 |
+
 ## D-001 – Fejlesztési és tesztágak
 
 **Döntés:** az alkalmazásfejlesztés automatikus commit/push célja a `dev`. A `teszt` ágra csak a felhasználónak ténylegesen átadható, ellenőrzött feladatkör kerül. A `main` alkalmazáskódja külön kiadáskor frissül.
@@ -113,6 +116,34 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 **Bizonyíték:** a felhasználó 2026-11-17-i pontosítása: „a javasolt összeállítás mentén tervezek menni, a Debianes laptop csak szervernek lesz használva, a fejlesztés windowsról és iphone-ról menne”.
 
 **Megvalósítás:** ez elfogadott terv, nem igazolt telepítés vagy már létrejött távoli hozzáférés. A szoftvertámogatást és kompatibilitást a telepítés előtt ténylegesen ellenőrizni kell.
+
+## D-008 – Alkalmazásfiókok
+
+**Döntési állapot:** Elfogadott követelmény, 2026-11-17.
+
+**Döntés:** az alkalmazáshoz felhasználónév és jelszó kell; minden aktív bejelentkezett felhasználó egyelőre minden alkalmazásfunkcióhoz és közös adathoz hozzáfér. Nem vezetünk be felhasználónként külön leltárt vagy modulonként eltérő szerepkört.
+
+**Indok:** a felhasználó kifejezett kérése. A Tailscale-es hálózati hozzáférés mellett önálló alkalmazásbelépés kell.
+
+**Következmény:** Spring Security-alapú belépés, megfelelő jelszóhash, session, CSRF és az API/képek védelme szükséges. Az egyenlő alkalmazásjog nem Linux/SSH/GitHub/szerveradminisztrációs jog. Kezdeti technikai alapértelmezésként a fiókok védett helyi karbantartói folyamattal jönnek létre; önregisztráció nincs. A későbbi alkalmazásbeli fiókkezelő felület külön pontosítandó.
+
+**Bizonyíték:** a felhasználó 2026-11-17-i kérése: „az alkalmazáshoz felhasználói fiókok kellenek, egyelőre mindenhez hozzáferhet egy felhasználó, miután van felhasználóneve és jelszava”.
+
+**Megvalósítás:** [01A fiókfeladat](../prompts/01A-FELHASZNALOI-FIOKOK.md), Tervezett. Ez dokumentált követelmény, nem kész bejelentkezés.
+
+## D-009 – Közös távoli hozzáférés megoldási javaslata
+
+**Döntési állapot:** kidolgozott javaslat, 2026-11-17. A közös hozzáférés célját a felhasználó kérte; az itt választott konkrét műveletsor még nem telepített és nem kipróbált rendszer.
+
+**Javaslat:** Dávid Windowsról/iPhone-ról Tailscale + saját SSH-kulcs segítségével adminisztrál. A ChatGPT a meglévő GitHub fájlíró/olvasó képességével egy külön privát vezérlőrepóban engedélyezett kéréseket ad át; a Debianon kifelé kapcsolódó, korlátozott helyi ügynök hajtja végre és szűrt eredményt ad vissza.
+
+**Indok:** ebben a ChatGPT-környezetben nincs közvetlen privát SSH/Tailscale-kapcsolat és új Actions workflow_dispatch indítására szolgáló eszköz. A GitHub fájlírás/olvasás használható kapcsolódási felület. A nyilvános alkalmazásrepóba nem kerülnek szervernaplók vagy műveleti eredmények.
+
+**Alternatívák:** közvetlen hitelesített SSH/MCP-integráció, ha később ténylegesen elérhető; általános self-hosted Actions runner a szerveren, amelyet az első verzióban nem választunk; publikus általános shell-végpont, amelyet nem építünk.
+
+**Korlát:** külön privát vezérlőrepó és annak csatlakoztatása, helyi ügynök, szűk jogosultság és élő próba még szükséges. A kezdő műveletek status/diagnostics/start/stop/restart, izolált tesztkörnyezeten. Ez nem teljes értékű távoli shell vagy kész telepítési csatorna.
+
+**Részletek:** [távoli hozzáférési terv](SZERVER-TAVOLI-HOZZAFERES.md). A D-006 vezérlési kérdésére ez konkrét javaslatot ad; a telepítéshez szükséges hardver, mentési célhely és helyi beállítások továbbra is nyitottak.
 
 ## Új döntés vagy módosítás
 

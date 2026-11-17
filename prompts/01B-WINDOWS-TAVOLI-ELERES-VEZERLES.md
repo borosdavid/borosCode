@@ -16,6 +16,14 @@ Ez előkészített feladat, nem már kiépített hozzáférés. Az első otthoni
 
 A feladat a [D-007 döntést](../projekt/DONTESI-NAPLO.md) követi: Debian 13/Xfce, Docker Engine/Compose, Tailscale/SSH és privát HTTPS a tervezett alap. Az iPhone-ról kezdeményezett fejlesztés végrehajtási/build helyét külön igazold; ne feltételezz iPhone-on futó helyi buildet. A fájl korábbi Windowsos neve a meglévő hivatkozások miatt megmarad, a célpontot a jelenlegi tartalom határozza meg.
 
+## Kiválasztott tervezési irány és előfeltételek
+
+Kövesd a [konkrét távoli hozzáférési tervet](../projekt/SZERVER-TAVOLI-HOZZAFERES.md). Dávid közvetlen Tailscale/SSH-hozzáférése és a ChatGPT számára külön privát GitHub-műveletsor készülhet; a helyi ügynök csak rögzített műveleteket fogyaszthat, nem Gitből letöltött kódot. A privát repo javasolt neve még nem létrejött szolgáltatás. Az ügynök implementációja a dev ágra kerül majd; a terv nem aktivál vezérlést.
+
+A kezdeti körben status/diagnostics/start/stop/restart készül, csak izolált tesztkörnyezetre. A kódbuild, telepítés és nyers naplóhozzáférés követelménye külön későbbi ütem; ennek lezárásáig a tágabb 01B feladat aktív marad. Általános shell-végrehajtást vagy self-hosted CI-runnert ne telepíts automatikusan a személyes szerverre.
+
+A védett telefonos alkalmazáselérés előtt a [01A fiókfeladat](01A-FELHASZNALOI-FIOKOK.md) készüljön el: minden aktív bejelentkezett felhasználó egyenlő alkalmazásjogot kap, szerveradmin-jogot nem.
+
 ## Első lépés: igazolt kapcsolat
 
 - Vizsgáld meg az aktuális dev ágat, az AGENTS.md-t, a közös promptutasításokat, az indító/leállító PowerShell-szkripteket és a docs/pwa-01.md korlátait.
@@ -44,7 +52,7 @@ A feladat a [D-007 döntést](../projekt/DONTESI-NAPLO.md) követi: Debian 13/Xf
 ## HTTPS és jogosultság
 
 - Különítsd el a PWA felhasználói hozzáférését a szerver adminisztratív vezérlésétől. Az alkalmazás megnyitása ne adjon szerveradminisztrációs jogosultságot.
-- A jelenlegi LocalAccessFilter távoli/proxy blokkolását csak megvalósított, ellenőrzött hozzáférési modellre cseréld. Ne kapcsold ki pusztán a link működéséért.
+- A jelenlegi LocalAccessFilter távoli/proxy blokkolását csak megvalósított, ellenőrzött felhasználónév/jelszó + session alapú alkalmazásbelépésre és megbízható proxykezelésre cseréld. Ne kapcsold ki pusztán a link működéséért.
 - A Debian oldali végrehajtó csak előre meghatározott műveleteket fogadjon, minimális jogosultsággal, visszavonható hitelesítéssel. Ne legyen tetszőleges shell-parancs, fájlútvonal vagy Git-ref korlátlan átadása. Titkok a helyi biztonságos konfigurációban legyenek, ne repóban, naplóban vagy chatben.
 - Ne nyiss nyilvános MySQL/imaging/admin/shell portot. A Debian-szerver privát telefonos eléréséhez Tailscale Serve és megbízható HTTPS használható, Funnel nélkül; az aktuális telepített súgót ellenőrizd. A ChatGPT vezérlési csatornáját ettől külön igazold.
 - Önállóan futó, állandó távoli felügyeletet ne ígérj: az interaktív chatből kiadott műveletet, a helyi tartós szolgáltatást és az esetleges későbbi ütemezést egyértelműen különítsd el.

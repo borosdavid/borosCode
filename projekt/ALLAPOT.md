@@ -4,6 +4,9 @@
 
 ## Most hol tartunk?
 
+- Elfogadott alkalmazáskövetelmény (D-008): felhasználónév/jelszó, azonos teljes alkalmazás-hozzáférés minden aktív fióknak. A belépés még nincs implementálva.
+- A közös távoli hozzáférés konkrét terve elkészült (D-009): felhasználói Tailscale/SSH, külön privát GitHub-műveletsor és korlátozott Debian-ügynök. Élő kapcsolat még nincs.
+
 - A helyi PWA-alap a `dev` ágon van; a telefonról megnyitható, védett HTTPS-elérés még nincs igazolva.
 - A teljes offline leltár, a tartós offline szerkesztés és a kétirányú szinkron még további fejlesztés.
 - A távoli `dev` ágon a JPA-átállás nem látható; az esetleges Windows-oldali helyi eredményt innen nem tudjuk ellenőrizni.
@@ -27,6 +30,7 @@
 |---|---|---|
 | [00A – JPA](../prompts/00A-HIBERNATE-JPA-ATALLAS.md) | Tervezett | Távoli megvalósítás nem igazolt; a helyi Windows-munka ellenőrzendő |
 | [01 – PWA és HTTPS](../prompts/01-PWA-HTTPS-MOBIL-ALAP.md) | Fejlesztés alatt | Helyi PWA kész; hozzáférés és valódi iPhone-átadás hiányzik |
+| [01A – alkalmazásfiókok](../prompts/01A-FELHASZNALOI-FIOKOK.md) | Tervezett | Felhasználónév/jelszó és egyenlő jogok eldöntve; implementáció kell a védett HTTPS-átadás előtt |
 | [01B – távoli vezérlés](../prompts/01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md) | Tervezett | Debian-szerver és Windows/iPhone fejlesztési szerepek eldöntve; telepítés és kapcsolat még nem igazolt |
 | [02 – offline leltár](../prompts/02-TELJES-OFFLINE-LELTAR-ELOZETEK.md) | Tervezett | Előfeltétel a JPA-állapot és a védett elérés rendezése |
 | [03 – offline szerkesztés/szinkron](../prompts/03-OFFLINE-MODOSITAS-KAMERA-SZINKRON.md) | Tervezett | A 02-es konzisztens olvasási/változásnapló-alapjára épül |
@@ -67,3 +71,5 @@ Kapcsolódás: [státuszszabályok](STATUSZOK.md). Az oldal frissítése a fejle
 Tesztkiadások: [verziózás és átadási eljárás](TESZTVERZIOK.md), [átadási sablon](sablonok/TESZTATADAS.md). 2026-11-17-én nem volt Git-tag vagy GitHub Release; új alkalmazás-tesztkiadást a mostani dokumentációs feladat nem hozott létre.
 
 Döntések és nyitott javaslatok: [döntési napló](DONTESI-NAPLO.md). A D-006 gépszerepekre és alapösszeállításra vonatkozó részét D-007 feloldotta. A hardver, jogosultságok, mentés és tényleges vezérlési kapcsolat részletei továbbra is tisztázandók.
+
+A jogosultsági és vezérlési pontosítások: [D-008/D-009 a naplóban](DONTESI-NAPLO.md), [távoli hozzáférési terv](SZERVER-TAVOLI-HOZZAFERES.md). A külön privát vezérlőrepó és az ügynök még nincs létrehozva/telepítve. Az alkalmazásfiók nem szerveradminisztrációs fiók.

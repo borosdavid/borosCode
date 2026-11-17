@@ -19,6 +19,7 @@ A teljesen elkészült feladatok leírásai a **[kesz/](kesz/README.md)** almapp
 
 0. **00A-HIBERNATE-JPA-ATALLAS.md** – JdbcTemplate → Hibernate / Spring Data JPA refaktor, a mobilos fejlesztések előtt.
 1. **01-PWA-HTTPS-MOBIL-ALAP.md** – mobil és biztonságos elérés.
+   - **[01A-FELHASZNALOI-FIOKOK.md](01A-FELHASZNALOI-FIOKOK.md)** – felhasználónév/jelszó, azonos teljes alkalmazásjog; a telefonos hozzáférés előfeltétele.
 2. **02-TELJES-OFFLINE-LELTAR-ELOZETEK.md** – offline olvasás.
 3. **03-OFFLINE-MODOSITAS-KAMERA-SZINKRON.md** – offline írás és szinkron.
 4. **04-IPHONE-TESZT-ADATVEDELEM-ATADAS.md** – teszt és átadás.
@@ -46,3 +47,5 @@ A `prompts/` és `roadmap/` aktuális tartalmát kizárólag a [main ágon](http
 Minden végrehajtandó prompt az [egységes státuszszabályokat](../projekt/STATUSZOK.md) és a [sablon adatlapját](SABLON.md) követi. A közös útmutatók és indexek nem végrehajtandó feladatok.
 
 Aktuális összefoglaló: [projektállapot](../projekt/ALLAPOT.md).
+
+A 01B konkrét megoldási terve: [közös távoli szerverhozzáférés](../projekt/SZERVER-TAVOLI-HOZZAFERES.md). A javaslat külön kezeli a felhasználó SSH-elérését, a ChatGPT korlátozott műveleti csatornáját és az alkalmazásfiókokat.
