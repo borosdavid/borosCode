@@ -2,6 +2,10 @@
 
 Magyar nyelvű, helyi alkalmazás. Első modulja a költözési leltár. A háztartás közös adatokat használ egy Windows-gépen.
 
+## Átmeneti Windows-tesztszerver (01B)
+
+A Debian beállítása későbbre marad. A bekapcsolt Windows-gépen elkülönített natív tesztszerver és privát telefonos HTTPS készíthető elő. [Indítás, Tailscale és a korlátozott távoli vezérlő](docs/windows-tesztszerver-01b.md). A kód és a mock ellenőrzések elkészültek; a valódi Windows/iPhone és innen indított privát GitHub-próba még hátravan. Ez nem már aktivált szerverkapcsolat.
+
 ## Első indítás
 
 1. A projektmappában kattints duplán az **Inditas.cmd** fájlra. A megnyíló böngészőben a **Beállítások** fülön add meg az első helyszín nevét, és kattints a **Mentés** gombra. Ismételd meg a többi helyszínnel.
