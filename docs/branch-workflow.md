@@ -41,3 +41,5 @@ Ez fejlesztői munkarend, nem folyamatos háttérszinkron.
 ## Feladatok nyomon követése
 
 A promptok és roadmapek egységes életciklusa: Tervezett → Fejlesztés alatt → Tesztelhető → Elfogadott. Az adatlapot és a bizonyítékokat a main ág [projekt/STATUSZOK.md](https://github.com/borosdavid/borosCode/blob/main/projekt/STATUSZOK.md) szabályai szerint, feladatkezdéskor és állapotváltozáskor frissítsd. A nem igazolt asztali munka nem kész megvalósítás; a puszta dokumentációfrissítés nem tesztkiadás.
+
+A központi [projektállapotot](https://github.com/borosdavid/borosCode/blob/main/projekt/ALLAPOT.md) a main ágon frissítsd az adatlapokkal együtt: mi működik, mi blokkolt, mi következik, mely commitból származik az információ. A helyi vagy más beszélgetésben végzett munkát csak igazolás után vedd át.
