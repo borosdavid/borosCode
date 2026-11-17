@@ -21,3 +21,18 @@ A felhasználó 2026. november 17-i utasítása:
 - A meglévő személyes `.local/` profilt, adatbázist, fényképeket és Docker-köteteket őrizd meg. Meglévő Flyway-migrációt ne módosíts.
 - Olvasd el az aktuális feladatot és a közös promptutasításokat. A fenti, felhasználó által megadott ágmunkarend elsőbbséget élvez a régebbi, commit/push előtti megerősítésre vonatkozó szöveggel szemben.
 - A beszámolóban különítsd el az elkészült, ellenőrzött és még felhasználói tesztre váró részeket.
+
+## Elkészült feladatleírások automatikus rendezése
+
+A felhasználó kérése alapján a teljesen elkészült folyamatok leírásait automatikusan helyezd át a megfelelő `kesz/` almappába:
+
+- `prompts/<feladat>.md` → `prompts/kesz/<feladat>.md`
+- `roadmap/<terv>.md` → `roadmap/kesz/<terv>.md`
+
+Ezt a feladat lezárásának részeként végezd el külön kérés nélkül, és a hozzá tartozó fejlesztéssel együtt commitold/pushold a `dev` ágra. Ez fejlesztői munkarend, nem időzített háttérfolyamat.
+
+Áthelyezés előtt ellenőrizd a tényleges kódot, az adott feladat elfogadási feltételeit és a szükséges teszteredményeket. A részben elkészült, blokkolt, még nem hozzáférhető vagy kötelező elfogadási próbára váró feladat leírása az aktív mappában maradjon; rögzítsd, mi hiányzik. A pusztán elkészített prompt nem kész megvalósítás. Roadmap-tervet csak a teljes leírt cél teljesülésekor archiválj; részfeladat befejezésekor frissítsd a státuszt, de a tágabb terv maradjon aktív.
+
+Az áthelyezett leírást őrizd meg teljes egészében. Egészítsd ki lezárási dátummal, a megvalósító commit(ok)/PR hivatkozásával, a teszteredményekkel és az átadási dokumentum helyével. Ne találj ki bizonyítékot. Az aktív szülőindexből a befejezett feladatot vedd ki az aktív sorrendből, és hivatkozd az archívum indexében. Javítsd a befelé és kifelé mutató relatív linkeket és a régi útvonalra hivatkozó dokumentumokat/szkripteket. Azonos nevű meglévő archív fájlt ne írj felül.
+
+A `README.md` indexek, a `prompts/00-KOZOS-UTASITASOK.md` és a `prompts/SABLON.md` az aktív mappában maradnak, mert folyamatosan használt útmutatók. Újranyitott feladatnál a leírás visszakerülhet az aktív mappába, a korábbi lezárási előzmény megőrzésével. Az archiválás nem helyettesíti a `teszt` ágra emelés külön feltételeit.

@@ -11,6 +11,10 @@ Ebben a mappában gyűjtjük a ChatGPT-vel előkészített, később a Codexnek 
 
 A `SABLON.md` egy új feladat kiindulópontja, **nem végrehajtandó fejlesztési kérés**.
 
+## Elkészült leírások
+
+A teljesen elkészült feladatok leírásai a **[kesz/](kesz/README.md)** almappába kerülnek automatikusan, a fejlesztés lezárásakor. A részben elkészült vagy blokkolt feladatok itt maradnak. Áthelyezéskor a státuszokat, az indexeket és az érintett hivatkozásokat is frissítjük; a részletes szabályokat a gyökér [AGENTS.md](../AGENTS.md) tartalmazza.
+
 ## Fejlesztési sorrend
 
 0. **00A-HIBERNATE-JPA-ATALLAS.md** – JdbcTemplate → Hibernate / Spring Data JPA refaktor, a mobilos fejlesztések előtt.

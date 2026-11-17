@@ -13,6 +13,10 @@ Az itt szereplő ötletek **nem automatikus fejlesztési megbízások**. Egy hos
 
 Az Otthontár kezdetben egy magyar nyelvű, Windows-gépen futó, Java/Spring Boot alapú költözési leltár. Hosszabb távon olyan háztartási alkalmazássá bővíthető, amely több eszközről is használható, és a költözés után is hasznos marad.
 
+## Elkészült leírások
+
+A teljesen elkészült feladatok leírásai a **[kesz/](kesz/README.md)** almappába kerülnek automatikusan, a fejlesztés lezárásakor. A részben elkészült vagy blokkolt feladatok itt maradnak. Áthelyezéskor a státuszokat, az indexeket és az érintett hivatkozásokat is frissítjük; a részletes szabályokat a gyökér [AGENTS.md](../AGENTS.md) tartalmazza.
+
 ## Tervterületek és prioritások
 
 A sorrend irányadó, nem végleges ütemterv. A részletes tervek önálló Markdown-fájlokban szerepelnek.
