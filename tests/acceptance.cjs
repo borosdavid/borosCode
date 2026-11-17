@@ -32,7 +32,7 @@ const start = (...args) => execFileSync('powershell.exe',['-NoProfile','-Executi
     }
     async function place(name){
         await page.goto(origin+'/leltar/beallitasok');
-        const form=page.locator('form').first();
+        const form=page.locator('#places form').first();
         await form.locator('input').fill(name);
         const response=page.waitForResponse(r=>r.url().endsWith('/api/places')&&r.request().method()==='POST');
         await form.locator('button').click();assert.ok((await response).ok());
