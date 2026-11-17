@@ -21,6 +21,10 @@ A `SABLON.md` egy új feladat kiindulópontja, **nem végrehajtandó fejlesztés
 
 A `00-KOZOS-UTASITASOK.md` szabályai minden fázisra érvényesek. A fázisok nem indulnak el automatikusan.
 
+## Következő feladat – Windows-hozzáférés
+
+**[01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md](01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md)** – a valódi Windows-szerver állapotának, naplóinak és fejlesztési riportjainak elérése ChatGPT-ből, biztonságos indítás/leállítás/újraindítás, majd a telefonos HTTPS-elérés igazolása. A felhasználó ezt jelölte ki következő feladatként, az offline fázisok előtt. Egyelőre előkészített feladat; a kapcsolat még nincs kiépítve.
+
 ## Alapelvek
 
 - Egy fájl lehetőleg egy jól körülhatárolt feladatot írjon le.
