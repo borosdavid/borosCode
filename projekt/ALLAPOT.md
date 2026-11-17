@@ -12,12 +12,14 @@
 
 ## Következő teendő és akadályok
 
-1. A korábban kijelölt 01B feladat előkészítése: a tényleges fejlesztői/szerverkörnyezet azonosítása és hitelesített kapcsolat kialakítása.
+1. A korábban kijelölt 01B feladat előkészítése: a dedikált Debian-szerver hardverének/telepítésének felmérése és hitelesített kapcsolat kialakítása Windowsról, iPhone-ról és a használt ChatGPT-környezetből.
 2. A Windows-fejlesztőgépen esetleg meglévő JPA-munka biztonságos ellenőrzése, mentése és összefésülése. Az offline fázisok előtt ezt rendezni kell.
 3. Az 01-es fázis hozzáférésvédelmének és telefonos HTTPS-elérésének befejezése, majd tesztkiadás.
 4. Ezután a teljes offline olvasás (02), offline írás/szinkron (03), végső iPhone-próbák (04).
 
-**Nyitott egyeztetés a szerveres szálhoz:** a 01B jelenleg Windows-gépet ír le; közben felmerült egy külön Linux-laptop mint állandó szerver. A laptop típusa/RAM-ja, a végleges gépszerepek és a ténylegesen használható távoli kapcsolat nem igazolt. A szerveres tervezés külön beszélgetésben folytatható, de a megállapodás és bizonyíték a repóba is kerüljön. Tailscale vagy azonos ChatGPT-fiók önmagában nem ad ebből a beszélgetésből géphozzáférést.
+**Elfogadott gépszerepek (D-007, 2026-11-17):** a Debian 13/Xfce laptop kizárólag szerver; tervezett alapja Docker Engine/Compose, Tailscale/SSH és privát HTTPS. A fejlesztés Windowsról és iPhone-ról történik. A Windows helyi fejlesztést/buildet/tesztet szolgál; az iPhone fejlesztések kezdeményezését és követését, valamint PWA-próbákat. Az iPhone-ról indított munka tényleges végrehajtási helyét és a telepítési csatornát még igazolni kell.
+
+**Nyitva marad:** a laptop hardvere és kompatibilitása, a helyi első telepítés, jogosultságok, mentési célhely és a valóban használható távoli vezérlési kapcsolat. A kiválasztott összeállítás még nem kész telepítés. Tailscale vagy azonos ChatGPT-fiók önmagában nem ad ebből a beszélgetésből géphozzáférést.
 
 ## Végrehajtási feladatok
 
@@ -25,7 +27,7 @@
 |---|---|---|
 | [00A – JPA](../prompts/00A-HIBERNATE-JPA-ATALLAS.md) | Tervezett | Távoli megvalósítás nem igazolt; a helyi Windows-munka ellenőrzendő |
 | [01 – PWA és HTTPS](../prompts/01-PWA-HTTPS-MOBIL-ALAP.md) | Fejlesztés alatt | Helyi PWA kész; hozzáférés és valódi iPhone-átadás hiányzik |
-| [01B – távoli vezérlés](../prompts/01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md) | Tervezett | Kapcsolat és végleges gépszerepek még nem igazoltak |
+| [01B – távoli vezérlés](../prompts/01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md) | Tervezett | Debian-szerver és Windows/iPhone fejlesztési szerepek eldöntve; telepítés és kapcsolat még nem igazolt |
 | [02 – offline leltár](../prompts/02-TELJES-OFFLINE-LELTAR-ELOZETEK.md) | Tervezett | Előfeltétel a JPA-állapot és a védett elérés rendezése |
 | [03 – offline szerkesztés/szinkron](../prompts/03-OFFLINE-MODOSITAS-KAMERA-SZINKRON.md) | Tervezett | A 02-es konzisztens olvasási/változásnapló-alapjára épül |
 | [04 – iPhone és átadás](../prompts/04-IPHONE-TESZT-ADATVEDELEM-ATADAS.md) | Tervezett | Előző fázisok és elérhető eszközös tesztkörnyezet szükséges |
@@ -64,4 +66,4 @@ Kapcsolódás: [státuszszabályok](STATUSZOK.md). Az oldal frissítése a fejle
 
 Tesztkiadások: [verziózás és átadási eljárás](TESZTVERZIOK.md), [átadási sablon](sablonok/TESZTATADAS.md). 2026-11-17-én nem volt Git-tag vagy GitHub Release; új alkalmazás-tesztkiadást a mostani dokumentációs feladat nem hozott létre.
 
-Döntések és nyitott javaslatok: [döntési napló](DONTESI-NAPLO.md). A D-006 szerveres kérdés nyitott; a jelenlegi dokumentációs munkát nem akadályozza, a szerver telepítése előtt tisztázandó.
+Döntések és nyitott javaslatok: [döntési napló](DONTESI-NAPLO.md). A D-006 gépszerepekre és alapösszeállításra vonatkozó részét D-007 feloldotta. A hardver, jogosultságok, mentés és tényleges vezérlési kapcsolat részletei továbbra is tisztázandók.

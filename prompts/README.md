@@ -25,9 +25,9 @@ A teljesen elkészült feladatok leírásai a **[kesz/](kesz/README.md)** almapp
 
 A `00-KOZOS-UTASITASOK.md` szabályai minden fázisra érvényesek. A fázisok nem indulnak el automatikusan.
 
-## Következő feladat – Windows-hozzáférés
+## Következő feladat – dedikált Debian-szerver elérése
 
-**[01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md](01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md)** – a valódi Windows-szerver állapotának, naplóinak és fejlesztési riportjainak elérése ChatGPT-ből, biztonságos indítás/leállítás/újraindítás, majd a telefonos HTTPS-elérés igazolása. A felhasználó ezt jelölte ki következő feladatként, az offline fázisok előtt. Egyelőre előkészített feladat; a kapcsolat még nincs kiépítve.
+**[01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md](01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md)** – a dedikált Debian-szerver állapotának és naplóinak elérése ChatGPT-ből, a Windows/iPhone fejlesztési riportok követése, biztonságos indítás/leállítás/újraindítás, majd a telefonos HTTPS-elérés igazolása. A felhasználó ezt jelölte ki következő feladatként, az offline fázisok előtt. Egyelőre előkészített feladat; a kapcsolat még nincs kiépítve.
 
 ## Alapelvek
 

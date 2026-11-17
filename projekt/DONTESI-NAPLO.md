@@ -11,7 +11,8 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 | D-003 | Első iPhone-megoldásként PWA | Elfogadott fejlesztési irány | Rögzítve: 2026-11-17 |
 | D-004 | Közös csempés alkalmazásgyűjtő, önálló modulokkal | Elfogadott távlati termékirány | 2026-11-17 |
 | D-005 | Státuszok, projektállapot és címkézett tesztátadás | Elfogadott munkarend | 2026-11-17 |
-| D-006 | Állandó szerver végleges gépe és hozzáférése | Nyitott; a felsorolt megoldások javaslatok | 2026-11-17 |
+| D-006 | Állandó szerver végleges gépe és hozzáférése | Részben feloldva D-007-tel; telepítési és üzemeltetési részletek nyitottak | 2026-11-17 |
+| D-007 | Dedikált Debian-szerver, fejlesztés Windowsról és iPhone-ról | Elfogadott irány; telepítés még nem igazolt | 2026-11-17 |
 
 ## D-001 – Fejlesztési és tesztágak
 
@@ -75,6 +76,8 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 
 ## D-006 – Állandó szerver és távoli kezelés
 
+**Frissítés, 2026-11-17:** az alábbi eredeti kérdésfelvetés gépszerepekre és alapösszeállításra vonatkozó részét D-007 feloldotta. Az eredeti állapotot előzményként megőrizzük; a hardver, jogosultságok, mentési cél és a tényleges vezérlési csatorna részletei még nyitottak.
+
 **Igazolt cél:** folyamatos szerverháttér, védett internetes hozzáférés, tartós adat- és képtárolás, automatikus indulás és külső, visszaállítható mentés. A felhasználó meglévő Linux-laptop használatát vetette fel.
 
 **Még javaslat:** Debian/Xfce, Docker Compose, Tailscale/SSH és privát HTTPS. A konkrét hardverrel való kompatibilitás, a telepített szoftverek és a ChatGPT-ből ténylegesen használható hitelesített vezérlési csatorna nem igazoltak. Ez a napló nem ellenőrzi az ajánlott termékek aktuális támogatását.
@@ -86,6 +89,30 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 **Következmény:** a [01B Windows-feladat](../prompts/01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md) átírása vagy végrehajtása előtt a gépszerepeket tisztázni kell. Az azonos fiók és a Tailscale önmagában nem biztosít ebből a beszélgetésből géphozzáférést.
 
 **Forrás:** a szerveres beszélgetésben felvetett célok és alternatívák; [automatizálási távlati terv](../roadmap/AI-FEJLESZTES-ES-SZERVERAUTOMATIZALAS.md). Nem kész telepítés.
+
+## D-007 – Dedikált Debian-szerver és távoli fejlesztés
+
+**Döntési állapot:** Elfogadott irány, 2026-11-17. A D-006 gépszerepekre és javasolt alapösszeállításra vonatkozó nyitott részét feloldja; az üzemeltetési részleteket nem zárja le.
+
+**Döntés:** a meglévő laptop kizárólag szerverfeladatot kap. Tervezett alapja Debian 13/Xfce, Docker Engine és Compose, Tailscale/SSH és privát HTTPS. Az alkalmazásszolgáltatások, a MySQL és a tartós képtárolás ezen a gépen futnak majd, automatikus indulással és külső, visszaállítható mentéssel. Az Xfce a szükség szerinti helyi beállítást segítheti; nem teszi a szervert napi fejlesztőgéppé.
+
+| Eszköz | Szerep |
+|---|---|
+| Debian-laptop | Dedikált, folyamatosan működő szerver; alkalmazás és adattárolás |
+| Windows-gép | Fejlesztés, helyi build és tesztek; a meglévő helyi munka megőrzése |
+| iPhone | Fejlesztések kezdeményezése, követése és ellenőrzése ChatGPT/Codex felületen, valamint PWA-próbák; a kódvégrehajtás és build helyét külön kell igazolni |
+
+**Indok:** az alkalmazás elérhetősége ne függjön a Windows-fejlesztőgép bekapcsolásától. A felhasználó Windowsról és iPhone-ról szeretné folytatni a fejlesztést.
+
+**Alternatíva:** a Windows-gép használata folyamatos szerverként, illetve a szerver és napi fejlesztés ugyanazon laptopra helyezése. Ezek helyett a dedikált Debian-szerep lett kiválasztva.
+
+**Következmény:** a 01B feladat szerveroldali célpontja Debian; a Windows-oldali fejlesztési állapot követése megmarad, de a PowerShell-indítók nem Linuxos szerverindítók. A szerverre lehetőleg ellenőrzött buildtermék kerül; a végleges build/telepítési folyamat még kialakítandó. A PWA használata és az adminisztratív vezérlés külön jogosultságú kapcsolat legyen.
+
+**Nyitva marad:** hardver és kompatibilitás, első helyi telepítési lépések, felhasználók/jogosultságok, külső mentés célhelye, és az ebből a ChatGPT-környezetből ténylegesen működő hitelesített vezérlési csatorna. Az iPhone-os fejlesztési igény nem jelent automatikus helyi buildkörnyezetet az iPhone-on.
+
+**Bizonyíték:** a felhasználó 2026-11-17-i pontosítása: „a javasolt összeállítás mentén tervezek menni, a Debianes laptop csak szervernek lesz használva, a fejlesztés windowsról és iphone-ról menne”.
+
+**Megvalósítás:** ez elfogadott terv, nem igazolt telepítés vagy már létrejött távoli hozzáférés. A szoftvertámogatást és kompatibilitást a telepítés előtt ténylegesen ellenőrizni kell.
 
 ## Új döntés vagy módosítás
 
