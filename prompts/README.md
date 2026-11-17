@@ -44,3 +44,5 @@ A `prompts/` és `roadmap/` aktuális tartalmát kizárólag a [main ágon](http
 ## Feladatstátuszok
 
 Minden végrehajtandó prompt az [egységes státuszszabályokat](../projekt/STATUSZOK.md) és a [sablon adatlapját](SABLON.md) követi. A közös útmutatók és indexek nem végrehajtandó feladatok.
+
+Aktuális összefoglaló: [projektállapot](../projekt/ALLAPOT.md).

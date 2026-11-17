@@ -87,3 +87,5 @@ Roadmap létrehozva: 2026-11-16. Legutóbbi bővítés: 2026-11-17 – közös a
 ## A tervek hiteles forrása: main
 
 A `prompts/` és `roadmap/` aktuális tartalmát kizárólag a [main ágon](https://github.com/borosdavid/borosCode/tree/main) szerkesztjük és mentjük, beleértve a `kesz/` archívumokat is. A `dev` és `teszt` ágakon korábbi példányok maradhatnak, és normál összevonással frissülhetnek; automatikus szinkron nincs. Fejlesztéskor mindig a `main` aktuális promptját olvassuk, a megvalósítás viszont a `dev` ágra kerül. Státuszfrissítéskor jelöljük a kód ágát és commitját, a teszteredményeket és a hátralévő felhasználói próbát. A műszaki és átadási dokumentáció a kód verzióját követi. Részletek: [AGENTS.md](../AGENTS.md).
+
+Aktuális összefoglaló: [projektállapot](../projekt/ALLAPOT.md).
