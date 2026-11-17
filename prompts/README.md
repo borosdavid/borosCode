@@ -37,6 +37,6 @@ A `00-KOZOS-UTASITASOK.md` szabályai minden fázisra érvényesek. A fázisok n
 - Meglévő Flyway-migrációt ne módosítson; ha kell, készítsen újat.
 - Módosítás után a Codex számoljon be a változtatásokról és az elvégzett tesztekről.
 
-## Közös dokumentáció mindhárom ágon
+## A tervek hiteles forrása: main
 
-A `prompts/` és `roadmap/` tartalma közös a `dev`, `teszt` és `main` ágakon, a `kesz/` almappákkal együtt. Módosításkor külön dokumentációs commitban mindhárom ágon frissítjük. A tervek és státuszok a teljes projektre vonatkoznak; a megvalósítás ágát és commitját külön jelöljük. Az azonos dokumentáció nem jelent azonos alkalmazáskódot vagy tesztkiadást. Részletes munkarend: [AGENTS.md](../AGENTS.md).
+A `prompts/` és `roadmap/` aktuális tartalmát kizárólag a [main ágon](https://github.com/borosdavid/borosCode/tree/main) szerkesztjük és mentjük, beleértve a `kesz/` archívumokat is. A `dev` és `teszt` ágakon korábbi példányok maradhatnak, és normál összevonással frissülhetnek; automatikus szinkron nincs. Fejlesztéskor mindig a `main` aktuális promptját olvassuk, a megvalósítás viszont a `dev` ágra kerül. Státuszfrissítéskor jelöljük a kód ágát és commitját, a teszteredményeket és a hátralévő felhasználói próbát. A műszaki és átadási dokumentáció a kód verzióját követi. Részletek: [AGENTS.md](../AGENTS.md).

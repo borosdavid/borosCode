@@ -1,6 +1,6 @@
 # Otthontár iPhone offline-first PWA – közös megvalósítási szabályok
 
-**Repo:** `borosdavid/borosCode`, fejlesztési ág: `dev`; közös promptok és roadmapek: `dev`, `teszt`, `main` (lásd [AGENTS.md](../AGENTS.md)).
+**Repo:** `borosdavid/borosCode`, fejlesztési ág: `dev`; promptok és roadmapek hiteles forrása: `main` (lásd [AGENTS.md](../AGENTS.md)).
 **Cél:** az iPhone 12 Pro készüléken, Mac és App Store nélkül telepíthető, Safari kezdőképernyős Otthontár PWA; a TELJES tárgy- és helyszínleltár offline, offline minden tárgyhoz KIS ELŐNÉZETI kép(ek), a teljes méretű képek csak akkor töltődjenek le, amikor a felhasználó megnyitja/szerkeszti a tárgyat ÉS elérhető a szerver. Az offline készített ÚJ fotók eredeti változata feltöltésig helyben marad.
 
 **A repository tényleges kódját mindig vizsgáld meg, ne tekintsd készpénznek a prompt feltételezéseit.** A jelenlegi README szerint: Java/Spring Boot, Thymeleaf, MySQL/Flyway, imaging szolgáltatás, `GET /api/places`, `GET /api/items?trash=false`, `GET /api/items/{id}`, `POST /api/items` multipart, `GET /api/photos/{id}/{original,small}`; `Ledger.Draft` és verzióellenőrzés. A helyi szerver 127.0.0.1:8740-en figyelhet; ez iPhone-ról önmagában nem érhető el. Ellenőrizd a valós API-szerződéseket, verziókat, képtárolási és biztonsági megoldásokat.

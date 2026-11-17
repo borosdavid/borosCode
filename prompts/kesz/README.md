@@ -1,6 +1,6 @@
 # Elkészült fejlesztési feladatok
 
-Ide kerülnek a teljesen megvalósított és az előírt ellenőrzésekkel igazolt promptok. Az áthelyezést a fejlesztő a lezárás részeként automatikusan elvégzi, és a dev ágra menti.
+Ide kerülnek a teljesen megvalósított és az előírt ellenőrzésekkel igazolt promptok. Az áthelyezést a fejlesztő a lezárás részeként automatikusan elvégzi, és a main ágra menti.
 
 A leírás az eredeti követelmények mellett tartalmazza a lezárás dátumát, a megvalósító commit/PR hivatkozását, a teszteredményeket és az átadási dokumentumot. Az aktív feladatok a [szülőmappában](../README.md), a közös szabályok a [gyökér AGENTS.md-ben](../../AGENTS.md) vannak.
 
