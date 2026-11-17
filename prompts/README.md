@@ -36,3 +36,7 @@ A `00-KOZOS-UTASITASOK.md` szabályai minden fázisra érvényesek. A fázisok n
 - A meglévő személyes adatokat, képeket, helyi konfigurációt és Docker-köteteket meg kell őrizni.
 - Meglévő Flyway-migrációt ne módosítson; ha kell, készítsen újat.
 - Módosítás után a Codex számoljon be a változtatásokról és az elvégzett tesztekről.
+
+## Közös dokumentáció mindhárom ágon
+
+A `prompts/` és `roadmap/` tartalma közös a `dev`, `teszt` és `main` ágakon, a `kesz/` almappákkal együtt. Módosításkor külön dokumentációs commitban mindhárom ágon frissítjük. A tervek és státuszok a teljes projektre vonatkoznak; a megvalósítás ágát és commitját külön jelöljük. Az azonos dokumentáció nem jelent azonos alkalmazáskódot vagy tesztkiadást. Részletes munkarend: [AGENTS.md](../AGENTS.md).
