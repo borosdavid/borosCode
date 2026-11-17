@@ -14,7 +14,7 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 | D-006 | Állandó szerver végleges gépe és hozzáférése | Részben feloldva D-007-tel; telepítési és üzemeltetési részletek nyitottak | 2026-11-17 |
 | D-007 | Dedikált Debian-szerver, fejlesztés Windowsról és iPhone-ról | Elfogadott irány; telepítés még nem igazolt | 2026-11-17 |
 
-| D-008 | Felhasználónév/jelszó és egyenlő alkalmazásjogok | Elfogadott követelmény; implementáció nincs | 2026-11-17 |
+| D-008 | Felhasználónév/jelszó és egyenlő alkalmazásjogok | Elfogadott követelmény; dev-megvalósítás ellenőrzött alapokkal, átadás folyamatban | 2026-11-17 |
 | D-009 | Közös távoli hozzáférés: Tailscale/SSH és privát GitHub-műveletsor | Kidolgozott javaslat; telepítés/kapcsolat nem igazolt | 2026-11-17 |
 | D-010 | Hibernate/JPA a meglévő Flyway-sémán, változatlan külső szerződéssel | Elfogadott architekturális irány; dev-megvalósítás ellenőrizve, felhasználói elfogadás nyitott | 2026-11-17 |
 
@@ -130,7 +130,7 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 
 **Bizonyíték:** a felhasználó 2026-11-17-i kérése: „az alkalmazáshoz felhasználói fiókok kellenek, egyelőre mindenhez hozzáferhet egy felhasználó, miután van felhasználóneve és jelszava”.
 
-**Megvalósítás:** [01A fiókfeladat](../prompts/01A-FELHASZNALOI-FIOKOK.md), Tervezett. Ez dokumentált követelmény, nem kész bejelentkezés.
+**Megvalósítás:** [01A fiókfeladat](../prompts/01A-FELHASZNALOI-FIOKOK.md), Fejlesztés alatt. A dev-kód elkészült: [`815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c`](https://github.com/borosdavid/borosCode/commit/815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c); 18 Java-teszt és 4 headless böngészős csoport sikeres. A valódi MySQL/Windows/Docker/HTTPS-iPhone átadási próbák még hátravan, nincs felhasználói elfogadás. [Riport](https://github.com/borosdavid/borosCode/blob/815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c/docs/fiokok-01a.md).
 
 ## D-009 – Közös távoli hozzáférés megoldási javaslata
 

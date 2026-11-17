@@ -1,10 +1,10 @@
 # 01A – Alkalmazásfiókok és bejelentkezés
 
-> **Státusz:** Tervezett  
-> **Pontosítás / akadály:** A felhasználó elfogadott követelménye: felhasználónév/jelszó, minden bejelentkezett felhasználónak azonos teljes alkalmazás-hozzáférés. Az implementáció még nem készült el.  
-> **Megvalósítás:** Nincs igazolt megvalósítási commit.  
-> **Ellenőrzés:** Követelmény és megoldási irány dokumentálva; alkalmazásteszt nem futott.  
-> **Felhasználói teszt:** Nincs átadva.  
+> **Státusz:** Fejlesztés alatt  
+> **Pontosítás / akadály:** A fiókok/sessionbelépés dev-megvalósítása elkészült. Valódi MySQL-migráció/fiók-karbantartás, Windows/Docker és HTTPS/iPhone-elfogadás hátravan; az első fiókot helyben kell létrehozni.  
+> **Megvalósítás:** dev, [`815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c`](https://github.com/borosdavid/borosCode/commit/815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c).  
+> **Ellenőrzés:** 2026-11-17: Maven verify/18 Java-teszt, 4 headless böngészős tesztcsoport és szintaxis/diff ellenőrzés sikeres. MySQL/Windows/Docker/valódi HTTPS-iPhone próba ebben a körben nem futott. [Részletes riport](https://github.com/borosdavid/borosCode/blob/815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c/docs/fiokok-01a.md).  
+> **Felhasználói teszt:** Nincs tesztágas átadás vagy elfogadás; a kötelező környezeti próbákig a prompt aktív marad.  
 > **Frissítve:** 2026-11-17. [Státuszszabályok](../projekt/STATUSZOK.md).
 
 ## Cél és kapcsolódás

@@ -4,7 +4,7 @@
 
 ## Most hol tartunk?
 
-- Elfogadott alkalmazáskövetelmény (D-008): felhasználónév/jelszó, azonos teljes alkalmazás-hozzáférés minden aktív fióknak. A belépés még nincs implementálva.
+- Elfogadott alkalmazáskövetelmény (D-008): felhasználónév/jelszó, azonos teljes alkalmazás-hozzáférés minden aktív fióknak. A belépés a dev ágon elkészült: [`815dcb2`](https://github.com/borosdavid/borosCode/commit/815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c); a valódi adatbázisos és eszközös átadás még hátravan.
 - A közös távoli hozzáférés konkrét terve elkészült (D-009): felhasználói Tailscale/SSH, külön privát GitHub-műveletsor és korlátozott Debian-ügynök. Élő kapcsolat még nincs.
 
 - A helyi PWA-alap a `dev` ágon van; a telefonról megnyitható, védett HTTPS-elérés még nincs igazolva.
@@ -30,7 +30,7 @@
 |---|---|---|
 | [00A – JPA](../prompts/00A-HIBERNATE-JPA-ATALLAS.md) | Fejlesztés alatt | Kód elkészült és dev-be feltöltve; 24 Java-teszt és 7 Windowsos csoport sikeres; külön tesztátadás/elfogadás még nincs |
 | [01 – PWA és HTTPS](../prompts/01-PWA-HTTPS-MOBIL-ALAP.md) | Fejlesztés alatt | Helyi PWA kész; Windows/Edge offline deep-link próba sikertelen, hozzáférés és valódi iPhone-átadás hiányzik |
-| [01A – alkalmazásfiókok](../prompts/01A-FELHASZNALOI-FIOKOK.md) | Tervezett | Felhasználónév/jelszó és egyenlő jogok eldöntve; implementáció kell a védett HTTPS-átadás előtt |
+| [01A – alkalmazásfiókok](../prompts/01A-FELHASZNALOI-FIOKOK.md) | Fejlesztés alatt | Fiókok/session, CSRF és fiókváltási védelem dev-be feltöltve; 18 Java-teszt/4 böngészős csoport sikeres; valódi MySQL és HTTPS/iPhone-próbák hátravan |
 | [01B – távoli vezérlés](../prompts/01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md) | Tervezett | Debian-szerver és Windows/iPhone fejlesztési szerepek eldöntve; telepítés és kapcsolat még nem igazolt |
 | [02 – offline leltár](../prompts/02-TELJES-OFFLINE-LELTAR-ELOZETEK.md) | Tervezett | Előfeltétel a JPA-állapot és a védett elérés rendezése |
 | [03 – offline szerkesztés/szinkron](../prompts/03-OFFLINE-MODOSITAS-KAMERA-SZINKRON.md) | Tervezett | A 02-es konzisztens olvasási/változásnapló-alapjára épül |
@@ -74,3 +74,11 @@ Tesztkiadások: [verziózás és átadási eljárás](TESZTVERZIOK.md), [átadá
 Döntések és nyitott javaslatok: [döntési napló](DONTESI-NAPLO.md). A D-006 gépszerepekre és alapösszeállításra vonatkozó részét D-007 feloldotta. A hardver, jogosultságok, mentés és tényleges vezérlési kapcsolat részletei továbbra is tisztázandók.
 
 A jogosultsági és vezérlési pontosítások: [D-008/D-009 a naplóban](DONTESI-NAPLO.md), [távoli hozzáférési terv](SZERVER-TAVOLI-HOZZAFERES.md). A külön privát vezérlőrepó és az ügynök még nincs létrehozva/telepítve. Az alkalmazásfiók nem szerveradminisztrációs fiók.
+
+## Legutóbbi fejlesztés – 01A, 2026-11-17
+
+A JPA/PWA `dae1224` kódjára épített fiókfejlesztés: [815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c](https://github.com/borosdavid/borosCode/commit/815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c). Felhasználónév/jelszó, egyenlő közös alkalmazásjog, BCrypt-hash, session/CSRF, fiókletiltás és jelszócsere utáni online session-visszavonás, újrabelépéskor megőrzött nyitott piszkozat/fotó, fiókváltás ellen védett írás. Első fiókot helyben kell létrehozni; nincs alapjelszó.
+
+Maven verify és 18 Java-teszt sikeres; a PWA fixture 4 csoportja Headless Chromium 131 alatt sikeres. A korábban jelzett Windows/Edge offline hibát ez nem zárja le. A módosított MySQL/Windows harness lefordult, de a valódi MySQL V3-migráció/karbantartás, Windows helper és acceptance, Docker, Tailscale/HTTPS és iPhone még nem volt ellenőrizhető. A natív explicit HTTPS-proxykonfiguráció tesztelve van szimulált kérésekkel; a Docker távoli proxy-topológiája külön szervertelepítési feladat.
+
+Részletes, kódhoz kötött riport és fióklétrehozás: [01A átadási leírás](https://github.com/borosdavid/borosCode/blob/815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c/docs/fiokok-01a.md). A `teszt` ág és a kiadási címkék változatlanok. Következő gyakorlati lépés a valódi izolált adatbázisos/eszközös ellenőrzés, valamint a 01B szerverkapcsolat előkészítése; a 02/03 offline fázisok még nem indultak el.
