@@ -62,6 +62,12 @@ A sorrend irányadó, nem végleges ütemterv. A részletes tervek önálló Mar
 - A ranglista elérhetetlensége nem akadályozza a játékot; a feltöltés és pontellenőrzés részletei még tervezendők.
 - Részletes terv: [SNAKE.md](SNAKE.md)
 
+### 9. AI-támogatott fejlesztés és otthoni szerverautomatizálás – távlati terv
+- Mobilról kezdeményezhető Codex-fejlesztés, GitHub PR-ek, automatikus build és tesztelés.
+- Privát, minimális jogosultságú Linux-szerverdiagnosztika; GitHub Actions-alapú, jóváhagyott telepítések.
+- Docker Compose, Tailscale/SSH, monitoring, külső mentések és visszaállítási tesztek.
+- Részletes koncepció: [AI-FEJLESZTES-ES-SZERVERAUTOMATIZALAS.md](AI-FEJLESZTES-ES-SZERVERAUTOMATIZALAS.md)
+
 Az új pontok sorszáma nem kötött megvalósítási sorrend: a közös kezdőképernyő az önálló modulok belépési kerete lehet. Az új termékirány nem módosítja a jelenleg következő Windows-hozzáférési feladatot.
 
 ## Tervezési státuszok
@@ -80,4 +86,4 @@ Az új pontok sorszáma nem kötött megvalósítási sorrend: a közös kezdők
 4. A megvalósítási sorrendet az egymásra épülő követelmények és a felhasználói prioritások határozzák meg.
 5. A hosszú távú elképzeléseket különválasztjuk az azonnal végrehajtható Codex-feladatoktól.
 
-Roadmap létrehozva: 2026-11-16. Legutóbbi bővítés: 2026-11-17 – közös alkalmazásgyűjtő és Snake.
+Roadmap létrehozva: 2026-11-16. Legutóbbi bővítés: 2026-11-17 – közös alkalmazásgyűjtő, Snake és AI-támogatott szerverautomatizálás.
