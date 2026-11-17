@@ -51,3 +51,7 @@ Ezt a feladat lezárásának részeként végezd el külön kérés nélkül, a 
 Az áthelyezett leírást őrizd meg teljes egészében. Egészítsd ki lezárási dátummal, a megvalósító commit(ok)/PR hivatkozásával, a teszteredményekkel és az átadási dokumentum helyével. Ne találj ki bizonyítékot. Az aktív szülőindexből a befejezett feladatot vedd ki az aktív sorrendből, és hivatkozd az archívum indexében. Javítsd a befelé és kifelé mutató relatív linkeket és a régi útvonalra hivatkozó dokumentumokat/szkripteket. Azonos nevű meglévő archív fájlt ne írj felül.
 
 A `README.md` indexek, a `prompts/00-KOZOS-UTASITASOK.md` és a `prompts/SABLON.md` az aktív mappában maradnak, mert folyamatosan használt útmutatók. Újranyitott feladatnál a leírás visszakerülhet az aktív mappába, a korábbi lezárási előzmény megőrzésével. Az archiválás nem helyettesíti a `teszt` ágra emelés külön feltételeit.
+
+## Feladatok nyomon követése
+
+A promptok és roadmapek egységes életciklusa: Tervezett → Fejlesztés alatt → Tesztelhető → Elfogadott. Az adatlapot és a bizonyítékokat a main ág [projekt/STATUSZOK.md](https://github.com/borosdavid/borosCode/blob/main/projekt/STATUSZOK.md) szabályai szerint, feladatkezdéskor és állapotváltozáskor frissítsd. A nem igazolt asztali munka nem kész megvalósítás; a puszta dokumentációfrissítés nem tesztkiadás.
