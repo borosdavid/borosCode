@@ -11,7 +11,8 @@ const state = path.resolve('.local/acceptance');
 const start = (...args) => execFileSync('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/Start.ps1','-TestRun','-Native','-NoBrowser',...args],{timeout:180000,stdio:'inherit'});
 (async()=>{
     const browser=await chromium.launch({executablePath: process.env.BROWSER_EXE || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true});
-    const page=await browser.newPage();
+    const context=await browser.newContext();
+    const page=await context.newPage();
     page.setDefaultTimeout(10000);
     const username=process.env.OTTHONTAR_TEST_USERNAME, password=process.env.OTTHONTAR_TEST_PASSWORD;
     assert.ok(username&&password,'Külön tesztfiók szükséges: OTTHONTAR_TEST_USERNAME és OTTHONTAR_TEST_PASSWORD.');
@@ -159,7 +160,7 @@ const start = (...args) => execFileSync('powershell.exe',['-NoProfile','-Executi
         await action('/lomtar','Végleges törlés',false);await action('/lomtar','Visszaállítás');
         assert.equal((await get('items/'+id)).cover,row.cover);
         console.log('OK: Lomtár, megszakítás és visszaállítás.');
-        await visit();const other=await browser.newPage();await other.goto(origin+'/leltar/'+id);
+        await visit();const other=await context.newPage();await other.goto(origin+'/leltar/'+id);
         await other.locator('[name=name]').waitFor();await field('description').fill('Új leírás');await save();
         await other.locator('[name=description]').fill('Másik piszkozat');await other.locator('#picker').setInputFiles(files[0]);
         await other.getByRole('button',{name:'Mentés',exact:true}).first().click();await other.locator('#conflict').waitFor();
@@ -172,7 +173,7 @@ const start = (...args) => execFileSync('powershell.exe',['-NoProfile','-Executi
         await page.locator('.tabs a').first().click({noWaitAfter:true});await page.waitForTimeout(200);
         assert.ok(warned);assert.equal(await field('description').inputValue(),'Piszkozat');
         await field('description').fill('Másik piszkozat');await page.locator('.tabs a').first().click();await page.waitForURL(origin+'/leltar');
-        const closing=await browser.newPage();
+        const closing=await context.newPage();
         await closing.goto(origin+'/leltar/'+id);
         await closing.locator('[name=name]').click();
         await closing.locator('[name=name]').fill('Mentetlen név');

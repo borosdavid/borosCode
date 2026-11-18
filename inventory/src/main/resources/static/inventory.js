@@ -11,17 +11,26 @@ function esc(v) {return String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':
 async function api(path, options) {
     const writing = options?.method && !['GET','HEAD','OPTIONS'].includes(options.method.toUpperCase());
     const authHeaders = writing ? await AccountAuth.writeHeaders() : {};
-    const res=await fetch('/api/'+path, {...options, cache:'no-store', headers:{...options?.headers, ...authHeaders, 'X-Otthontar-Request':'1'}});
-    const raw=await res.text();
+    let res, raw;
+    try {
+        res=await fetch('/api/'+path, {...options, cache:'no-store', headers:{...options?.headers, ...authHeaders, 'X-Otthontar-Request':'1'}});
+        raw=await res.text();
+    } catch (error) {
+        error.outcomeUnknown = writing;
+        throw error;
+    }
     if(!res.ok) {
         if(res.status===401)AccountAuth.expired();
         let detail;
         try { detail=JSON.parse(raw).detail; } catch {}
         const error=new Error(detail || 'A művelet sikertelen ('+res.status+'). Próbáld újra.');
         error.status=res.status;
+        error.outcomeUnknown=writing && (res.status===408 || res.status>=500);
+        error.applicationProblem=res.headers.get('Content-Type')?.startsWith('application/problem+json');
         throw error;
     }
-    return raw ? JSON.parse(raw) : null;
+    try { return raw ? JSON.parse(raw) : null; }
+    catch (error) { error.outcomeUnknown=writing; throw error; }
 }
 function options(){return places.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');}
 window.addEventListener('beforeunload',e=>{if(dirty()){e.preventDefault();e.returnValue=true;}});
@@ -182,7 +191,7 @@ function editor(item) {
     fields.location.onchange=()=>{if(fields.destination.value===fields.location.value)fields.destination.value='';visibility();};
     fields.destination.onchange=visibility;
     form.querySelector('[data-complete]').onclick=()=>{fields.location.value=fields.destination.value;fields.destination.value='';fields.actionId.value='';visibility();};
-    let preparing = false;
+    let preparing = false, saveAttempt = null;
     async function selectPhotos(e) {
         const files = [...e.target.files];
         preparing = true; form.inert = true;
@@ -220,26 +229,38 @@ function editor(item) {
     }
     form.onsubmit=async e=>{
         e.preventDefault();message.hidden=true;
-        if(preparing)return;
-        if(pending.some(p=>p.error)){warn(new Error('A hibás képet vedd ki, vagy válassz helyette JPEG-et. A többi mező és fotó megmarad.'));return;}
-        const draft=Object.fromEntries(keys.map(k=>[k,fields[k].value]));
-        Object.assign(draft,{id,version,cover:pending.some(p=>p.key===cover)?'new:'+pending.findIndex(p=>p.key===cover):cover});
-        for(const k of ['asking','actual','soldDate'])if(!draft[k])draft[k]=null;
-        const kind=actions.find(a=>a.id===draft.actionId)?.kind;
-        if(kind!=='MOVE') draft.destination=null;
-        if(kind!=='SALE') draft.status='KEEP';
-        if(draft.status==='KEEP')Object.assign(draft,{link:'',asking:null});
-        if(draft.status!=='SOLD')Object.assign(draft,{actual:null,soldDate:null});
-        try{OtthontarPhotos.validateTotal(pending.map(p=>p.file),new Blob([JSON.stringify(draft)]).size);}catch(err){warn(err);return;}
-        const data=new FormData();data.append('draft',new Blob([JSON.stringify(draft)],{type:'application/json'}));
-        pending.forEach(p=>data.append('files',p.file));
+        if(preparing||form.inert)return;
+        if(!saveAttempt){
+            if(pending.some(p=>p.error)){warn(new Error('A hibás képet vedd ki, vagy válassz helyette JPEG-et. A többi mező és fotó megmarad.'));return;}
+            const draft=Object.fromEntries(keys.map(k=>[k,fields[k].value]));
+            Object.assign(draft,{id,version,cover:pending.some(p=>p.key===cover)?'new:'+pending.findIndex(p=>p.key===cover):cover});
+            for(const k of ['asking','actual','soldDate'])if(!draft[k])draft[k]=null;
+            const kind=actions.find(a=>a.id===draft.actionId)?.kind;
+            if(kind!=='MOVE') draft.destination=null;
+            if(kind!=='SALE') draft.status='KEEP';
+            if(draft.status==='KEEP')Object.assign(draft,{link:'',asking:null});
+            if(draft.status!=='SOLD')Object.assign(draft,{actual:null,soldDate:null});
+            try{OtthontarPhotos.validateTotal(pending.map(p=>p.file),new Blob([JSON.stringify(draft)]).size);}catch(err){warn(err);return;}
+            const data=new FormData();data.append('draft',new Blob([JSON.stringify(draft)],{type:'application/json'}));
+            pending.forEach(p=>data.append('files',p.file));
+            saveAttempt={id:crypto.randomUUID(),data,uncertain:false};
+        }
         form.inert=true;
         try{
-            await api('items',{method:'POST',body:data});dirty=()=>false;location.replace(returnPath);
+            await api('items',{method:'POST',body:saveAttempt.data,headers:{'X-Otthontar-Save-Id':saveAttempt.id}});
+            dirty=()=>false;location.replace(returnPath);
         }catch(err){
-            warn(err);
-            if(err.status===409)try{await conflict();}catch(other){warn(other);}
-        }finally{form.inert=false;}
+            saveAttempt.uncertain ||= err.outcomeUnknown === true;
+            // Keep the exact submitted data while its outcome is uncertain. An application-level
+            // rejection of that same request can resolve the uncertainty and restore editing.
+            const rejected=err.applicationProblem && [404,409,422].includes(err.status);
+            if(!saveAttempt.uncertain || rejected)saveAttempt=null;
+            warn(saveAttempt ? new Error(err.message+' A mentés eredménye még bizonytalan. A Mentés gombbal ugyanazt a kérést próbálhatod újra.') : err);
+            if(!saveAttempt && err.status===409)try{await conflict();}catch(other){warn(other);}
+        }finally{
+            form.querySelectorAll('fieldset, #conflict').forEach(part=>{part.inert=!!saveAttempt;});
+            form.inert=false;
+        }
     };
 }
 (async()=>{

@@ -97,7 +97,7 @@ A Tailscale önmagában nem köti ezt a ChatGPT-környezetet a gépedhez. A kül
 
 Ez csak sablon, így nem végrehajtható. Az engedélyezett operation: `status`, `diagnostics`, `start`, `stop`, `restart`. A server_id a helyi beállításból jön; nem adható át útvonal vagy shellargumentum. Nincs külön `protocol-version` fájlra támaszkodó önfrissítés: a séma 1-es verzióját a helyi kód rögzíti.
 
-Az ügynök minden kör elején rögzíti a main commitot, és ugyanabból az immutable commitból olvassa a kérelemjegyzéket és tartalmat. Legfeljebb 100 fájlos aktív sor és körönként 5 új kérés engedélyezett; a lezárt kérés/eredmény párokat szükség szerint kézzel archiválni kell. A kérés utólagos átírása `request_changed`, nem új művelet.
+Az ügynök minden kör elején rögzíti a main commitot, és ugyanabból a commitból olvassa a kérelemjegyzéket és tartalmat. Az aktív sor legfeljebb 100 fájlt tartalmazhat, az ügynök körönként legfeljebb 5 új kérést dolgoz fel. A lezárt kérés/eredmény párokat szükség szerint kézzel archiváld. Ha egy korábban feldolgozott kérést átírnak, az ügynök `request_changed` figyelmeztetést ad a helyi terminálon, megőrzi az eredeti eredményt, és folytatja a többi kérés feldolgozását.
 
 Válasz: `results/<azonos UUID>.json`. Csak az állapot/hibakód, UTC idő, három technikai állapotjelző, commit és JAR-hashek engedélyezettek; nincs jelszó, token, cookie, napló, fájlútvonal vagy tárgyadat. `database_tcp_open` csak portellenőrzés, nem SQL-integritási próba. A diagnostics nem ad szabad lemezterületet vagy nyers hibaszöveget.
 
@@ -108,6 +108,8 @@ Az indító alfolyamat 150 másodperces határideje után `unknown/start_timeout
 Egy beadott kérés még csak sorba állt. Ha a lejáratig és az ismert legfeljebb 150 másodperces indítási időn túl sincs válasz, az állapot nem igazolt; ne jelents sikert vagy kikapcsolt gépet pusztán a válaszhiányból. A tokent visszavonni, az ügynököt leállítani és a tailnet-hozzáférést törölni külön művelet. A lejárati ellenőrzéshez pontos Windows-óra szükséges.
 
 ## Ellenőrzések és hátralévő próbák
+
+A 2026-11-18-i javítás után a `restart` előbb ellenőrzi a buildet és a HTTPS-beállítást. Ha hibát talál, a futó példányt meghagyja. A bővített PowerShell-teszt 77 ellenőrzést futtat, köztük a hibás konfigurációjú újraindítást és az átírt kérést követő érvényes kérés kezelését. A korábban telepített ügynöknél a javított modulokat leállítás után a `Configure-RemoteControl.ps1` ismételt futtatása telepíti. Add meg a meglévő privát repót, szerverazonosítót és a használni kívánt módosítási engedélyt.
 
 Ebben a Linux munkakörnyezetben PowerShell 7.5.13 alatt **71 sikeres assertion**: az összes PowerShell-fájl szintaktikai elemzése; szigorú séma/cél/lejárat/művelet; fájlzár; valódi Git/buildjegyzék és módosított JAR/forrás felismerése; ismétlés/módosítás; tartós napló és megszakadás; eredményírási hiba; titokszűrés; csak olvasó alapmód; mock GitHub-poll és írásütközés; HTTPS-idempotencia/Funnel/foglalt port; idegen folyamat elleni védelem; mock indítás/leállítás és személyesprofil-megőrzés.
 

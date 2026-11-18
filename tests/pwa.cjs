@@ -8,6 +8,7 @@ const root = path.resolve(__dirname,'../inventory/src/main/resources');
 const types = {'.js':'text/javascript','.css':'text/css','.html':'text/html','.webmanifest':'application/manifest+json','.png':'image/png'};
 let expiredSession = false, fixtureUser = 'account-1';
 let failSave = true, savedBody = '', savedHeader = '', nextWorker = false, failAsset = false;
+let dropSaveResponse = false, saveId;
 const server = http.createServer(async (req,res) => {
     const url = new URL(req.url,'http://localhost');
     try {
@@ -20,8 +21,11 @@ const server = http.createServer(async (req,res) => {
 
             if(req.method==='POST') {
                 savedHeader=req.headers['x-otthontar-request'];
+                saveId=req.headers['x-otthontar-save-id'];
+                assert.match(saveId,/^[a-f0-9-]{36}$/);
                 assert.equal(req.headers['x-csrf-token'],'fixture-token');assert.equal(req.headers['x-otthontar-user'],'account-1');
                 for await(const chunk of req) savedBody+=chunk.toString('latin1');
+                if(dropSaveResponse){req.socket.destroy();return;}
                 res.writeHead(failSave?413:200,{'Content-Type':'application/json'});
                 res.end(JSON.stringify(failSave?{detail:'Túl nagy kérés. A piszkozat megmarad.'}:{}));return;
             }
@@ -36,7 +40,7 @@ const server = http.createServer(async (req,res) => {
         if(failAsset && url.pathname==='/manifest.webmanifest'){res.writeHead(503);res.end();return;}
         const file=path.join(root,'static',url.pathname);
         let data=await fs.readFile(file);
-        if(url.pathname==='/sw.js'&&nextWorker)data=Buffer.from(data.toString().replace('otthontar-shell-v2','otthontar-shell-v3'));
+        if(url.pathname==='/sw.js'&&nextWorker)data=Buffer.from(data.toString().replace('otthontar-shell-v3','otthontar-shell-v4'));
         res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(data);
     }catch{res.writeHead(404);res.end();}
 });
@@ -107,9 +111,18 @@ const server = http.createServer(async (req,res) => {
         fixtureUser='account-1';
         await reauth.getByRole('button',{name:'Mégse',exact:true}).click();
         console.log('OK: session expiry and same-account reauthentication preserve draft/photos; changed account cannot upload.');
-        failSave=false;
+        failSave=false;dropSaveResponse=true;
+        await page.getByRole('button',{name:'Mentés',exact:true}).first().click();
+        await page.getByText(/A mentés eredménye még bizonytalan/).waitFor();
+        const originalSaveId=saveId;
+        const originalDraft=savedBody.match(/\{"actionId"[^\r\n]+/)[0];
+        assert.equal(await page.locator('#itemform fieldset[inert]').count(),3);
+        dropSaveResponse=false;savedBody='';
         await page.getByRole('button',{name:'Mentés',exact:true}).first().click();
         await page.waitForURL(origin+'/leltar');
+        assert.equal(saveId,originalSaveId);
+        assert.ok(savedBody.includes(originalDraft));
+        assert.ok(savedBody.includes('filename="test.jpg"'));
         await page.getByRole('heading',{name:'Tárgyak',exact:true}).waitFor();
         await page.setViewportSize({width:1280,height:900});
         await page.getByRole('link',{name:'Új tárgy',exact:true}).click();
@@ -131,7 +144,7 @@ const server = http.createServer(async (req,res) => {
             const done=new Promise(resolve=>registration.addEventListener('updatefound',()=>{const worker=registration.installing;worker.addEventListener('statechange',()=>{if(worker.state==='redundant')resolve();});},{once:true}));
             await registration.update();await done;
         });
-        assert.ok((await page.evaluate(()=>caches.keys())).includes('otthontar-shell-v2'));
+        assert.ok((await page.evaluate(()=>caches.keys())).includes('otthontar-shell-v3'));
         failAsset=false;
         await page.evaluate(async()=>{
             const registration=await navigator.serviceWorker.getRegistration();
@@ -145,10 +158,10 @@ const server = http.createServer(async (req,res) => {
         await page.close();
         const fresh=await context.newPage();
         await fresh.goto(origin+'/leltar');
-        await fresh.waitForFunction(async()=>(await caches.keys()).includes('otthontar-shell-v3')&&!(await caches.keys()).includes('otthontar-shell-v2'));
+        await fresh.waitForFunction(async()=>(await caches.keys()).includes('otthontar-shell-v4')&&!(await caches.keys()).includes('otthontar-shell-v3'));
         const dbValue=await fresh.evaluate(()=>new Promise(resolve=>{const r=indexedDB.open('otthontar-retention-test');r.onsuccess=()=>{const db=r.result;const tx=db.transaction('drafts');const get=tx.objectStore('drafts').get('draft');get.onsuccess=()=>{resolve(get.result);db.close();};};}));
         assert.equal(dbValue,'keep');
-        const cached=await fresh.evaluate(async()=>({keys:await caches.keys(),urls:(await(await caches.open('otthontar-shell-v3')).keys()).map(r=>r.url)}));
+        const cached=await fresh.evaluate(async()=>({keys:await caches.keys(),urls:(await(await caches.open('otthontar-shell-v4')).keys()).map(r=>r.url)}));
         assert.ok(cached.keys.includes('unrelated-app'));assert.ok(!cached.urls.some(u=>u.includes('/api/')||/\/leltar/.test(u)));
         await context.setOffline(true);
         await fresh.goto(origin+'/leltar/some-item');

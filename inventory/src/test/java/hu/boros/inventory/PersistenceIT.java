@@ -66,7 +66,11 @@ class PersistenceIT {
         "Kizárólag a külön inventory_jpa_test séma használható, explicit test.db.url paraméterrel.");
     databaseUser = System.getProperty("test.db.user", "root");
     databasePassword = Objects.toString(System.getenv("OTTHONTAR_TEST_DB_PASSWORD"), "");
-    Flyway.configure().dataSource(databaseUrl, databaseUser, databasePassword).load().migrate();
+    Flyway.configure()
+        .dataSource(databaseUrl, databaseUser, databasePassword)
+        .target("2")
+        .load()
+        .migrate();
     try (var connection = connection();
         var sql = connection.createStatement()) {
       try (var result = sql.executeQuery("select count(*) from item")) {
@@ -516,6 +520,53 @@ class PersistenceIT {
   }
 
   @Test
+  void concurrentAndRepeatedPhotoSaveWithSameOperationAppliesOnce() throws Exception {
+    var draft = draft();
+    saved(draft);
+    draft.put("version", 1);
+    String operation = UUID.randomUUID().toString();
+    var photo = upload("retry.jpg");
+    int callsBefore = imagingCalls.get();
+    try (var workers = Executors.newFixedThreadPool(2)) {
+      var start = new CountDownLatch(1);
+      Callable<HttpResponse<byte[]>> upload =
+          () -> {
+            await(start);
+            return saveWithOperation(draft, operation, photo);
+          };
+      var first = workers.submit(upload);
+      var second = workers.submit(upload);
+      start.countDown();
+      assertStatus(200, first.get(15, TimeUnit.SECONDS));
+      assertStatus(200, second.get(15, TimeUnit.SECONDS));
+    }
+    var replay = saveWithOperation(draft, operation, photo);
+    assertStatus(200, replay);
+    var item = json.readTree(replay.body());
+    assertEquals(2, item.get("version").asLong());
+    assertEquals(1, item.get("photos").size());
+    assertStatus(409, saveWithOperation(draft, operation, upload("different.jpg")));
+    assertEquals(callsBefore + 1, imagingCalls.get());
+  }
+
+  @Test
+  void rolledBackPhotoSaveCanBeRetriedWithTheSameOperation() throws Exception {
+    var draft = draft();
+    String operation = UUID.randomUUID().toString();
+    var photo = upload("retry-after-failure.jpg");
+    imagingStatus.set(503);
+    try {
+      assertStatus(503, saveWithOperation(draft, operation, photo));
+      assertFalse(containsId(get("/api/items"), draft.get("id").toString()));
+    } finally {
+      imagingStatus.set(200);
+    }
+    var retry = saveWithOperation(draft, operation, photo);
+    assertStatus(200, retry);
+    assertEquals(1, json.readTree(retry.body()).get("photos").size());
+  }
+
+  @Test
   void concurrentSaveSaleTrashAndMoveKeepVersionPreconditions() throws Exception {
     var sale = draft();
     sale.put("actionId", "SALE");
@@ -702,6 +753,11 @@ class PersistenceIT {
   }
 
   static HttpResponse<byte[]> save(Map<String, Object> draft, Upload... files) throws Exception {
+    return saveWithOperation(draft, null, files);
+  }
+
+  static HttpResponse<byte[]> saveWithOperation(
+      Map<String, Object> draft, String operation, Upload... files) throws Exception {
     String boundary = UUID.randomUUID().toString();
     var body = new ByteArrayOutputStream();
     body.write(
@@ -721,15 +777,16 @@ class PersistenceIT {
       body.write(file.bytes());
     }
     body.write(("\r\n--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
-    return http.send(
+    var request =
         HttpRequest.newBuilder(URI.create(origin + "/api/items"))
             .timeout(Duration.ofSeconds(15))
             .header("Content-Type", "multipart/form-data; boundary=" + boundary)
             .header("X-Otthontar-Request", "1")
             .header(csrfHeader, csrfToken)
-            .header("X-Otthontar-User", accountId)
-            .POST(HttpRequest.BodyPublishers.ofByteArray(body.toByteArray()))
-            .build(),
+            .header("X-Otthontar-User", accountId);
+    if (operation != null) request.header("X-Otthontar-Save-Id", operation);
+    return http.send(
+        request.POST(HttpRequest.BodyPublishers.ofByteArray(body.toByteArray())).build(),
         HttpResponse.BodyHandlers.ofByteArray());
   }
 

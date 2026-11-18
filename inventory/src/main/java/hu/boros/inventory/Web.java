@@ -5,6 +5,7 @@ import java.util.*;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.dao.*;
 import org.springframework.http.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,11 +31,13 @@ public class Web {
   final Photos photos;
 
   private final Actions actions;
+  private final ItemSaves itemSaves;
 
-  Web(Ledger ledger, Photos photos, Actions actions) {
+  Web(Ledger ledger, Photos photos, Actions actions, ItemSaves itemSaves) {
     this.ledger = ledger;
     this.photos = photos;
     this.actions = actions;
+    this.itemSaves = itemSaves;
   }
 
   @GetMapping("/actions")
@@ -69,8 +72,16 @@ public class Web {
 
   @PostMapping(value = "/items", consumes = "multipart/form-data")
   Object save(
-      @RequestPart Ledger.Draft draft, @RequestPart(required = false) List<MultipartFile> files) {
-    ledger.save(draft, files == null ? List.of() : files);
+      @RequestPart Ledger.Draft draft,
+      @RequestPart(required = false) List<MultipartFile> files,
+      @RequestHeader(name = "X-Otthontar-Save-Id", required = false) UUID operation,
+      @AuthenticationPrincipal AccountSecurity.LoginUser user) {
+    var uploads = files == null ? List.<MultipartFile>of() : files;
+    if (operation != null) {
+      if (user == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+      return itemSaves.save(user.id, operation, draft, uploads);
+    }
+    ledger.save(draft, uploads);
     return ledger.item(draft.id());
   }
 

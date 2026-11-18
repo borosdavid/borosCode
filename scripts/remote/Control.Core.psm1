@@ -141,7 +141,10 @@ function Invoke-ControlCycle {
         $local=Join-Path $StateDirectory ($id+'.json')
         if(Test-Path -LiteralPath $local){
             $saved=Convert-ControlJson (Get-Content -LiteralPath $local -Raw)
-            if($saved.request_sha -cne $item.sha){throw 'request_changed'}
+            if($saved.request_sha -cne $item.sha){
+                Write-Warning ('request_changed: '+$id)
+                continue
+            }
             if($saved.published -and $saved.result.state -ne 'executing'){continue}
         }
         if($processed -ge 5){break}

@@ -1,6 +1,6 @@
 /* Bump VERSION whenever a shell asset changes. Never cache inventory or photos. */
 'use strict';
-const VERSION = 'otthontar-shell-v2';
+const VERSION = 'otthontar-shell-v3';
 const ASSETS = ['/offline.html','/inventory.css','/inventory.js','/auth.js','/photo-input.js','/pwa.js',
     '/manifest.webmanifest','/icons/icon-180.png','/icons/icon-192.png','/icons/icon-512.png'];
 self.addEventListener('install', event => {

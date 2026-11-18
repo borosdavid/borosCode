@@ -8,10 +8,15 @@ A Debian beállítása későbbre marad. A bekapcsolt Windows-gépen elkülöní
 
 ## Első indítás
 
-1. A projektmappában kattints duplán az **Inditas.cmd** fájlra. A megnyíló böngészőben a **Beállítások** fülön add meg az első helyszín nevét, és kattints a **Mentés** gombra. Ismételd meg a többi helyszínnel.
-2. A **Tárgyak → Új tárgy** oldalon add meg a tárgy nevét, válassz helyszínt, és válaszd ki a JPG-ket. A képek alatti gombokkal választhatsz borítót vagy kivehetsz egy új képet. A **Mentés** együtt rögzíti az adatlapot és a fotókat.
-3. Az **Eladás** oldalon láthatod a Marketplace-re szánt tárgyakat. A hirdetést kézzel add fel. Az alkalmazásban forintban vezetheted az árakat.
-4. Leállításhoz kattints duplán a **Leallitas.cmd** fájlra. A szolgáltatások a böngésző bezárása után is futnak. Az adatbázis és a képek megmaradnak.
+1. Ellenőrizd alább a futtatási előfeltételeket. Natív Windowson előbb futtasd a `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Build.ps1` parancsot. Ezután indítsd el az alkalmazást az **Inditas.cmd** fájllal.
+2. Az első indításkor a felület bejelentkezést kér. A futó alkalmazás mellett, a projektmappában nyitott PowerShellben hozd létre az első fiókot. Válassz saját felhasználónevet és a kérdésre helyben add meg a jelszavadat.
+
+   - Natív Windows: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Account.ps1 -Action create -UserName david`
+   - Docker az **Inditas.cmd** indítójával: `docker exec -it otthontar-personal-inventory-1 java -jar /app.jar account create david`. Ha a konténer neve eltér, a `docker ps` kimenetében keresd a személyes profil inventory konténerét. Kézi Compose indításhoz lásd a [fiókkezelési útmutatót](docs/fiokok-01a.md#első-fiók-és-karbantartás).
+
+3. Jelentkezz be, majd a **Beállítások** fülön add meg az első helyszínt. A **Tárgyak → Új tárgy** oldalon adj nevet a tárgynak, válassz helyszínt és csatolj képeket. A **Mentés** együtt rögzíti az adatlapot és a fotókat.
+4. Az **Eladás** oldalon láthatod a Marketplace-re szánt tárgyakat. A hirdetést kézzel add fel. Az alkalmazásban forintban vezetheted az árakat.
+5. Leállításhoz kattints duplán a **Leallitas.cmd** fájlra. A szolgáltatások a böngésző bezárása után is futnak. Az adatbázis és a képek megmaradnak.
 
 A helyi cím [Otthontár](http://127.0.0.1:8740/leltar). A második indítás megnyitja a már futó példányt. Az első beállításkor működő Docker Compose esetén az indító a konténereket választja. Ezen a gépen előkészítettük a közvetlen windowsos indítást. A kiválasztott módot a gép megjegyzi, így a következő alkalommal is ugyanazt a leltárt látod.
 
@@ -64,6 +69,8 @@ Az Actuator /actuator/health végpont mindkét szolgáltatásnál elérhető. A 
 | POST /api/items/{id}/{trash,restore,purge,move}?version=N | Verzióvédett Lomtár-művelet |
 | GET /api/photos/{id}/{original,small} | JPEG |
 | POST /thumbnail (imaging) | image/jpeg bemenet és JPEG válasz |
+
+Az adatlap mentéséhez opcionális az `X-Otthontar-Save-Id` UUID fejléc. A webes szerkesztő elküldi, és válaszvesztés után ugyanazzal az azonosítóval, ugyanazokkal a mezőkkel és fotókkal próbálkozik újra. A szerver fiókonként tartósan rögzíti a sikeres műveletet, és az ismétléskor az adatlap aktuális állapotát adja vissza az adatok újbóli módosítása nélkül. Eltérő tartalomhoz új UUID kell. A korábbi, fejléc nélküli kliensek a meglévő verzióellenőrzést használják.
 
 A hibás kérés 400, hiányzó tétel 404, ütközés 409, túl nagy feltöltés 413, hibás üzleti adat vagy JPEG 422, elérhetetlen képszolgáltatás 503 választ adhat. A kliens a hibánál megtartja a piszkozatot.
 

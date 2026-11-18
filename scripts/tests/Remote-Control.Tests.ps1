@@ -123,6 +123,7 @@ try{
     Reject {Invoke-TestServer start $serverRoot} 'native_test_profile_required'
     [IO.File]::WriteAllText((Join-Path $acceptance 'runtime.txt'),'native')
     Reject {Invoke-TestServer start $serverRoot} 'verified_build_required'
+    Reject {Invoke-TestServer restart $serverRoot} 'verified_build_required'
     Assert ((Invoke-TestServer status $serverRoot).environment -eq 'teszt') 'status uses isolated profile'
 
     Remove-Item -LiteralPath (Join-Path $acceptance 'inventory.pid') -Force
@@ -154,6 +155,11 @@ try{
         function script:Stop-Process {param($Id) $script:testStopped+=@($Id);$script:testUp=$false}
     }
     & $serverModule {param($Value) $script:testAcceptance=$Value} $acceptance
+    $httpsConfig=Join-Path $serverRoot '.local/remote-test/https.json'
+    Write-AtomicJson $httpsConfig @{public_origin='http://invalid.example'}
+    Reject {Invoke-TestServer restart $serverRoot} 'invalid_https_configuration'
+    Assert ((& $serverModule {$script:testStopped.Count}) -eq 0) 'invalid HTTPS configuration leaves running services alone'
+    Remove-Item -LiteralPath $httpsConfig
     Invoke-TestServer stop $serverRoot | Out-Null
     Assert ((& $serverModule {$script:testStopped.Count}) -eq 2) 'only two owned application processes stopped'
     Assert ((Get-Content -LiteralPath (Join-Path $acceptance 'mysql.pid') -Raw) -eq '65432') 'database process untouched'
@@ -166,14 +172,25 @@ try{
     $controlModule=Get-Module Control.Core
     & $controlModule {
         $script:testPrivate=$true;$script:testWrites=0;$script:testExecutes=0;$script:testConflict=$true
-        $script:testId=[guid]::NewGuid().ToString()
+        $script:testId='0'+([guid]::NewGuid().ToString()).Substring(1)
+        $script:secondId='1'+([guid]::NewGuid().ToString()).Substring(1)
+        $script:queueContainsChangedRequest=$false
         $script:testPayload=@{schema_version=1;request_id=$script:testId;server_id='windows-test';environment='teszt';operation='status';created_at=[DateTimeOffset]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ');expires_at=[DateTimeOffset]::UtcNow.AddMinutes(5).ToString('yyyy-MM-ddTHH:mm:ssZ')} | ConvertTo-Json -Compress
         function script:Invoke-ControlApi {
             param($Token,$Path,$Method='GET',$Body)
             if($Path -eq '/repos/example/private-ops'){return [pscustomobject]@{private=$script:testPrivate;full_name='example/private-ops'}}
             if($Path.EndsWith('/commits/main')){return [pscustomobject]@{sha=('a'*40)}}
             if($Path -match '/contents/requests\?ref=([a-f0-9]{40})$'){
+                if($script:queueContainsChangedRequest){
+                    [pscustomobject]@{type='file';name=($script:testId+'.json');path=('requests/'+$script:testId+'.json');size=400;sha=('d'*40)}
+                    [pscustomobject]@{type='file';name=($script:secondId+'.json');path=('requests/'+$script:secondId+'.json');size=400;sha=('e'*40)}
+                    return
+                }
                 return [pscustomobject]@{type='file';name=($script:testId+'.json');path=('requests/'+$script:testId+'.json');size=400;sha=('c'*40)}
+            }
+            if($Path.Contains('/contents/requests/'+$script:secondId+'.json?ref='+(('a'*40)))){
+                $payload=$script:testPayload.Replace($script:testId,$script:secondId)
+                return [pscustomobject]@{sha=('e'*40);encoding='base64';size=400;content=[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($payload))}
             }
             if($Path -match '/contents/requests/.+\?ref=([a-f0-9]{40})$'){return [pscustomobject]@{sha=('c'*40);encoding='base64';size=400;content=[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($script:testPayload))}}
             if($Path -match '/contents/results/'){
@@ -193,6 +210,15 @@ try{
     Invoke-ControlCycle @cycleArgs
     $counts=& $controlModule {@($script:testExecutes,$script:testWrites)}
     Assert ($counts[0] -eq 1 -and $counts[1] -eq 2) 'GitHub conflict retries publication only'
+    $firstId=& $controlModule {$script:testId}
+    $firstReceipt=Join-Path $cycleArgs.StateDirectory ($firstId+'.json')
+    $originalReceipt=Get-Content -Raw -LiteralPath $firstReceipt
+    & $controlModule {$script:queueContainsChangedRequest=$true}
+    $warnings=@(Invoke-ControlCycle @cycleArgs 3>&1)
+    $counts=& $controlModule {@($script:testExecutes,$script:testWrites)}
+    Assert ($warnings.Count -eq 1 -and "$($warnings[0])" -like 'request_changed:*') 'changed request flagged'
+    Assert ($counts[0] -eq 2 -and $counts[1] -eq 3) 'valid request after changed request executed and published'
+    Assert ($originalReceipt -ceq (Get-Content -Raw -LiteralPath $firstReceipt)) 'original receipt preserved'
     & $controlModule {$script:testPrivate=$false}
     Reject {Invoke-ControlCycle @cycleArgs} 'private_control_repository_required'
     Write-Host "PASS: $script:passed assertions (parser, protocol, journal, mock GitHub, HTTPS and test-profile guards)"

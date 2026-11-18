@@ -139,6 +139,10 @@ function Invoke-TestServer {
             if($null -ne $child -and $child.StartTime.ToUniversalTime().ToString('o') -ceq $pending.started){throw 'previous_start_running'}
             Remove-Item -LiteralPath $starting -Force
         }
+        if($Action -in @('start','restart')){
+            Assert-TestBuild $Root
+            $origin=Get-TestOrigin $Root
+        }
         if($Action -in @('stop','restart')){
             Stop-OwnedTestApplication $Root
             for($i=0;$i -lt 20;$i++){
@@ -148,8 +152,6 @@ function Invoke-TestServer {
             if((Test-LocalHealth 18740) -or (Test-LocalHealth 18741)){throw 'stop_not_confirmed'}
         }
         if($Action -in @('start','restart')){
-            Assert-TestBuild $Root
-            $origin=Get-TestOrigin $Root
             $runtimeInfo=Join-Path $directory 'runtime.json'
             $alreadyUp=Test-LocalHealth 18740
             if($alreadyUp){
