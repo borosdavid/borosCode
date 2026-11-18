@@ -62,7 +62,13 @@ A sorrend irányadó, nem végleges ütemterv. A részletes tervek önálló Mar
 - A ranglista elérhetetlensége nem akadályozza a játékot; a feltöltés és pontellenőrzés részletei még tervezendők.
 - Részletes terv: [SNAKE.md](SNAKE.md)
 
-### 9. AI-támogatott fejlesztés és otthoni szerverautomatizálás – távlati terv
+### 9. Dedikált Debian otthoni szerver – hardverfelmérés után
+- Régi Linux-kompatibilis laptopon állandó Otthontár üzemeltetés: Spring Boot, képfeldolgozás, MySQL, Docker Compose.
+- HTTPS, privát SSH/Tailscale-adminisztráció, automatikus indulás, külső titkosított mentés és helyreállítási próba.
+- Helyi Codex CLI és később külön hitelesített mobilos ChatGPT-vezérlés.
+- Részletes terv: [DEDIKALT-DEBIAN-OTTHONI-SZERVER.md](DEDIKALT-DEBIAN-OTTHONI-SZERVER.md)
+
+### 10. AI-támogatott fejlesztés és otthoni szerverautomatizálás – távlati terv
 - Mobilról kezdeményezhető Codex-fejlesztés, GitHub PR-ek, automatikus build és tesztelés.
 - Privát, minimális jogosultságú Linux-szerverdiagnosztika; GitHub Actions-alapú, jóváhagyott telepítések.
 - Docker Compose, Tailscale/SSH, monitoring, külső mentések és visszaállítási tesztek.
@@ -82,7 +88,7 @@ A megvalósítás egységes sorrendje: **Tervezett → Fejlesztés alatt → Tes
 4. A megvalósítási sorrendet az egymásra épülő követelmények és a felhasználói prioritások határozzák meg.
 5. A hosszú távú elképzeléseket különválasztjuk az azonnal végrehajtható Codex-feladatoktól.
 
-Roadmap létrehozva: 2026-11-16. Legutóbbi bővítés: 2026-11-17 – közös alkalmazásgyűjtő, Snake és AI-támogatott szerverautomatizálás.
+Roadmap létrehozva: 2026-11-16. Legutóbbi bővítés: 2026-11-18 – dedikált Debian otthoni szerver részletes terve.
 
 ## A tervek hiteles forrása: main
 
