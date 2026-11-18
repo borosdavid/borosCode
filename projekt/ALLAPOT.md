@@ -1,11 +1,11 @@
 # Projektállapot – Otthontár
 
-**Frissítve:** 2026-11-17. Ez a `main` ágon karbantartott állapotfelvétel, nem élő szervermonitor és nem a `main` kódjának funkciólistája.
+**Frissítve:** 2026-11-18. Ez a `main` ágon karbantartott állapotfelvétel, nem élő szervermonitor és nem a `main` kódjának funkciólistája.
 
 ## Most hol tartunk?
 
-- Elfogadott alkalmazáskövetelmény (D-008): felhasználónév/jelszó, azonos teljes alkalmazás-hozzáférés minden aktív fióknak. A belépés a dev ágon elkészült: [`815dcb2`](https://github.com/borosdavid/borosCode/commit/815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c); a valódi adatbázisos és eszközös átadás még hátravan.
-- D-011: a Debian telepítése későbbre kerül; átmenetileg a bekapcsolt Windows fejlesztőgép a tesztszerver. A 01B Windows-segédprogramok és privát GitHub-ügynök a dev ágon elkészültek ([cf19142](https://github.com/borosdavid/borosCode/commit/cf191426810ded4ef4b362d56c35735165321cb4)); 71 PowerShell assertion sikeres. Élő Windows/Tailscale/vezérlési kapcsolat még nincs igazolva.
+- Elfogadott alkalmazáskövetelmény (D-008): felhasználónév/jelszó, azonos teljes alkalmazás-hozzáférés minden aktív fióknak. A belépés a dev ágon elkészült: [`815dcb2`](https://github.com/borosdavid/borosCode/commit/815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c); a valódi MySQL-integráció sikeres. A Windows/iPhone átadás hátravan.
+- D-011: a Debian telepítése későbbre kerül; átmenetileg a bekapcsolt Windows fejlesztőgép a tesztszerver. A 01B Windows-segédprogramok és privát GitHub-ügynök a dev ágon elkészültek ([cf19142](https://github.com/borosdavid/borosCode/commit/cf191426810ded4ef4b362d56c35735165321cb4)). A javított dev-verzió [`f3c2f74`](https://github.com/borosdavid/borosCode/commit/f3c2f742fd57b4633a226f880d74685984549d1c) 77 PowerShell-ellenőrzésen ment át. Élő Windows/Tailscale/vezérlési kapcsolat még nincs igazolva.
 
 - A helyi PWA-alap a `dev` ágon van; a telefonról megnyitható, védett HTTPS-elérés még nincs igazolva.
 - A teljes offline leltár, a tartós offline szerkesztés és a kétirányú szinkron még további fejlesztés.
@@ -30,8 +30,8 @@
 |---|---|---|
 | [00A – JPA](../prompts/00A-HIBERNATE-JPA-ATALLAS.md) | Fejlesztés alatt | Kód elkészült és dev-be feltöltve; 24 Java-teszt és 7 Windowsos csoport sikeres; külön tesztátadás/elfogadás még nincs |
 | [01 – PWA és HTTPS](../prompts/01-PWA-HTTPS-MOBIL-ALAP.md) | Fejlesztés alatt | Helyi PWA kész; Windows/Edge offline deep-link próba sikertelen, hozzáférés és valódi iPhone-átadás hiányzik |
-| [01A – alkalmazásfiókok](../prompts/01A-FELHASZNALOI-FIOKOK.md) | Fejlesztés alatt | Fiókok/session, CSRF és fiókváltási védelem dev-be feltöltve; 18 Java-teszt/4 böngészős csoport sikeres; valódi MySQL és HTTPS/iPhone-próbák hátravan |
-| [01B – Windows-tesztszerver és vezérlés](../prompts/01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md) | Fejlesztés alatt | Kód dev cf19142; 71 PowerShell assertion sikeres; valós Windows/HTTPS/privát repo és innen működő vezérlés még hiányzik |
+| [01A – alkalmazásfiókok](../prompts/01A-FELHASZNALOI-FIOKOK.md) | Fejlesztés alatt | Fiókok/session, CSRF és fiókváltási védelem dev-be feltöltve; 18 egységteszt, 16 valódi MySQL-integrációs teszt és 4 böngészős csoport sikeres; Windows/HTTPS/iPhone hátravan |
+| [01B – Windows-tesztszerver és vezérlés](../prompts/01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md) | Fejlesztés alatt | Kód dev f3c2f74; 77 PowerShell-ellenőrzés sikeres; valós Windows/HTTPS/privát repo és innen működő vezérlés még hiányzik |
 | [02 – offline leltár](../prompts/02-TELJES-OFFLINE-LELTAR-ELOZETEK.md) | Tervezett | Előfeltétel a JPA-állapot és a védett elérés rendezése |
 | [03 – offline szerkesztés/szinkron](../prompts/03-OFFLINE-MODOSITAS-KAMERA-SZINKRON.md) | Tervezett | A 02-es konzisztens olvasási/változásnapló-alapjára épül |
 | [04 – iPhone és átadás](../prompts/04-IPHONE-TESZT-ADATVEDELEM-ATADAS.md) | Tervezett | Előző fázisok és elérhető eszközös tesztkörnyezet szükséges |
@@ -90,3 +90,9 @@ A 01A `815dcb2` dev-kódjára épülő [cf191426810ded4ef4b362d56c35735165321cb4
 71 sikeres assertion PowerShell 7.5.13/Linux alatt: parser, séma/cél/lejárat, lock/napló/replay/crash/timeout, eredményszűrés, valódi Git/buildjegyzék és módosított JAR/forrás, mock GitHub/HTTPS/tesztfolyamatok. Ez nem Windows-eszközteszt. Java-kód és migráció ebben a fázisban nem változott; Maven/01A teszteket most nem futtattuk újra.
 
 [Helyi aktiválási parancsok és a hiányzó élő próbák](https://github.com/borosdavid/borosCode/blob/cf191426810ded4ef4b362d56c35735165321cb4/docs/windows-tesztszerver-01b.md). A Windows bekapcsolt/ébren lévő állapota és az elindított ügynök szükséges az online vezérléshez. A privát repo létrehozását/csatlakoztatását, helyi tokent és Tailscale-bejelentkezést ez a felhős munkamenet nem helyettesíti. A 01B aktív marad; nincs új tesztágas kiadás vagy címke. A D-011 döntés azonnali Debian-telepítés helyett átmeneti Windows-tesztet rögzít; az offline 02/03 továbbra is következő külön fejlesztés.
+
+## A 2026-11-18-i projektátvizsgálás javításai
+
+A dev [`f3c2f74`](https://github.com/borosdavid/borosCode/commit/f3c2f742fd57b4633a226f880d74685984549d1c) öt javítást tartalmaz. A tesztszerver újraindítása leállítás előtt ellenőrzi a buildet és a HTTPS-beállítást. Az átírt vezérlési kérés után a sor továbbhalad. A Windowsos böngészős teszt lapjai közös belépést használnak, és az első fiók létrehozása bekerült az indítási útmutatóba. A fotós mentés elveszett válasz után ugyanazzal a műveletazonosítóval biztonságosan újrapróbálható.
+
+Az elkülönített MySQL 8.4.8 integráció 16 tesztje sikeres, beleértve a V2→V4 migrációt meglévő tesztadatokkal és a párhuzamos ismétlést. További 18 Java-egységteszt, 4 Chromium-tesztcsoport és 77 PowerShell-ellenőrzés sikeres. A Windowsos teljes próba, interaktív fiókkarbantartás, iPhone HTTPS és az élő privát vezérlés a gépeken ellenőrizendő. A fázisok státusza továbbra is Fejlesztés alatt.

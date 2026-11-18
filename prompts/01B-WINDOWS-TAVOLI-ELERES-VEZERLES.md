@@ -2,10 +2,10 @@
 
 > **Státusz:** Fejlesztés alatt
 > **Pontosítás / akadály:** D-011 szerint a Debian telepítése későbbre kerül; most a bekapcsolt Windows fejlesztőgép a tesztszerver. Az élő Windows/Tailscale/privát GitHub-kapcsolat még nincs aktiválva/igazolva.
-> **Megvalósítás:** dev [`cf19142`](https://github.com/borosdavid/borosCode/commit/cf191426810ded4ef4b362d56c35735165321cb4).
-> **Ellenőrzés:** 71 sikeres PowerShell assertion Linux/PowerShell 7.5.13 alatt: parser, protokoll, tartós műveleti napló, Git/buildjegyzék, mock vezérlés/GitHub/HTTPS. Nem valódi Windows-eszközteszt.
+> **Megvalósítás:** dev [`f3c2f74`](https://github.com/borosdavid/borosCode/commit/f3c2f742fd57b4633a226f880d74685984549d1c), az alapimplementáció: [cf19142](https://github.com/borosdavid/borosCode/commit/cf191426810ded4ef4b362d56c35735165321cb4).
+> **Ellenőrzés:** 77 ellenőrzés sikeres PowerShell 7.5.13/Linux alatt, köztük a hibás build előtti leállítás megelőzése és a sor folytatása egy átírt kérés után. A helyi folyamatkezelés és GitHub-kapcsolat ebben a tesztben szimulált.
 > **Felhasználói teszt:** Nincs átadva; Windows PowerShell 5.1, DPAPI/ACL, natív MySQL/Java, élő GitHub és iPhone HTTPS hátravan.
-> **Frissítve:** 2026-11-17. [Státuszszabályok](../projekt/STATUSZOK.md).
+> **Frissítve:** 2026-11-18. [Státuszszabályok](../projekt/STATUSZOK.md).
 
 ## Cél és elfogadott változás
 

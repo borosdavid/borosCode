@@ -1,11 +1,11 @@
 # 01A – Alkalmazásfiókok és bejelentkezés
 
 > **Státusz:** Fejlesztés alatt  
-> **Pontosítás / akadály:** A fiókok/sessionbelépés dev-megvalósítása elkészült. Valódi MySQL-migráció/fiók-karbantartás, Windows/Docker és HTTPS/iPhone-elfogadás hátravan; az első fiókot helyben kell létrehozni.  
+> **Pontosítás / akadály:** A fiókok és a bejelentkezés dev-megvalósítása elkészült. A natív Windows-fiókkarbantartás, Docker és a valódi HTTPS/iPhone próba hátravan.
 > **Megvalósítás:** dev, [`815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c`](https://github.com/borosdavid/borosCode/commit/815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c).  
-> **Ellenőrzés:** 2026-11-17: Maven verify/18 Java-teszt, 4 headless böngészős tesztcsoport és szintaxis/diff ellenőrzés sikeres. MySQL/Windows/Docker/valódi HTTPS-iPhone próba ebben a körben nem futott. [Részletes riport](https://github.com/borosdavid/borosCode/blob/815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c/docs/fiokok-01a.md).  
+> **Ellenőrzés:** 2026-11-18: dev [`f3c2f74`](https://github.com/borosdavid/borosCode/commit/f3c2f742fd57b4633a226f880d74685984549d1c), 18 egységteszt, 16 integrációs teszt MySQL 8.4.8-cal és 4 headless böngészős tesztcsoport sikeres. A V2 sémából meglévő tesztadatokkal sikerült V3/V4-re migrálni.
 > **Felhasználói teszt:** Nincs tesztágas átadás vagy elfogadás; a kötelező környezeti próbákig a prompt aktív marad.  
-> **Frissítve:** 2026-11-17. [Státuszszabályok](../projekt/STATUSZOK.md).
+> **Frissítve:** 2026-11-18. [Státuszszabályok](../projekt/STATUSZOK.md).
 
 ## Cél és kapcsolódás
 
