@@ -8,8 +8,9 @@ const root = path.resolve(__dirname,'../inventory/src/main/resources');
 const types = {'.js':'text/javascript','.css':'text/css','.html':'text/html','.webmanifest':'application/manifest+json','.png':'image/png'};
 let expiredSession = false, fixtureUser = 'account-1';
 let failSave = true, savedBody = '', savedHeader = '', nextWorker = false, failAsset = false;
-let dropSaveResponse = false, saveId;
+let dropSaveResponse = false, serverUnavailable = false, saveId;
 const server = http.createServer(async (req,res) => {
+    if(serverUnavailable){req.socket.destroy();return;}
     const url = new URL(req.url,'http://localhost');
     try {
         res.setHeader('Cache-Control','no-store');
@@ -47,7 +48,9 @@ const server = http.createServer(async (req,res) => {
 (async()=>{
     await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
     const origin='http://127.0.0.1:'+server.address().port;
-    const browser=await chromium.launch({executablePath:process.env.BROWSER_EXE||(process.platform==='win32'?'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe':'/usr/bin/chromium'),headless:true,args:['--no-sandbox']});
+    const executablePath=process.env.BROWSER_EXE || (process.platform==='win32'
+        ? 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe' : undefined);
+    const browser=await chromium.launch({executablePath,headless:true,args:['--no-sandbox']});
     const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:3});
     const page=await context.newPage();
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -163,7 +166,9 @@ const server = http.createServer(async (req,res) => {
         assert.equal(dbValue,'keep');
         const cached=await fresh.evaluate(async()=>({keys:await caches.keys(),urls:(await(await caches.open('otthontar-shell-v4')).keys()).map(r=>r.url)}));
         assert.ok(cached.keys.includes('unrelated-app'));assert.ok(!cached.urls.some(u=>u.includes('/api/')||/\/leltar/.test(u)));
-        await context.setOffline(true);
+        await fresh.waitForFunction(()=>navigator.serviceWorker.controller?.state==='activated');
+        // Fail the actual HTTP connection, including fetches made by the service worker.
+        serverUnavailable=true;
         await fresh.goto(origin+'/leltar/some-item');
         await fresh.getByRole('heading',{name:'A szerver nem érhető el'}).waitFor();
         assert.equal(await fresh.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);

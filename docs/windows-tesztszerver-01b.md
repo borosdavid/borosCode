@@ -119,7 +119,14 @@ pwsh -NoProfile -File .\scripts\tests\Remote-Control.Tests.ps1
 
 A mockok nem működő Windows-szerver bizonyítékai. A Windows PowerShell 5.1-et célozza a kód, de az ottani tényleges végrehajtás, DPAPI/ACL, CIM-folyamatazonosítás, Java/MySQL-indítás, valódi GitHub-privátrepó és iPhone/Tailscale HTTPS még helyi próbát igényel. Java/alkalmazáskód és migráció e fázisban nem változott; a korábbi 01A-tesztek eredménye a [01A-riportban](fiokok-01a.md), most nem futottak újra.
 
-Élő elfogadás: csak olvasó kérés innen valódi válasszal → start/health/verzió → ismételt start → restart/health → stop; személyes adatok változatlanok; tokenvisszavonás/lejárat; gépalvás/hálózati kiesés; HTTPS-belépés és fényképes teszttárgy iPhone-ról. A 01A valódi V3-migrációs és fiókkezelési próbái is szükségesek. Ezek lezárásáig a 01B aktív, `Fejlesztés alatt`, a `teszt` ág és címkéi változatlanok.
+Az első fiók, a belépés, a valódi képszolgáltatás és a mentett fotó újraindítás utáni elérése automatizált Linux-próbával ellenőrizhető külön MySQL-sémán. Éles adatok nélkül a következő próbák futtathatók az átmeneti Windows-tesztszerveren és iPhone-on:
+
+1. Buildeld a friss `dev` ágat, indítsd a tesztprofilt, és ellenőrizd a státuszban a build commitját és a szolgáltatások egészségét. Hozz létre külön tesztfiókot. Futtasd az Edge böngészős próbát a [README](../README.md#verziók-és-ellenőrzések) szerint.
+2. Nyisd meg a Tailscale HTTPS-címet iPhone-ról Safariban. Jelentkezz be, készíts fotót egy teszttárgyhoz, mentsd el, és nyisd meg az előnézetet és az eredetit.
+3. Miután a PWA egyszer online betöltött, nyiss meg közvetlenül egy korábban meglátogatott adatlapot megszakított hálózattal. A jelenlegi PWA-nak az offline tájékoztatót kell mutatnia. Állítsd vissza a hálózatot és ellenőrizd, hogy az adatlap újra betölt.
+4. A privát műveleti repón keresztül kérj állapotot, majd próbáld végig az indítást, az ismételt indítást, az újraindítást és a leállítást. Újraindítás után nézd meg, hogy az előző fotó ugyanúgy elérhető. Az élő próba része a lejárt vagy visszavont token, illetve az alvó vagy elérhetetlen gép kezelése is.
+
+A 01B az eszközpróbákig `Fejlesztés alatt` marad.
 
 A gép energiaellátását/alvási házirendjét nem módosítja a kód. A helyi mentést és a későbbi Debianra költöztetést külön kell elvégezni. HTTPS visszavonásakor a saját konfiguráció ellenőrzése után `tailscale serve --https=443 off` kapcsolhatja le ezt a portot; ne használj globális Serve resetet más szolgáltatások mellett. Az alkalmazás belépési originjét helyben kell visszaállítani és újraindítani.
 

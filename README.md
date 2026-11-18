@@ -91,6 +91,18 @@ teszteket. A sima `mvn verify` továbbra is az egységteszteket, a csomagolást 
 formázásellenőrzést futtatja. Részletek és tényleges eredmények:
 [tesztjegyzőkönyv](docs/jpa-teszteredmenyek.md).
 
+A böngészős PWA-tesztek helyi futtatása a repó gyökeréből:
+
+```bash
+npm ci --ignore-scripts --prefix tests
+npm exec --prefix tests -- playwright-core install --only-shell chromium
+npm test --prefix tests
+```
+
+Linuxon a Chromiumhoz szükséges rendszerfüggőségeket az install parancs `--with-deps` kapcsolóval is feltelepíti. Windowson a teszt alapból Edge-et használ. A `BROWSER_EXE` változóval saját böngészőbináris választható.
+
+Az első fiók és a két Java-szolgáltatás közös próbája a `tests/first-account-smoke.py`. `mvn verify` után, Linuxon futtatható egy frissen létrehozott, üres `inventory_jpa_test_cli` sémával, kizárólag loopback MySQL-címen. Add meg az `OTTHONTAR_SMOKE_DB_URL` (például `jdbc:mysql://127.0.0.1:43316/inventory_jpa_test_cli`), `OTTHONTAR_SMOKE_DB_USER` és `OTTHONTAR_SMOKE_DB_PASSWORD` változókat, majd futtasd a `python3 tests/first-account-smoke.py` parancsot. A próba tesztjelszót állít elő, a valódi JAR parancssorán hozza létre a fiókot, HTTP-n belép, képet ment, majd újraindítás után ellenőrzi a mentett adatokat és a fotót.
+
 A 2026-11-17-i dev összeillesztés újrafuttatott ellenőrzéseit és a nyitott PWA
 offline próbát a [JPA dev integrációs riport](docs/jpa-dev-integracio.md) rögzíti.
 

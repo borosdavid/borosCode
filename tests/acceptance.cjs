@@ -1,10 +1,11 @@
 // Run against the isolated Windows test profile only.
-const { chromium } = require(process.env.PLAYWRIGHT_CORE || '../.local/package');
 const assert = require('node:assert/strict');
 
 const fs = require('node:fs');
 const {execFileSync} = require('node:child_process');
 const path = require('node:path');
+const localPlaywright = path.resolve(__dirname, '../.local/package');
+const { chromium } = require(process.env.PLAYWRIGHT_CORE || (fs.existsSync(localPlaywright) ? localPlaywright : 'playwright-core'));
 const origin = 'http://127.0.0.1:18740';
 const run = Date.now().toString(36);
 const state = path.resolve('.local/acceptance');
