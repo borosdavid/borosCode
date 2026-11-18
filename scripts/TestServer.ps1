@@ -1,4 +1,4 @@
-param([ValidateSet('status','diagnostics','start','stop','restart')][string]$Action='status')
+﻿param([ValidateSet('status','diagnostics','start','stop','restart')][string]$Action='status')
 $ErrorActionPreference='Stop'
 if($env:OS -ne 'Windows_NT'){throw 'Ez a belépési pont a Windows tesztprofilhoz készült.'}
 Import-Module (Join-Path $PSScriptRoot 'remote/TestServer.Core.psm1') -Force

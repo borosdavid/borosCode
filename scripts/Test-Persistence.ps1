@@ -1,4 +1,4 @@
-param([string]$MySqlBin)
+﻿param([string]$MySqlBin)
 $ErrorActionPreference = 'Stop'
 Set-Location (Split-Path $PSScriptRoot)
 $projectRoot = (Get-Location).Path

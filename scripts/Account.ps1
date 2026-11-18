@@ -1,4 +1,4 @@
-param(
+﻿param(
     [Parameter(Mandatory=$true)][ValidateSet('create','password','disable','enable')][string]$Action,
     [Parameter(Mandatory=$true)][string]$UserName,
     [switch]$TestRun
