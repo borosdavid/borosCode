@@ -3,8 +3,8 @@
 > **Státusz:** Fejlesztés alatt
 > **Pontosítás / akadály:** D-011 szerint a Debian telepítése későbbre kerül; most a bekapcsolt Windows fejlesztőgép a tesztszerver. Az élő Windows/Tailscale/privát GitHub-kapcsolat még nincs aktiválva/igazolva.
 > **Megvalósítás:** dev [`f3c2f74`](https://github.com/borosdavid/borosCode/commit/f3c2f742fd57b4633a226f880d74685984549d1c), az alapimplementáció: [cf19142](https://github.com/borosdavid/borosCode/commit/cf191426810ded4ef4b362d56c35735165321cb4).
-> **Ellenőrzés:** 77 ellenőrzés sikeres PowerShell 7.5.13/Linux alatt, köztük a hibás build előtti leállítás megelőzése és a sor folytatása egy átírt kérés után. A helyi folyamatkezelés és GitHub-kapcsolat ebben a tesztben szimulált.
-> **Felhasználói teszt:** Nincs átadva; Windows PowerShell 5.1, DPAPI/ACL, natív MySQL/Java, élő GitHub és iPhone HTTPS hátravan.
+> **Ellenőrzés:** 77 ellenőrzés sikeres PowerShell 7.5.13/Linux alatt, köztük a hibás build előtti leállítás megelőzése és a sor folytatása egy átírt kérés után. A GitHub futtatóján a kódolási javítás után Windows PowerShell 5.1 alatt is sikeres a 77 ellenőrzés, és az Edge PWA-próba is átment. A helyi folyamatkezelés és az alkalmazás privát GitHub-vezérlése a PowerShell-próbában szimulált. [CI futás](https://github.com/borosdavid/borosCode/actions/runs/44285364279).
+> **Felhasználói teszt:** Nincs átadva; A tényleges gépen a DPAPI/ACL, natív MySQL/Java, élő privát GitHub-vezérlés és iPhone HTTPS hátravan. [Eszközpróbák](https://github.com/borosdavid/borosCode/blob/16ad22ba72ed86d0a806f5f6a58d2b851fdf2af3/docs/windows-tesztszerver-01b.md#ellenőrzések-és-hátralévő-próbák).
 > **Frissítve:** 2026-11-18. [Státuszszabályok](../projekt/STATUSZOK.md).
 
 ## Cél és elfogadott változás

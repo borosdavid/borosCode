@@ -3,7 +3,7 @@
 > **Státusz:** Fejlesztés alatt  
 > **Pontosítás / akadály:** A fiókok és a bejelentkezés dev-megvalósítása elkészült. A natív Windows-fiókkarbantartás, Docker és a valódi HTTPS/iPhone próba hátravan.
 > **Megvalósítás:** dev, [`815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c`](https://github.com/borosdavid/borosCode/commit/815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c).  
-> **Ellenőrzés:** 2026-11-18: dev [`f3c2f74`](https://github.com/borosdavid/borosCode/commit/f3c2f742fd57b4633a226f880d74685984549d1c), 18 egységteszt, 16 integrációs teszt MySQL 8.4.8-cal és 4 headless böngészős tesztcsoport sikeres. A V2 sémából meglévő tesztadatokkal sikerült V3/V4-re migrálni.
+> **Ellenőrzés:** 2026-11-18: dev [`f3c2f74`](https://github.com/borosdavid/borosCode/commit/f3c2f742fd57b4633a226f880d74685984549d1c), 18 egységteszt, 16 integrációs teszt MySQL 8.4.8-cal és 4 headless böngészős tesztcsoport sikeres. A V2 sémából meglévő tesztadatokkal sikerült V3/V4-re migrálni. Az első fiók létrehozása a becsomagolt JAR interaktív parancsával, majd az első belépés és a fotó megőrzése újraindítás után sikeres külön Linux/MySQL 8.4.8 sémán. [Automatizált próba](https://github.com/borosdavid/borosCode/commit/be040d584e1a26a10bfbc933ed5a2e53c43106db).
 > **Felhasználói teszt:** Nincs tesztágas átadás vagy elfogadás; a kötelező környezeti próbákig a prompt aktív marad.  
 > **Frissítve:** 2026-11-18. [Státuszszabályok](../projekt/STATUSZOK.md).
 
