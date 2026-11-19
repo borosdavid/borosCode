@@ -17,6 +17,7 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 | D-009 | Közös távoli hozzáférés: Tailscale/SSH és privát GitHub-műveletsor | Kidolgozott javaslat; telepítés/kapcsolat nem igazolt | 2026-11-17 |
 | D-010 | Hibernate/JPA a meglévő Flyway-sémán, változatlan külső szerződéssel | Elfogadott architekturális irány; dev-megvalósítás ellenőrizve, felhasználói elfogadás nyitott | 2026-11-17 |
 | D-011 | Átmeneti Windows-tesztszerver a Debian telepítése előtt | Elfogadott; kód dev-ben, helyi aktiválás/élő próba hátravan | 2026-11-17 |
+| D-012 | BorosCode domain és védett Cloudflare-elérés az Otthontárhoz | Elfogadott tervezési irány | 2026-11-19 |
 
 ## D-001 – Fejlesztési és tesztágak
 
@@ -179,6 +180,18 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 **Bizonyíték:** a felhasználó utasítása: „a debian szervert egyelőre hagyjuk későbbre … csináljuk meg átmenetileg a szervert ezen a gépen, tesztelni tudunk rajta, amíg be van kapcsolva”. Az „ezen a gépen” a projekt Windows fejlesztőgépére értendő, nem az itteni felhős futtatókörnyezetre.
 
 **Megvalósítás és korlát:** dev [cf191426810ded4ef4b362d56c35735165321cb4](https://github.com/borosdavid/borosCode/commit/cf191426810ded4ef4b362d56c35735165321cb4), 71 sikeres PowerShell assertion Linux/PS 7.5.13 alatt. A valódi Windows/DPAPI/CIM/MySQL, privát repo és innen adott status-válasz, valamint Tailscale/iPhone HTTPS még helyi aktiválást és próbát igényel. Nincs tesztági kiadás vagy élő szerverigazolás. [Részletes leírás](https://github.com/borosdavid/borosCode/blob/cf191426810ded4ef4b362d56c35735165321cb4/docs/windows-tesztszerver-01b.md).
+
+## D-012 – BorosCode domain és Cloudflare-elérés
+
+**Kérdés és döntés:** hogyan érhetők el a BorosCode fejlesztései saját domainen? A `boroscode.com` a nyilvános projektfőoldal, az `otthontar.boroscode.com` az Otthontár állandó, védett címe. A további önálló projektek saját aldomaint kaphatnak. Az Otthontárhoz Cloudflare Tunnel és Access a tervezett irány.
+
+**Indok:** az alkalmazások külön címen és hozzáférési feltételekkel működhetnek, és az Otthontár címe a háttérszerver cseréjekor is megőrizhető.
+
+**Alternatíva:** az Otthontár végleges elérése a privát Tailscale-címen. Ez marad az átmeneti iPhone-próba útvonala a D-011 szerint.
+
+**Következmény:** meg kell határozni az Access felhasználói körét, hozzá kell igazítani az alkalmazás HTTPS-beállítását, és ellenőrizni kell az iPhone-os belépést. A részleteket és az átállási feltételeket a [Cloudflare-roadmap](../roadmap/CLOUDFLARE-BOROSCODE-DOMAIN.md) tartalmazza.
+
+**Bizonyíték:** Dávid 2026-11-19-én jelezte a domain megvásárlását, és jóváhagyta a javasolt Cloudflare-tervet. A megvalósítás státusza Tervezett.
 
 ## Új döntés vagy módosítás
 

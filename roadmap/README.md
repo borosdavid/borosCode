@@ -74,6 +74,11 @@ A sorrend irányadó, nem végleges ütemterv. A részletes tervek önálló Mar
 - Docker Compose, Tailscale/SSH, monitoring, külső mentések és visszaállítási tesztek.
 - Részletes koncepció: [AI-FEJLESZTES-ES-SZERVERAUTOMATIZALAS.md](AI-FEJLESZTES-ES-SZERVERAUTOMATIZALAS.md)
 
+### 11. Saját domain és Cloudflare-elérés
+- A `boroscode.com` nyilvános projektfőoldal, az `otthontar.boroscode.com` a későbbi védett Otthontár-cím. Az önálló fejlesztések külön aldomaint kaphatnak.
+- A tervezett elérés Cloudflare Tunnel és Access. Az átmeneti iPhone-próba továbbra is a privát Tailscale-címen zajlik.
+- Részletes terv: [CLOUDFLARE-BOROSCODE-DOMAIN.md](CLOUDFLARE-BOROSCODE-DOMAIN.md)
+
 Az új pontok sorszáma nem kötött megvalósítási sorrend: a közös kezdőképernyő az önálló modulok belépési kerete lehet. Az új termékirány nem módosítja a jelenleg következő távoli hozzáférési feladatot: D-011 szerint átmenetileg a bekapcsolt Windows-gép a tesztszerver, a D-007 szerinti dedikált Debian későbbre kerül.
 
 ## Tervezési státuszok
@@ -88,7 +93,7 @@ A megvalósítás egységes sorrendje: **Tervezett → Fejlesztés alatt → Tes
 4. A megvalósítási sorrendet az egymásra épülő követelmények és a felhasználói prioritások határozzák meg.
 5. A hosszú távú elképzeléseket különválasztjuk az azonnal végrehajtható Codex-feladatoktól.
 
-Roadmap létrehozva: 2026-11-16. Legutóbbi bővítés: 2026-11-18 – dedikált Debian otthoni szerver részletes terve.
+Roadmap létrehozva: 2026-11-16. Legutóbbi bővítés: 2026-11-19 – BorosCode domain és Cloudflare-elérés.
 
 ## A tervek hiteles forrása: main
 

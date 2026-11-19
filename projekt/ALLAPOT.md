@@ -1,9 +1,10 @@
 # Projektállapot – Otthontár
 
-**Frissítve:** 2026-11-18. Ez a `main` ágon karbantartott állapotfelvétel, nem élő szervermonitor és nem a `main` kódjának funkciólistája.
+**Frissítve:** 2026-11-19. Ez a `main` ágon karbantartott állapotfelvétel, nem élő szervermonitor és nem a `main` kódjának funkciólistája.
 
 ## Most hol tartunk?
 
+- D-012: elfogadott terv a `boroscode.com` projektfőoldal és az `otthontar.boroscode.com` védett alkalmazáscím. Az átmeneti iPhone-próba a privát Tailscale-címet használja. [Cloudflare-terv](../roadmap/CLOUDFLARE-BOROSCODE-DOMAIN.md)
 - Elfogadott alkalmazáskövetelmény (D-008): felhasználónév/jelszó, azonos teljes alkalmazás-hozzáférés minden aktív fióknak. A belépés a dev ágon elkészült: [`815dcb2`](https://github.com/borosdavid/borosCode/commit/815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c); a valódi MySQL-integráció sikeres. A Windows/iPhone átadás hátravan.
 - D-011: a Debian telepítése későbbre kerül; átmenetileg a bekapcsolt Windows fejlesztőgép a tesztszerver. A 01B Windows-segédprogramok és privát GitHub-ügynök a dev ágon elkészültek ([cf19142](https://github.com/borosdavid/borosCode/commit/cf191426810ded4ef4b362d56c35735165321cb4)). A javított dev-verzió [`f3c2f74`](https://github.com/borosdavid/borosCode/commit/f3c2f742fd57b4633a226f880d74685984549d1c) 77 PowerShell-ellenőrzésen ment át. Élő Windows/Tailscale/vezérlési kapcsolat még nincs igazolva.
 

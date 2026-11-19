@@ -18,7 +18,7 @@ Egy régi, kizárólag Linuxszal használható laptopból állandóan üzemelő,
 - **Alaprendszer:** Debian 13, opcionális könnyű Xfce asztali felület; a grafikus környezet csak akkor szükséges, ha helyi grafikus ChatGPT/böngészős kezelés valóban hasznos és a hardver elbírja. Headless telepítés is vizsgálandó.
 - **Konténerplatform:** Docker Engine + Compose, megfontolt erőforráskorlátok, állapotellenőrzések, újraindítási szabályok és naplórotáció.
 - **Alkalmazások:** Java Spring Boot backend, külön képfeldolgozó szolgáltatás, MySQL; a kép- és adatbázistárolás tartós köteteken vagy megfelelő hostkönyvtárakban.
-- **Publikus szolgáltatás:** HTTPS reverse proxy (javaslat: Caddy), alkalmazásszintű hitelesítés és jogosultság; Cloudflare Tunnel megvizsgálandó portnyitás nélküli publikáláshoz, különösen CGNAT esetén. Domain, szolgáltatási feltételek, függőségek és alternatívák tisztázandók.
+- **Webes elérés:** az `otthontar.boroscode.com` címhez Cloudflare Tunnel és Access a tervezett irány az alkalmazásszintű hitelesítés mellett. A külön helyi reverse proxy (például Caddy) szükségessége a telepítés kialakításakor dől el. [Cloudflare-terv](CLOUDFLARE-BOROSCODE-DOMAIN.md)
 - **Privát adminisztráció:** Tailscale + SSH, kulcsalapú hitelesítés, minimális jogosultságok, közvetlen publikus SSH-, MySQL-, Docker- és adminportok nélkül.
 - **Fejlesztői környezet:** Git, GitHub, hivatalos Codex CLI; a hivatalos Linuxos ChatGPT alkalmazás tényleges elérhetőségét, terjesztési csatornáját és hardver/OS-támogatását telepítéskor ellenőrizni kell. A grafikus alkalmazás hiánya ne blokkolja a CLI-t.
 - **Mentés és felügyelet:** Restic vagy hasonló titkosított, verziózott külső mentés; rendszeres próbavisszaállítás; systemd, naplózás és későbbi monitoring/riasztás.
@@ -45,7 +45,7 @@ Egy régi, kizárólag Linuxszal használható laptopból állandóan üzemelő,
 2. **Debian telepítés és alapvédelem:** Debian 13, szükség esetén Xfce; külön normál felhasználó, frissítések, SSH-kulcsok/tűzfal; a fedél lecsukásakor alvás letiltása, áramkimaradás utáni indulás lehetőségének vizsgálata.
 3. **Codex és fejlesztői eszközök:** hivatalos telepítési út és kompatibilitás ellenőrzése; Git/GitHub hitelesítés, CLI működési próba, korlátozott jogosultságok.
 4. **Docker-alapok:** Compose telepítése, Spring Boot + imaging + MySQL stack, tartós kötetek, egészségellenőrzés, automatikus újraindítás; adatvesztést kizáró telepítési teszt.
-5. **Elérés és TLS:** Tailscale/SSH privát adminisztráció; Caddy és a kiválasztott publikus hozzáférési megoldás, valós külső HTTPS és alkalmazásbelépési teszt.
+5. **Elérés és TLS:** Tailscale/SSH privát adminisztráció; a tervezett Cloudflare Tunnel és Access beállítása, majd külső HTTPS és alkalmazásbelépési próba.
 6. **Üzemeltetés és mentés:** naplók/monitoring, tárhelyfigyelés, külső mentés; sikeres visszaállítási próba és áram-/hálózati kiesés utáni helyreállás ellenőrzése.
 7. **Verziózott telepítés:** GitHub `dev` fejlesztések, ellenőrzött build/CI, jóváhagyott deploy és visszagörgetés; csak felhasználói tesztre kész kód kerül a `teszt` ágra. A `roadmap/` és `prompts/` hiteles dokumentációja a `main` ágon marad.
 8. **Mobilos ChatGPT-vezérlés:** külön hitelesített kapcsolat; státusz/napló, majd ellenőrzött start/stop/restart és telepítési műveletek, élő végponttól kapott visszaigazolással.
@@ -58,7 +58,7 @@ Egy régi, kizárólag Linuxszal használható laptopból állandóan üzemelő,
 
 ## Nyitott döntések / elfogadási feltételek
 
-**Nyitott:** hardver megfelelősége; Xfce szükségessége; publikus domain/TLS/tunnel stratégia; külső mentési cél és retenció; CI/deploy mechanizmus; ChatGPT-Linux és Codex valóban támogatott telepítési útja; a mobilos ügynök pontos hitelesítése és jogosultságai.
+**Nyitott:** hardver megfelelősége; Xfce szükségessége; a saját domainhez tartozó hozzáférési szabályok és a helyi proxy kialakítása; külső mentési cél és retenció; CI/deploy mechanizmus; ChatGPT-Linux és Codex valóban támogatott telepítési útja; a mobilos ügynök pontos hitelesítése és jogosultságai.
 
 **A teljes terv akkor tekinthető késznek, ha** a backend, imaging és MySQL tartósan üzemel; HTTPS és hitelesítés működik távolról; adminisztráció privát; az automatikus indulás és kiesés utáni helyreállás próbált; a külső mentésből az adatbázis és képek visszaállíthatók; a telepítés jóváhagyott és visszagörgethető; a mobilos vezérlés valódi, auditált és korlátozott jogosultságú kapcsolaton bizonyított.
 
