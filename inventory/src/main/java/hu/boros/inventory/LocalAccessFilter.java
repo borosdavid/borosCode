@@ -23,17 +23,24 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class LocalAccessFilter extends OncePerRequestFilter {
   private final URI publicOrigin;
+  private final String proxyForwardedHost;
 
   public LocalAccessFilter() {
     this("", true, "127.0.0.1");
+  }
+
+  public LocalAccessFilter(String origin, boolean secureCookie, String bind) {
+    this(origin, secureCookie, bind, "");
   }
 
   @Autowired
   public LocalAccessFilter(
       @Value("${app.security.public-origin:}") String origin,
       @Value("${server.servlet.session.cookie.secure:true}") boolean secureCookie,
-      @Value("${server.address:127.0.0.1}") String bind) {
+      @Value("${server.address:127.0.0.1}") String bind,
+      @Value("${app.security.proxy-forwarded-host:}") String proxyForwardedHost) {
     publicOrigin = origin.isBlank() ? null : URI.create(origin);
+    this.proxyForwardedHost = proxyForwardedHost;
     if (publicOrigin != null
         && (!"https".equals(publicOrigin.getScheme())
             || publicOrigin.getHost() == null
@@ -46,6 +53,12 @@ public class LocalAccessFilter extends OncePerRequestFilter {
             || !Set.of("localhost", "127.0.0.1", "::1").contains(bind)))
       throw new IllegalArgumentException(
           "Public origin requires HTTPS, secure cookies and loopback binding.");
+    if (!proxyForwardedHost.isEmpty()
+        && (publicOrigin == null
+            || !proxyForwardedHost.equalsIgnoreCase(
+                URI.create("https://" + proxyForwardedHost).getHost())))
+      throw new IllegalArgumentException(
+          "Proxy forwarded host requires a hostname and a configured public origin.");
   }
 
   static String applicationPath(HttpServletRequest request) {
@@ -80,6 +93,7 @@ public class LocalAccessFilter extends OncePerRequestFilter {
     boolean local = Set.of("localhost", "127.0.0.1", "[::1]", "::1").contains(host);
     boolean loopback =
         Set.of("127.0.0.1", "::1", "0:0:0:0:0:0:0:1").contains(request.getRemoteAddr());
+    String forwardedHost = request.getHeader("X-Forwarded-Host");
     boolean trustedProxy =
         publicOrigin != null
             && publicOrigin.getHost().equalsIgnoreCase(host)
@@ -87,8 +101,10 @@ public class LocalAccessFilter extends OncePerRequestFilter {
             && request.getHeader("Forwarded") == null
             && (request.getHeader("X-Forwarded-Proto") == null
                 || "https".equals(request.getHeader("X-Forwarded-Proto")))
-            && (request.getHeader("X-Forwarded-Host") == null
-                || publicOrigin.getHost().equalsIgnoreCase(request.getHeader("X-Forwarded-Host")))
+            && (forwardedHost == null
+                || publicOrigin.getHost().equalsIgnoreCase(forwardedHost)
+                || (!proxyForwardedHost.isEmpty()
+                    && proxyForwardedHost.equalsIgnoreCase(forwardedHost)))
             && (request.getHeader("Host").equalsIgnoreCase(publicOrigin.getHost())
                 || request.getHeader("Host").equalsIgnoreCase(publicOrigin.getHost() + ":443"));
     if ((!trustedProxy && (forwarded || !local))

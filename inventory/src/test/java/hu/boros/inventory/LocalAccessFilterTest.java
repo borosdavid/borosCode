@@ -162,6 +162,36 @@ class LocalAccessFilterTest {
   }
 
   @Test
+  void allowsOnlyTheExplicitProxyForwardedHostAlongsideThePublicHost() throws Exception {
+    var origin = "https://boroscode.com";
+    var forwardedHost = "otthontar-origin.boroscode.com";
+    var filter = new LocalAccessFilter(origin, true, "127.0.0.1", forwardedHost);
+    var headers =
+        Map.of(
+            "Host",
+            "boroscode.com",
+            "X-Forwarded-Host",
+            forwardedHost,
+            "X-Forwarded-Proto",
+            "https");
+    var path = "/otthontar/login";
+    assertTrue(request(filter, "GET", path, headers).allowed());
+    assertEquals(
+        403,
+        request(new LocalAccessFilter(origin, true, "127.0.0.1"), "GET", path, headers).status());
+
+    var mismatched = new HashMap<>(headers);
+    mismatched.put("X-Forwarded-Host", forwardedHost + ".example");
+    assertEquals(403, request(filter, "GET", path, mismatched).status());
+    mismatched.put("X-Forwarded-Host", forwardedHost);
+    mismatched.put("Host", forwardedHost);
+    assertEquals(403, request(filter, "GET", path, mismatched).status());
+    mismatched.put("Host", "boroscode.com");
+    mismatched.put("Peer", "192.168.0.2");
+    assertEquals(403, request(filter, "GET", path, mismatched).status());
+  }
+
+  @Test
   void publicOriginFailsClosedForUnsafeConfiguration() {
     for (String origin :
         List.of(
@@ -177,5 +207,12 @@ class LocalAccessFilterTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new LocalAccessFilter("https://home.ts.net", true, "0.0.0.0"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new LocalAccessFilter("", true, "127.0.0.1", "origin.example"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new LocalAccessFilter("https://home.ts.net", true, "127.0.0.1", "origin.example:443"));
   }
 }
