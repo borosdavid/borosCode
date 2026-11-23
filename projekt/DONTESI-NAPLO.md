@@ -183,6 +183,8 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 
 ## D-012 – BorosCode domain és Cloudflare-elérés
 
+**Későbbi módosítás:** az Otthontár felhasználói címét és a belépési folyamatot a [D-013](#d-013--otthontár-a-boroscode-főoldal-alatt) pontosítja.
+
 **Kérdés és döntés:** hogyan érhetők el a BorosCode fejlesztései saját domainen? A `boroscode.com` a nyilvános projektfőoldal, az `otthontar.boroscode.com` az Otthontár állandó, védett címe. A további önálló projektek saját aldomaint kaphatnak. Az Otthontárhoz Cloudflare Tunnel és Access a tervezett irány.
 
 **Indok:** az alkalmazások külön címen és hozzáférési feltételekkel működhetnek, és az Otthontár címe a háttérszerver cseréjekor is megőrizhető.
@@ -192,6 +194,16 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 **Következmény:** meg kell határozni az Access felhasználói körét, hozzá kell igazítani az alkalmazás HTTPS-beállítását, és ellenőrizni kell az iPhone-os belépést. A részleteket és az átállási feltételeket a [Cloudflare-roadmap](../roadmap/CLOUDFLARE-BOROSCODE-DOMAIN.md) tartalmazza.
 
 **Bizonyíték:** Dávid 2026-11-19-én jelezte a domain megvásárlását, és jóváhagyta a javasolt Cloudflare-tervet. A megvalósítás státusza Tervezett.
+
+## D-013 – Otthontár a BorosCode főoldal alatt
+
+**Döntési állapot:** Elfogadott, 2026-11-23. A felhasználó a jelszóval védett aloldal megvalósítását és ingyenes Cloudflare-csomagot kért.
+
+**Döntés:** a felhasználói cím `https://boroscode.com/otthontar/`. A weboldal Workere ezt az útvonalat továbbítja az Otthontár szerverére. A tunnel külön háttérhostját Cloudflare Access Service Auth védi. A látogató az Otthontár saját fiókjával lép be.
+
+**Indok és alternatíva:** a címsorban a BorosCode fődomain marad, és használható a meglévő alkalmazásbelépés. A D-012 korábbi, közvetlen aldomaines terve egyszerűbb proxybeállítás lenne. A választott megoldásban a főoldal és az Otthontár ugyanazon a böngészős originen van, ezért az alkalmazás munkamenete és PWA-hatálya az aloldal útvonalához igazodik.
+
+**Következmény:** a Worker, a Tunnel és az Access az ingyenes csomag korlátai között működik. A Windows-szerver, a Cloudflare-beállítás és az éles belépési próba biztosítja a tényleges elérést. [Megvalósítás és ellenőrzések](../roadmap/CLOUDFLARE-BOROSCODE-DOMAIN.md).
 
 ## Új döntés vagy módosítás
 

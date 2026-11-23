@@ -75,8 +75,8 @@ A sorrend irányadó, nem végleges ütemterv. A részletes tervek önálló Mar
 - Részletes koncepció: [AI-FEJLESZTES-ES-SZERVERAUTOMATIZALAS.md](AI-FEJLESZTES-ES-SZERVERAUTOMATIZALAS.md)
 
 ### 11. Saját domain és Cloudflare-elérés
-- A `boroscode.com` nyilvános projektfőoldal, az `otthontar.boroscode.com` a későbbi védett Otthontár-cím. Az önálló fejlesztések külön aldomaint kaphatnak.
-- A tervezett elérés Cloudflare Tunnel és Access. Az átmeneti iPhone-próba továbbra is a privát Tailscale-címen zajlik.
+- A `boroscode.com` nyilvános projektfőoldal, az `boroscode.com/otthontar/` a későbbi védett Otthontár-cím. Az önálló fejlesztések külön aldomaint kaphatnak.
+- A kód elkészült, az éles Cloudflare Tunnel és Access aktiválása, valamint az iPhone-próba hátravan.
 - Részletes terv: [CLOUDFLARE-BOROSCODE-DOMAIN.md](CLOUDFLARE-BOROSCODE-DOMAIN.md)
 
 Az új pontok sorszáma nem kötött megvalósítási sorrend: a közös kezdőképernyő az önálló modulok belépési kerete lehet. Az új termékirány nem módosítja a jelenleg következő távoli hozzáférési feladatot: D-011 szerint átmenetileg a bekapcsolt Windows-gép a tesztszerver, a D-007 szerinti dedikált Debian későbbre kerül.
@@ -93,7 +93,7 @@ A megvalósítás egységes sorrendje: **Tervezett → Fejlesztés alatt → Tes
 4. A megvalósítási sorrendet az egymásra épülő követelmények és a felhasználói prioritások határozzák meg.
 5. A hosszú távú elképzeléseket különválasztjuk az azonnal végrehajtható Codex-feladatoktól.
 
-Roadmap létrehozva: 2026-11-16. Legutóbbi bővítés: 2026-11-19 – BorosCode domain és Cloudflare-elérés.
+Roadmap létrehozva: 2026-11-16. Legutóbbi frissítés: 2026-11-23 – Otthontár a BorosCode főoldal alatt.
 
 ## A tervek hiteles forrása: main
 
