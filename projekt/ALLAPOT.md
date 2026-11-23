@@ -4,7 +4,7 @@
 
 ## Most hol tartunk?
 
-- D-013: az Otthontár `boroscode.com/otthontar/` útvonala és a főoldali belépés kódja elkészült. A védett Cloudflare Tunnel, a Worker titkai és a Windows/iPhone éles próba hátravan. [Cloudflare-terv](../roadmap/CLOUDFLARE-BOROSCODE-DOMAIN.md)
+- D-013: az Ubuntu-példány `boroscode.com/otthontar/` címe a Cloudflare Tunnelen keresztül megnyitja az Otthontár belépőoldalát. A háttérhost token nélkül elutasítja a kérést. A saját fiókos belépés, a fotófeltöltés és az iPhone-próba hátravan. [Cloudflare-terv](../roadmap/CLOUDFLARE-BOROSCODE-DOMAIN.md)
 - Elfogadott alkalmazáskövetelmény (D-008): felhasználónév/jelszó, azonos teljes alkalmazás-hozzáférés minden aktív fióknak. A belépés a dev ágon elkészült: [`815dcb2`](https://github.com/borosdavid/borosCode/commit/815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c); a valódi MySQL-integráció sikeres. A Windows/iPhone átadás hátravan.
 - D-011: a Debian telepítése későbbre kerül; átmenetileg a bekapcsolt Windows fejlesztőgép a tesztszerver. A 01B Windows-segédprogramok és privát GitHub-ügynök a dev ágon elkészültek ([cf19142](https://github.com/borosdavid/borosCode/commit/cf191426810ded4ef4b362d56c35735165321cb4)). A javított dev-verzió [`f3c2f74`](https://github.com/borosdavid/borosCode/commit/f3c2f742fd57b4633a226f880d74685984549d1c) 77 PowerShell-ellenőrzésen ment át. Élő Windows/Tailscale/vezérlési kapcsolat még nincs igazolva.
 
