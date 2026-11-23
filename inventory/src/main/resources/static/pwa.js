@@ -19,7 +19,7 @@
     install.textContent = 'iPhone Safari: Megosztás → Hozzáadás a Főképernyőhöz. Telefonon előbb beállított, megbízható HTTPS-elérés szükséges.';
     window.addEventListener('load', async () => {
         try {
-            const registration = await navigator.serviceWorker.register('/sw.js', {scope: '/leltar', updateViaCache: 'none'});
+            const registration = await navigator.serviceWorker.register(AccountAuth.url('sw.js'), {scope: AccountAuth.url('leltar'), updateViaCache: 'none'});
             const waiting = () => {
                 if (registration.waiting) {
                     note.hidden = false;

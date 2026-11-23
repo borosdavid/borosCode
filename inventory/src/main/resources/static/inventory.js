@@ -1,7 +1,8 @@
 'use strict';
 const content = document.querySelector('#content');
 const message = document.querySelector('#message');
-const page = location.pathname.split('/')[2] || 'targyak';
+const appUrl = AccountAuth.url;
+const page = location.pathname.slice(appUrl('leltar/').length) || 'targyak';
 const moving = page === 'koltoztetes';
 const sale = page === 'eladas', trash = page === 'lomtar';
 const statuses = {KEEP:'Megtartjuk', WAIT:'Meghirdetésre vár', LISTED:'Meghirdetve', SOLD:'Elkelt'};
@@ -13,7 +14,7 @@ async function api(path, options) {
     const authHeaders = writing ? await AccountAuth.writeHeaders() : {};
     let res, raw;
     try {
-        res=await fetch('/api/'+path, {...options, cache:'no-store', headers:{...options?.headers, ...authHeaders, 'X-Otthontar-Request':'1'}});
+        res=await fetch(appUrl('api/'+path), {...options, cache:'no-store', headers:{...options?.headers, ...authHeaders, 'X-Otthontar-Request':'1'}});
         raw=await res.text();
     } catch (error) {
         error.outcomeUnknown = writing;
@@ -119,13 +120,13 @@ async function list(selectedPlace='') {
     const rows=await api('items?trash='+trash);
     const sourceQuery=(sale||moving)?'?from='+page:'';
     const title=moving?'Költöztetés':trash?'Lomtár':sale?'Eladás':'Tárgyak';
-    content.innerHTML='<div class="heading"><h1>'+title+'</h1>'+(trash||moving?'':'<a class="button" href="'+(places.length?'/leltar/uj'+sourceQuery:'/leltar/beallitasok')+'">'+(places.length?'Új tárgy':'Első helyszín felvétele')+'</a>')+'</div><div class="bar"><label>Helyszín<select id="locationFilter"><option value="">Minden helyszín</option>'+options()+'</select></label>'+(!sale&&!trash&&!moving?'<label><span><input type="checkbox" id="saleFilter"> Csak eladó tárgyak</span></label>':'')+'</div><div class="cards"></div>';
+    content.innerHTML='<div class="heading"><h1>'+title+'</h1>'+(trash||moving?'':'<a class="button" href="'+(places.length?appUrl('leltar/uj')+sourceQuery:appUrl('leltar/beallitasok'))+'">'+(places.length?'Új tárgy':'Első helyszín felvétele')+'</a>')+'</div><div class="bar"><label>Helyszín<select id="locationFilter"><option value="">Minden helyszín</option>'+options()+'</select></label>'+(!sale&&!trash&&!moving?'<label><span><input type="checkbox" id="saleFilter"> Csak eladó tárgyak</span></label>':'')+'</div><div class="cards"></div>';
     const filter=content.querySelector('#locationFilter');
     filter.value=selectedPlace;
     const draw=()=>{
         const cards=content.querySelector('.cards');
         const visible=rows.filter(r=>(!moving || actions.some(a=>a.id===r.action_id && a.kind==='MOVE')) && (!filter.value||r.location_id===filter.value)&&(!(sale||document.querySelector('#saleFilter')?.checked)||r.status!=='KEEP'));
-        cards.innerHTML=visible.map(r=>'<article class="card '+(r.status==='SOLD'?'sold':'')+'">'+(r.cover?'<img alt="" src="/api/photos/'+esc(r.cover)+'/small">':'')+'<span class="tag">'+esc(moving ? actions.find(a=>a.id===r.action_id)?.name : actionLabel(r))+'</span><h2>'+esc(r.name)+'</h2><p>'+esc(r.place)+(moving?' → '+esc(places.find(p=>p.id===r.destination_id)?.name):'')+'</p>'+(sale&&r.status!=='SOLD'?'<button class="primary" data-action="sold">Eladva</button> ':'')+(trash?'<button data-action="restore">Visszaállítás</button> <button data-action="purge">Végleges törlés</button>':'<a href="/leltar/'+esc(r.id)+sourceQuery+'">Adatlap</a> '+(moving?'<button class="primary" data-action="move">Költöztetés végrehajtása</button>':'<button data-action="trash">Lomtárba</button>'))+'</article>').join('');
+        cards.innerHTML=visible.map(r=>'<article class="card '+(r.status==='SOLD'?'sold':'')+'">'+(r.cover?'<img alt="" src="'+appUrl('api/photos/')+esc(r.cover)+'/small">':'')+'<span class="tag">'+esc(moving ? actions.find(a=>a.id===r.action_id)?.name : actionLabel(r))+'</span><h2>'+esc(r.name)+'</h2><p>'+esc(r.place)+(moving?' → '+esc(places.find(p=>p.id===r.destination_id)?.name):'')+'</p>'+(sale&&r.status!=='SOLD'?'<button class="primary" data-action="sold">Eladva</button> ':'')+(trash?'<button data-action="restore">Visszaállítás</button> <button data-action="purge">Végleges törlés</button>':'<a href="'+appUrl('leltar/')+esc(r.id)+sourceQuery+'">Adatlap</a> '+(moving?'<button class="primary" data-action="move">Költöztetés végrehajtása</button>':'<button data-action="trash">Lomtárba</button>'))+'</article>').join('');
         if(!visible.length) cards.innerHTML='<p class="empty">'+(moving?'Nincs költöztetésre kijelölt tárgy ezen a listán.':trash?'A Lomtár üres.':'Nincs megjeleníthető tárgy.')+'</p>';
         [...cards.querySelectorAll('article')].forEach((card,i)=>{
             for(const b of card.querySelectorAll('button')) b.onclick=async()=>{
@@ -150,7 +151,7 @@ function editor(item) {
     content.replaceChildren(document.querySelector('#editor').content.cloneNode(true));
     const form=content.querySelector('form'), fields=form.elements;
     const source=new URLSearchParams(location.search).get('from');
-    const returnPath=['koltoztetes','eladas'].includes(source)?'/leltar/'+source:'/leltar';
+    const returnPath=['koltoztetes','eladas'].includes(source)?appUrl('leltar/'+source):appUrl('leltar');
     const id=item.id || crypto.randomUUID();
     let version=item.version||0, photos=item.photos||[], pending=[], cover=item.cover||'', baseline;
     const keys=['actionId','destination','name','description','location','status','asking','link','actual','soldDate'];
@@ -173,12 +174,12 @@ function editor(item) {
         form.querySelectorAll('[data-sold]').forEach(el=>el.hidden=kind!=='SALE'||fields.status.value!=='SOLD');
     }
     function gallery(){
-        const rows=[...photos.map(p=>({key:p.id,label:p.filename,src:'/api/photos/'+p.id+'/small'})),...pending];
+        const rows=[...photos.map(p=>({key:p.id,label:p.filename,src:appUrl('api/photos/'+p.id+'/small')})),...pending];
         if(!rows.some(r=>r.key===cover)) cover=rows[0]?.key||'';
         const host=form.querySelector('#gallery');host.replaceChildren();
         for(const r of rows){
             const figure=document.createElement('figure');
-            figure.innerHTML=(r.original?'':'<a target="_blank" rel="noopener" href="/api/photos/'+esc(r.key)+'/original">')+'<img alt="'+esc(r.label)+'" src="'+esc(r.src)+'">'+(r.original?'':'</a>')+'<figcaption>'+esc(r.label)+'</figcaption><button type="button" class="cover">'+(r.key===cover?'Borítókép':'Legyen borítókép')+'</button>'+(r.original?' <button class="remove" type="button">Kivétel</button>':'');
+            figure.innerHTML=(r.original?'':'<a target="_blank" rel="noopener" href="'+appUrl('api/photos/')+esc(r.key)+'/original">')+'<img alt="'+esc(r.label)+'" src="'+esc(r.src)+'">'+(r.original?'':'</a>')+'<figcaption>'+esc(r.label)+'</figcaption><button type="button" class="cover">'+(r.key===cover?'Borítókép':'Legyen borítókép')+'</button>'+(r.original?' <button class="remove" type="button">Kivétel</button>':'');
             if(r.error){const error=document.createElement('p');error.setAttribute('role','alert');error.textContent=r.error;figure.append(error);figure.querySelector('.cover').disabled=true;}
             figure.querySelector('.cover').onclick=()=>{cover=r.key;gallery();};
             if(r.original) figure.querySelector('.remove').onclick=()=>{pending=pending.filter(p=>p!==r);URL.revokeObjectURL(r.src);gallery();};

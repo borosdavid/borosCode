@@ -1,6 +1,8 @@
 'use strict';
 window.AccountAuth = (() => {
     // Never persist a password or session credential in localStorage/IndexedDB.
+    const appRoot = document.body.dataset.appRoot || '/';
+    const url = path => appRoot + path;
     let account = null;
     const dialog = document.createElement('dialog');
     dialog.setAttribute('aria-labelledby', 'reauth-title');
@@ -23,7 +25,7 @@ window.AccountAuth = (() => {
         if (!dialog.open) dialog.showModal();
     }
     async function session() {
-        const response = await fetch('/api/session', {cache:'no-store', credentials:'same-origin'});
+        const response = await fetch(url('api/session'), {cache:'no-store', credentials:'same-origin'});
         if (response.status === 401) expired();
         if (!response.ok) throw new Error('Jelentkezz be újra. A nyitott piszkozat megmarad.');
         return response.json();
@@ -48,10 +50,10 @@ window.AccountAuth = (() => {
         const button = form.querySelector('button');
         button.disabled = true;
         try {
-            const tokenResponse = await fetch('/auth/csrf', {cache:'no-store', credentials:'same-origin'});
+            const tokenResponse = await fetch(url('auth/csrf'), {cache:'no-store', credentials:'same-origin'});
             if (!tokenResponse.ok) throw new Error('A bejelentkezés most nem érhető el.');
             const csrf = await tokenResponse.json();
-            const response = await fetch('/login', {method:'POST', credentials:'same-origin', cache:'no-store',
+            const response = await fetch(url('login'), {method:'POST', credentials:'same-origin', cache:'no-store',
                 headers:{'Accept':'application/json', [csrf.headerName]:csrf.token},
                 body:new URLSearchParams({username:form.elements.username.value, password:form.elements.password.value})});
             if (!response.ok) throw new Error('Sikertelen bejelentkezés. Ellenőrizd az adatokat, vagy várj a próbálkozási korlát feloldásáig.');
@@ -61,5 +63,5 @@ window.AccountAuth = (() => {
         } catch (failure) { error.textContent = failure.message; }
         finally { form.elements.password.value = ''; button.disabled = false; }
     };
-    return {init, writeHeaders, expired};
+    return {init, writeHeaders, expired, url};
 })();

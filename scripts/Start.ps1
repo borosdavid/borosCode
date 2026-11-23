@@ -11,6 +11,7 @@ $env:WEB_PORT=if($TestRun){'18740'}else{'8740'}
 $env:IMAGE_PORT=if($TestRun){'18741'}else{'8741'}
 $env:DB_PORT=if($TestRun){'43316'}else{'33316'}
 $url='http://127.0.0.1:'+$env:WEB_PORT
+$inventoryUrl=$url+$env:APP_CONTEXT_PATH
 $env:IMAGING_URL='http://127.0.0.1:'+$env:IMAGE_PORT
 $env:PHOTO_DIR=Join-Path $state 'photos'
 if(!$env:PUBLIC_ORIGIN -and !$env:SESSION_COOKIE_SECURE){$env:SESSION_COOKIE_SECURE='false'}
@@ -56,7 +57,7 @@ if($Stop){
     }
     return
 }
-if(!(Healthy $url)){
+if(!(Healthy $inventoryUrl)){
     if(!(Test-Path $modeFile) -and !$Native -and (Get-Command docker -ErrorAction SilentlyContinue)){
         docker info --format '{{.ServerVersion}}' 2>$null | Out-Null
         if($LASTEXITCODE -eq 0){docker compose version | Out-Null;if($LASTEXITCODE -eq 0){$mode='docker'}}
@@ -110,7 +111,8 @@ if(!(Healthy $url)){
             if($service -eq 'imaging'){WaitFor $env:IMAGING_URL}
         }
     }
-    WaitFor $url
+    WaitFor $inventoryUrl
 }
-Write-Host "Az Otthontár elindult: $url/leltar"
-if(!$NoBrowser){Start-Process "$url/leltar"}
+$browserUrl=if($env:PUBLIC_ORIGIN){$env:PUBLIC_ORIGIN.TrimEnd('/')+$env:APP_CONTEXT_PATH}else{$inventoryUrl}
+Write-Host "Az Otthontár elindult: $browserUrl/leltar"
+if(!$NoBrowser){Start-Process "$browserUrl/leltar"}

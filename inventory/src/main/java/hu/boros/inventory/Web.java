@@ -2,24 +2,39 @@ package hu.boros.inventory;
 
 import java.nio.file.*;
 import java.util.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.dao.*;
 import org.springframework.http.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 @Controller
 class Pages {
+  private final long uploadLimitMiB;
+
+  Pages(@Value("${spring.servlet.multipart.max-request-size:200MB}") DataSize uploadLimit) {
+    uploadLimitMiB = uploadLimit.toMegabytes();
+  }
+
   @GetMapping("/")
   String home() {
     return "redirect:/leltar";
   }
 
+  @GetMapping("/offline.html")
+  String offline() {
+    return "offline";
+  }
+
   @GetMapping({"/leltar", "/leltar/{page}"})
-  String inventory() {
+  String inventory(Model model) {
+    model.addAttribute("uploadLimitMiB", uploadLimitMiB);
     return "inventory/index";
   }
 }

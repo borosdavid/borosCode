@@ -34,6 +34,7 @@ class LocalAccessFilterTest {
                     switch (call.getName()) {
                       case "getMethod" -> method;
                       case "getRequestURI" -> path;
+                      case "getContextPath" -> path.startsWith("/otthontar/") ? "/otthontar" : "";
                       case "getScheme" -> "http";
                       case "getRemoteAddr" -> headers.getOrDefault("Peer", "127.0.0.1");
                       case "getServerName" -> headers.get("Host").split(":")[0];
@@ -63,6 +64,18 @@ class LocalAccessFilterTest {
     assertTrue(result.allowed());
     assertEquals("no-store", result.headers().get("Cache-Control"));
     assertEquals("DENY", result.headers().get("X-Frame-Options"));
+  }
+
+  @Test
+  void enforcesCacheAndWritePoliciesWithAContextPath() throws Exception {
+    var get = request("GET", "/otthontar/api/photos/id/original", Map.of());
+    assertEquals("no-store", get.headers().get("Cache-Control"));
+    assertEquals(403, request("POST", "/otthontar/api/items", Map.of()).status());
+    var filter = new LocalAccessFilter("https://boroscode.com", true, "127.0.0.1");
+    assertEquals(
+        403,
+        request(filter, "GET", "/otthontar/actuator/health", Map.of("Host", "boroscode.com"))
+            .status());
   }
 
   @Test

@@ -130,7 +130,7 @@ def login(client, origin, username, password):
 
 @contextmanager
 def service(jar, port, directory, env):
-    origin = f"http://127.0.0.1:{port}"
+    origin = f"http://127.0.0.1:{port}" + env.get("APP_CONTEXT_PATH", "")
     with tempfile.TemporaryFile() as log, child(
         [JAVA, "-Xmx256m", "-Djava.awt.headless=true", "-jar", str(jar), f"--server.port={port}"],
         cwd=directory, env=env, stdout=log, stderr=subprocess.STDOUT,
@@ -210,10 +210,21 @@ def main():
         with service(IMAGING, free_port(), directory, env) as imaging:
             web_env = {**env, "IMAGING_URL": imaging, "PHOTO_DIR": str(Path(directory) / "photos")}
             port = free_port()
+            context_path = os.environ.get("OTTHONTAR_SMOKE_CONTEXT_PATH", "")
+            web_env.update(APP_CONTEXT_PATH=context_path, APP_UPLOAD_MAX_REQUEST_SIZE="90MB")
             with service(INVENTORY, port, directory, web_env) as origin:
                 client = build_opener(ProxyHandler({}), HTTPCookieProcessor(CookieJar()))
                 request(client, origin, "/api/items", expected=401)
+                login_page = request(client, origin, "/leltar").decode()
+                check(f'action="{context_path}/login"' in login_page, "The login form left the app path.")
                 headers = login(client, origin, username, password)
+                inventory_page = request(client, origin, "/leltar/beallitasok").decode()
+                check(f'data-app-root="{context_path}/"' in inventory_page, "Wrong client URL base.")
+                check('data-upload-limit-mib="90"' in inventory_page, "Wrong upload limit.")
+                check(f'href="{context_path}/leltar"' in request(client, origin, "/offline.html").decode(),
+                      "The offline page left the app path.")
+                manifest = json.loads(request(client, origin, "/manifest.webmanifest"))
+                check(manifest["start_url"] == "./leltar", "The manifest start URL left the app path.")
                 item_id, photo_id = save_fixture(client, origin, headers)
                 check(request(client, origin, f"/api/photos/{photo_id}/small").startswith(b"\xff\xd8"),
                       "Imaging did not produce a JPEG preview.")

@@ -2,7 +2,8 @@
 'use strict';
 window.OtthontarPhotos = (() => {
     const MAX_FILE = 20 * 1024 * 1024;
-    const MAX_REQUEST = 200 * 1024 * 1024;
+    const requestLimitMiB = Number(document.body.dataset.uploadLimitMib || 200);
+    const MAX_REQUEST = requestLimitMiB * 1024 * 1024;
     async function prepare(original) {
         if (!original.size || original.size > MAX_FILE) throw Error('A fotó legfeljebb 20 MiB lehet. Az eredeti fájl megmarad; válassz kisebb képet.');
         const bytes = new Uint8Array(await original.arrayBuffer());
@@ -29,7 +30,7 @@ window.OtthontarPhotos = (() => {
     function validateTotal(files, draftBytes = 0) {
         // Leave room for multipart field headers and boundaries, not only photo bytes.
         if (files.reduce((sum,file)=>sum+file.size, draftBytes) + 1024 * (files.length+2) > MAX_REQUEST)
-            throw Error('A mentés legfeljebb 200 MiB lehet a teljes űrlappal együtt. Vegyél ki néhány képet; a piszkozat megmarad.');
+            throw Error(`A mentés legfeljebb ${requestLimitMiB} MiB lehet a teljes űrlappal együtt. Vegyél ki néhány képet; a piszkozat megmarad.`);
     }
     return {prepare,validateTotal};
 })();

@@ -27,7 +27,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @EnableWebSecurity
 public class AccountSecurity {
   static boolean api(HttpServletRequest request) {
-    return request.getRequestURI().equals("/api") || request.getRequestURI().startsWith("/api/");
+    String path = LocalAccessFilter.applicationPath(request);
+    return path.equals("/api") || path.startsWith("/api/");
   }
 
   static void unauthorized(HttpServletResponse response) throws IOException {
@@ -77,13 +78,13 @@ public class AccountSecurity {
                         (request, response, authentication) -> {
                           if (Objects.toString(request.getHeader("Accept"), "")
                               .contains("application/json")) response.setStatus(204);
-                          else response.sendRedirect("/leltar");
+                          else response.sendRedirect(request.getContextPath() + "/leltar");
                         })
                     .failureHandler(
                         (request, response, exception) -> {
                           if (Objects.toString(request.getHeader("Accept"), "")
                               .contains("application/json")) unauthorized(response);
-                          else response.sendRedirect("/login?error");
+                          else response.sendRedirect(request.getContextPath() + "/login?error");
                         })
                     .permitAll())
         .logout(logout -> logout.logoutSuccessUrl("/login?logout").deleteCookies("JSESSIONID"))
@@ -95,7 +96,7 @@ public class AccountSecurity {
                     .authenticationEntryPoint(
                         (request, response, exception) -> {
                           if (api(request)) unauthorized(response);
-                          else response.sendRedirect("/login");
+                          else response.sendRedirect(request.getContextPath() + "/login");
                         })
                     .accessDeniedHandler(
                         (request, response, exception) -> {

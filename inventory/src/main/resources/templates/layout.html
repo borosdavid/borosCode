@@ -1,3 +1,3 @@
 <!doctype html><html lang="hu" xmlns:th="http://www.thymeleaf.org"><body>
-<header th:fragment="header"><a class="brand" href="/leltar"><span class="mark">⌂</span> Otthontár</a><nav aria-label="Modulok"><a href="/leltar">Költözési leltár</a><form th:action="@{/logout}" method="post" id="logout-form"><button>Kijelentkezés</button></form></nav></header>
+<header th:fragment="header"><a class="brand" th:href="@{/leltar}"><span class="mark">⌂</span> Otthontár</a><nav aria-label="Modulok"><a th:href="@{/leltar}">Költözési leltár</a><form th:action="@{/logout}" method="post" id="logout-form"><button>Kijelentkezés</button></form></nav></header>
 </body></html>

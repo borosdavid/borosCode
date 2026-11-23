@@ -48,6 +48,10 @@ public class LocalAccessFilter extends OncePerRequestFilter {
           "Public origin requires HTTPS, secure cookies and loopback binding.");
   }
 
+  static String applicationPath(HttpServletRequest request) {
+    return request.getRequestURI().substring(request.getContextPath().length());
+  }
+
   @Override
   protected void doFilterInternal(
       HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -56,8 +60,9 @@ public class LocalAccessFilter extends OncePerRequestFilter {
     response.setHeader("Referrer-Policy", "same-origin");
     response.setHeader("X-Frame-Options", "DENY");
     response.setHeader("Content-Security-Policy", "frame-ancestors 'none'");
-    String path = request.getRequestURI();
-    if (path.startsWith("/api/")
+    String path = applicationPath(request);
+    if (path.equals("/api")
+        || path.startsWith("/api/")
         || path.startsWith("/leltar")
         || path.startsWith("/auth/")
         || path.equals("/login")
