@@ -69,4 +69,24 @@ mapfile -t after < <(find "$tmp/backups" -maxdepth 1 -type f -name 'otthontar-*.
 if bash "$repo/scripts/Backup-Ubuntu.sh" --check "$tmp/does-not-exist"; then
   echo "Missing config should fail" >&2; exit 1
 fi
-printf 'Fixture tests OK: normal snapshot, checksum, failed dump recovery, config rejection.\n'
+
+: > "$MOCK_LOG"
+if MOCK_AGE_FAIL=1 bash "$repo/scripts/Backup-Ubuntu.sh" --run "$tmp/backup.conf"; then
+  echo "Failed encryption should fail backup" >&2; exit 1
+fi
+grep -q 'start otthontar-inventory.service' "$MOCK_LOG"
+mapfile -t after < <(find "$tmp/backups" -maxdepth 1 -type f -name 'otthontar-*.tar.age')
+[[ "${#after[@]}" -eq 1 ]] || { echo "Failed encryption altered archive count" >&2; exit 1; }
+
+exec 7>"$tmp/backups/.backup.lock"
+flock -n 7
+if bash "$repo/scripts/Backup-Ubuntu.sh" --run "$tmp/backup.conf"; then
+  echo "Concurrent backup should be rejected" >&2; exit 1
+fi
+exec 7>&-
+
+printf 'not-an-archive' > "$tmp/corrupt.tar.age"
+if bash "$repo/scripts/Verify-Backup-Ubuntu.sh" "$tmp/corrupt.tar.age" "$tmp/identity"; then
+  echo "Corrupt archive should be rejected" >&2; exit 1
+fi
+printf 'Fixture tests OK: snapshot, checksum, dump/encryption failure, lock, corruption, config validation.\\n'
