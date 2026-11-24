@@ -64,6 +64,8 @@ A sorrend irányadó, nem végleges ütemterv. A részletes tervek önálló Mar
 - Részletes terv: [SNAKE.md](SNAKE.md)
 
 ### 9. Dedikált Debian otthoni szerver – hardverfelmérés után
+
+**Jövőbeli, opcionális architektúraterv.** A dokumentált jelenlegi alkalmazáspéldány Ubuntu alatt, natív szolgáltatásokkal működik a Cloudflare Tunnel mögött. A Debian 13/Xfce és a Docker Compose-alapú dedikált szerver nem a jelenlegi éles környezet leírása; telepítéséről külön döntés és átadás szükséges. [Jelenlegi elérés](../projekt/SZERVER-TAVOLI-HOZZAFERES.md).
 - Régi Linux-kompatibilis laptopon állandó Otthontár üzemeltetés: Spring Boot, képfeldolgozás, MySQL, Docker Compose.
 - HTTPS, privát SSH/Tailscale-adminisztráció, automatikus indulás, külső titkosított mentés és helyreállítási próba.
 - Helyi Codex CLI és később külön hitelesített mobilos ChatGPT-vezérlés.
