@@ -1,9 +1,9 @@
 # 01C – Letisztult, reszponzív Otthontár webes felület
 
-> **Státusz:** Tervezett  
+> **Státusz:** Fejlesztés alatt  
 > **Pontosítás / akadály:** A felhasználó szerint a jelenlegi weboldal megfelelően működik. A feladat a használatban lévő funkciók egységes felületének kialakítása az iPhone-os offline fejlesztés előtt.  
 > **Megvalósítás:** Nincs igazolt megvalósítási commit.  
-> **Ellenőrzés:** A feladatleírás készült el.  
+> **Ellenőrzés:** A felület és az átvételi feltételek ellenőrzése folyamatban.  
 > **Felhasználói teszt:** Nincs átadva.  
 > **Frissítve:** 2026-11-24. [Státuszszabályok](../projekt/STATUSZOK.md).
 

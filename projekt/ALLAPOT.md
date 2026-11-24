@@ -32,7 +32,7 @@ A 00A Docker-próbája és a 01B Windows/privát GitHub-vezérlés élő átvét
 | [01 – PWA és HTTPS](../prompts/01-PWA-HTTPS-MOBIL-ALAP.md) | Fejlesztés alatt | Cloudflare-en elérhető a belépőoldal. A böngészős regresszió ellenőrzése és a valódi iPhone-átadás hátravan |
 | [01A – alkalmazásfiókok](../prompts/01A-FELHASZNALOI-FIOKOK.md) | Fejlesztés alatt | Fiókok/session, CSRF és fiókváltási védelem dev-be feltöltve; 18 egységteszt, 16 valódi MySQL-integrációs teszt és 4 böngészős csoport sikeres; a Cloudflare-es iPhone-átvétel és a külön Windows/Docker próba hátravan |
 | [01B – Windows-tesztszerver és vezérlés](../prompts/01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md) | Fejlesztés alatt | Kód dev f3c2f74; 77 PowerShell-ellenőrzés sikeres; valós Windows/HTTPS/privát repo és innen működő vezérlés még hiányzik |
-| [01C – letisztult webes felület](../prompts/01C-WEB-FELULET.md) | Tervezett | Következő fejlesztés, a meglévő webes funkciókra épül |
+| [01C – letisztult webes felület](../prompts/01C-WEB-FELULET.md) | Fejlesztés alatt | A reszponzív felület és az alútvonalas böngészőpróba készül |
 | [02 – offline leltár](../prompts/02-TELJES-OFFLINE-LELTAR-ELOZETEK.md) | Tervezett | A 01C felületére és a védett iPhone PWA-elérésre épül |
 | [03 – offline szerkesztés/szinkron](../prompts/03-OFFLINE-MODOSITAS-KAMERA-SZINKRON.md) | Tervezett | A 02-es konzisztens olvasási/változásnapló-alapjára épül |
 | [04 – iPhone és átadás](../prompts/04-IPHONE-TESZT-ADATVEDELEM-ATADAS.md) | Tervezett | Előző fázisok és elérhető eszközös tesztkörnyezet szükséges |
