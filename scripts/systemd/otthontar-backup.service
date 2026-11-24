@@ -1,0 +1,14 @@
+[Unit]
+Description=Otthontár encrypted local backup
+# Native Ubuntu user service; install under ~/.config/systemd/user/
+After=otthontar-inventory.service
+
+[Service]
+Type=oneshot
+ExecStart=%h/otthontar-ubuntu-teszt/borosCode/scripts/Backup-Ubuntu.sh --run
+# Replace ExecStart only if this verified repository path differs.
+TimeoutStartSec=2h
+UMask=0077
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
