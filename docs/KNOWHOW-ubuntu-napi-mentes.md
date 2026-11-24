@@ -25,15 +25,17 @@ systemctl --user status otthontar-inventory.service --no-pager
 systemctl --user status otthontar-imaging.service --no-pager
 ```
 
-Ha a munkafában nem commitolt változás van, ne válts ágat/írd felül. A backup-szkript csak akkor használható, amikor a megfelelő fájlok már a gépen vannak; ehhez a `dev` branch aktuális változatát kell biztonságosan lekérni:
+Ha a munkafában nem commitolt változás van, azt őrizd meg. **A mentés telepítéséhez NEM váltunk `dev` ágra**, hogy ne módosítsuk a működő `main` alkalmazás munkapéldányát. Kizárólag a szükséges szkriptet és ellenőrzőt másoljuk át egy külön, felhasználói programkönyvtárba a GitHubról:
 
 ```bash
-git fetch origin
-git switch dev
-git pull --ff-only origin dev
+git fetch origin dev
+install -d -m 700 "$HOME/.local/lib/otthontar"
+git show origin/dev:scripts/Backup-Ubuntu.sh > "$HOME/.local/lib/otthontar/Backup-Ubuntu.sh"
+git show origin/dev:scripts/Verify-Backup-Ubuntu.sh > "$HOME/.local/lib/otthontar/Verify-Backup-Ubuntu.sh"
+chmod 700 "$HOME/.local/lib/otthontar/"*.sh
 ```
 
-Ezek a parancsok **nem telepítik újra az Otthontárat**, nem indítják újra a szolgáltatásokat; a helyi változásokat azonban meg kell őrizni. A `git switch` csak tiszta, megfelelően ellenőrzött munkafában javasolt.
+Ezek a parancsok **nem váltanak Git-ágat, nem telepítik újra az Otthontárat**, és nem indítják újra a szolgáltatásokat. Ha a `git fetch` vagy `git show` hibázik, ne folytasd a mentés aktiválását.
 
 Ellenőrizd a **valós** DB/fotóbeállításokat a futó systemd egységből vagy az engedélyezett lokális konfigurációból. Titkokat ne másolj képernyőképre, chatbe vagy GitHubra:
 
@@ -133,7 +135,7 @@ Az `UPDATE_LOCK` csak akkor legyen beállítva, ha a helyi `Update-Ubuntu.sh` va
 ## 5. Kézi, biztonságos előellenőrzés
 
 ```bash
-bash scripts/Backup-Ubuntu.sh --check
+bash "$HOME/.local/lib/otthontar/Backup-Ubuntu.sh" --check
 ```
 
 Ez **nem állítja le az alkalmazást**, nem hoz létre mentést. Ellenőrzi a jogosultságokat, az eszközöket, a DB-kapcsolatot és az Inventory szolgáltatás állapotát. Hibát előbb javítsd ki, csak azután indíts éles mentést.
@@ -143,7 +145,7 @@ Ez **nem állítja le az alkalmazást**, nem hoz létre mentést. Ellenőrzi a j
 Olyan időpontban indítsd, amikor az Otthontárat senki nem használja, mert a mentés alatt a leltár nem lesz elérhető:
 
 ```bash
-bash scripts/Backup-Ubuntu.sh --run
+bash "$HOME/.local/lib/otthontar/Backup-Ubuntu.sh" --run
 ls -lh ~/otthontar-backups/otthontar-*.tar.age
 systemctl --user is-active otthontar-inventory.service
 ```
@@ -155,7 +157,7 @@ Egy sikeres futás egy új `otthontar-YYYYMMDDTHHMMSSZ-PID.tar.age` fájlt ad. *
 A legbiztonságosabb, ha az archívumot átmásolod egy külön, ellenőrzött gépre, ahol a privát `age` identitást tartod. Az ellenőrzés nem módosítja az éles adatokat:
 
 ```bash
-bash scripts/Verify-Backup-Ubuntu.sh "/A/MENTES/FAJL.tar.age" "/A/PRIVAT/AGE/IDENTITY"
+bash "$HOME/.local/lib/otthontar/Verify-Backup-Ubuntu.sh" "/A/MENTES/FAJL.tar.age" "/A/PRIVAT/AGE/IDENTITY"
 ```
 
 Az ellenőrzés feloldja az archívumot **ideiglenes, privát könyvtárba**, és ellenőrzi a SHA-256 állománylistát. Ehhez a privát kulcsot **ne másold tartósan az Ubuntu szerverre**.
@@ -168,11 +170,12 @@ Miután a kézi mentés és az ellenőrzés sikerült:
 
 ```bash
 mkdir -p ~/.config/systemd/user
-cp scripts/systemd/otthontar-backup.service ~/.config/systemd/user/
-cp scripts/systemd/otthontar-backup.timer ~/.config/systemd/user/
+cd /home/apollo/otthontar-ubuntu-teszt/borosCode
+git show origin/dev:scripts/systemd/otthontar-backup.service > ~/.config/systemd/user/otthontar-backup.service
+git show origin/dev:scripts/systemd/otthontar-backup.timer > ~/.config/systemd/user/otthontar-backup.timer
 ```
 
-Nyisd meg a service fájlt és ellenőrizd az `ExecStart` abszolút elérési útját: a mintában `%h/otthontar-ubuntu-teszt/borosCode` szerepel. Ha a tényleges hely eltér, módosítsd a service-ben; **ne** a telepítési útvonalat találgasd.
+A service a külön telepített `%h/.local/lib/otthontar/Backup-Ubuntu.sh` példányt indítja, **nem** a futó alkalmazás repóját. Ellenőrizd, hogy az új fájl valóban megvan: `systemctl --user cat otthontar-backup.service` és `ls -l ~/.local/lib/otthontar/Backup-Ubuntu.sh`.
 
 ```bash
 systemctl --user daemon-reload
