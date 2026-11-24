@@ -46,7 +46,7 @@ A dokumentációs feladat kezdetén az alábbi távoli állapotokat olvastuk. Ez
 | Forrás | Rögzített állapot | Mit bizonyít? |
 |---|---|---|
 | dev | [`6824ba30bcaa634cc8d96bef134d32774c4f5e75`](https://github.com/borosdavid/borosCode/commit/6824ba30bcaa634cc8d96bef134d32774c4f5e75) | A helyi PWA-kód és riport jelen van |
-| main | [`040dad1f0f1f24ab33d824257e8b3e9a03a3f8b7`](https://github.com/borosdavid/borosCode/commit/040dad1f0f1f24ab33d824257e8b3e9a03a3f8b7) | Központi tervek és munkarend |
+| main (történeti pillanatkép) | [`040dad1f0f1f24ab33d824257e8b3e9a03a3f8b7`](https://github.com/borosdavid/borosCode/commit/040dad1f0f1f24ab33d824257e8b3e9a03a3f8b7) | Az átállás előtti tervek és munkarend; az aktuális prompt/roadmap már a privát tudástárban van |
 | teszt | [`75ab347af6813290047232d45454190c43992655`](https://github.com/borosdavid/borosCode/commit/75ab347af6813290047232d45454190c43992655) | Alapállapot; önmagában nem tesztkiadás |
 | dev – JPA összeillesztés | [`dae1224627a983217296ffe2dd47a339caacdb59`](https://github.com/borosdavid/borosCode/commit/dae1224627a983217296ffe2dd47a339caacdb59) | A korábbi PWA és a JPA együtt; a Windowsos újrafuttatás bizonyítékai és nyitott PWA-próba a kód melletti riportban |
 
@@ -59,7 +59,8 @@ A dokumentációs feladat kezdetén az alábbi távoli állapotokat olvastuk. Ez
 
 | Tartalom | Hiteles forrás |
 |---|---|
-| Promptok, roadmapek, státuszok és projektirányítás | main |
+| Promptok, roadmapek, közös tervezés | privát `borosCode-knowledge/main/projects/otthontar/` |
+| Projektspecifikus státuszok, tesztbizonyítékok és projektirányítás | `borosCode/main/projekt/` |
 | Folyamatban lévő kód és hozzá illő műszaki riport | dev |
 | Átadott tesztkiadás és pontos tesztútmutató | teszt; a későbbi kiadás címkéje rögzíti az állapotot |
 | Munkarend | AGENTS.md és docs/branch-workflow.md minden használt ágon |
