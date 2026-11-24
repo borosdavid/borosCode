@@ -57,7 +57,7 @@ if [[ "$mode" == "--check" ]]; then
   [[ -d "$BACKUP_DIR" ]] || { echo "A mentési könyvtár még hiányzik: $BACKUP_DIR" >&2; exit 1; }
   [[ -w "$BACKUP_DIR" ]] || { echo "A mentési könyvtár nem írható." >&2; exit 1; }
   mysql --defaults-extra-file="$MYSQL_DEFAULTS_FILE" --batch --skip-column-names -e "SELECT 1" "$MYSQL_DATABASE" >/dev/null
-  age -r "$AGE_RECIPIENT" -o /dev/null </dev/null
+  age -r "$AGE_RECIPIENT" </dev/null >/dev/null
   systemctl --user is-active --quiet "$INVENTORY_SERVICE" || { echo "Az Inventory szolgáltatás nem aktív." >&2; exit 1; }
   echo "Előellenőrzés OK: fájlutak, DB-kapcsolat, eszközök, Inventory aktív."; exit 0
 fi
@@ -75,7 +75,7 @@ exec 9>"$BACKUP_DIR/.backup.lock"
 flock -n 9 || { echo "Már fut egy Otthontár-mentés." >&2; exit 1; }
 systemctl --user is-active --quiet "$INVENTORY_SERVICE" || { echo "Az Inventory már leállt; nem nyúlok hozzá." >&2; exit 1; }
 mysql --defaults-extra-file="$MYSQL_DEFAULTS_FILE" --batch --skip-column-names -e "SELECT 1" "$MYSQL_DATABASE" >/dev/null
-age -r "$AGE_RECIPIENT" -o /dev/null </dev/null
+age -r "$AGE_RECIPIENT" </dev/null >/dev/null
 stage=$(mktemp -d "$BACKUP_DIR/.snapshot.XXXXXXXX")
 partial=
 stopped=0
