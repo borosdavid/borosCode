@@ -6,6 +6,8 @@ Magyar nyelvű, helyi alkalmazás. Első modulja a költözési leltár. A házt
 
 A Debian beállítása későbbre marad. A bekapcsolt Windows-gépen elkülönített natív tesztszerver és privát telefonos HTTPS készíthető elő. [Indítás, Tailscale és a korlátozott távoli vezérlő](docs/windows-tesztszerver-01b.md). A kód és a mock ellenőrzések elkészültek; a valódi Windows/iPhone és innen indított privát GitHub-próba még hátravan. Ez nem már aktivált szerverkapcsolat.
 
+Az Ubuntu-példány frissítése a [telefonos frissítési útmutató](docs/KNOWHOW-ubuntu-frissites.md) szerint indítható.
+
 ## Első indítás
 
 1. Ellenőrizd alább a futtatási előfeltételeket. Natív Windowson előbb futtasd a `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Build.ps1` parancsot. Ezután indítsd el az alkalmazást az **Inditas.cmd** fájllal.
