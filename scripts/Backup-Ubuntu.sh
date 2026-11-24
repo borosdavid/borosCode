@@ -28,6 +28,9 @@ source "$config"
 : "${MYSQL_DATABASE:?MYSQL_DATABASE szükséges}"
 : "${AGE_RECIPIENT:?AGE_RECIPIENT szükséges}"
 INVENTORY_SERVICE=${INVENTORY_SERVICE:-otthontar-inventory.service}
+# Explicit optional local configuration files: CONFIG_FILES=(/absolute/path/one /absolute/path/two)
+declare -p CONFIG_FILES >/dev/null 2>&1 || CONFIG_FILES=()
+[[ "$(declare -p CONFIG_FILES)" == declare\ -a* ]] || { echo "CONFIG_FILES legyen Bash-tömb." >&2; exit 1; }
 RETAIN_DAYS=${RETAIN_DAYS:-14}
 [[ "$RETAIN_DAYS" =~ ^[0-9]+$ ]] && (( RETAIN_DAYS >= 2 )) || { echo "RETAIN_DAYS >= 2 szükséges" >&2; exit 1; }
 [[ "$MYSQL_DATABASE" =~ ^[A-Za-z0-9_]+$ ]] || { echo "Érvénytelen adatbázisnév" >&2; exit 1; }
@@ -41,6 +44,9 @@ db_perm=$(stat -c '%a' -- "$MYSQL_DEFAULTS_FILE")
 if (( 8#$db_perm & 8#077 )); then echo "MySQL-opciófájl csak a tulajdonos számára legyen olvasható." >&2; exit 1; fi
 case "$(realpath -m -- "$BACKUP_DIR")/" in "$(realpath -m -- "$PHOTO_DIR")/"*) echo "A mentési cél nem lehet a fényképkönyvtáron belül." >&2; exit 1 ;; esac
 case "$(realpath -m -- "$PHOTO_DIR")/" in "$(realpath -m -- "$BACKUP_DIR")/"*) echo "A fényképek nem lehetnek a mentési cél alatt." >&2; exit 1 ;; esac
+for file in "${CONFIG_FILES[@]}"; do
+  [[ "$file" = /* && -f "$file" && ! -L "$file" && -r "$file" ]] || { echo "Hiányzó vagy érvénytelen konfigurációs forrás: $file" >&2; exit 1; }
+done
 for cmd in systemctl mysql mysqldump tar age sha256sum flock cp find sort stat realpath mktemp; do
   command -v "$cmd" >/dev/null || { echo "Hiányzó program: $cmd" >&2; exit 1; }
 done
@@ -82,7 +88,8 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 trap 'exit 129' HUP
 
-mkdir -m 700 "$stage/photos"
+mkdir -m 700 "$stage/photos" "$stage/config"
+: > "$stage/config/origins.txt"
 echo "Inventory írásainak leállítása és konzisztens pillanatkép készítése..."
 systemctl --user stop "$INVENTORY_SERVICE"
 stopped=1
@@ -92,6 +99,11 @@ mysqldump --defaults-extra-file="$MYSQL_DEFAULTS_FILE" \
   --routines --triggers --databases "$MYSQL_DATABASE" >"$stage/database.sql"
 [[ -s "$stage/database.sql" ]] || { echo "Üres SQL dump!" >&2; exit 1; }
 cp -a -- "$PHOTO_DIR/." "$stage/photos/"
+for i in "${!CONFIG_FILES[@]}"; do
+  file="${CONFIG_FILES[i]}"
+  cp -p -- "$file" "$stage/config/file-$i"
+  printf 'file-%s=%s\\n' "$i" "$file" >> "$stage/config/origins.txt"
+done
 if ! systemctl --user start "$INVENTORY_SERVICE"; then
   echo "KRITIKUS: Inventory újraindítása sikertelen!" >&2; exit 1
 fi
@@ -109,13 +121,13 @@ timestamp=$(date -u +%Y%m%dT%H%M%SZ)
 } > "$stage/metadata.txt"
 (
   cd "$stage"
-  find database.sql metadata.txt photos -type f -print0 | sort -z | xargs -0 -r sha256sum > SHA256SUMS
+  find database.sql metadata.txt photos config -type f -print0 | sort -z | xargs -0 -r sha256sum > SHA256SUMS
 )
 name="otthontar-$timestamp-$$.tar.age"
 partial="$BACKUP_DIR/.$name.partial"
 final="$BACKUP_DIR/$name"
 # A complete encrypted file is published atomically only after tar/age succeeded.
-tar -C "$stage" -cf - database.sql metadata.txt photos SHA256SUMS |
+tar -C "$stage" -cf - database.sql metadata.txt photos config SHA256SUMS |
   age -r "$AGE_RECIPIENT" -o "$partial"
 [[ -s "$partial" ]] || { echo "Üres titkosított mentés!" >&2; exit 1; }
 chmod 600 "$partial"
