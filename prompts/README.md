@@ -17,18 +17,18 @@ A teljesen elkészült feladatok leírásai a **[kesz/](kesz/README.md)** almapp
 
 ## Fejlesztési sorrend
 
-0. **00A-HIBERNATE-JPA-ATALLAS.md** – JdbcTemplate → Hibernate / Spring Data JPA refaktor, a mobilos fejlesztések előtt.
-1. **01-PWA-HTTPS-MOBIL-ALAP.md** – mobil és biztonságos elérés.
-   - **[01A-FELHASZNALOI-FIOKOK.md](01A-FELHASZNALOI-FIOKOK.md)** – felhasználónév/jelszó, azonos teljes alkalmazásjog; a telefonos hozzáférés előfeltétele.
-2. **02-TELJES-OFFLINE-LELTAR-ELOZETEK.md** – offline olvasás.
-3. **03-OFFLINE-MODOSITAS-KAMERA-SZINKRON.md** – offline írás és szinkron.
-4. **04-IPHONE-TESZT-ADATVEDELEM-ATADAS.md** – teszt és átadás.
+1. [00A – Hibernate/JPA-átállás](00A-HIBERNATE-JPA-ATALLAS.md) – a meglévő perzisztenciaalap.
+2. [01 – PWA és HTTPS](01-PWA-HTTPS-MOBIL-ALAP.md) és [01A – alkalmazásfiókok](01A-FELHASZNALOI-FIOKOK.md) – a használatban lévő webes alap és a hozzá tartozó PWA-ellenőrzések.
+3. **[01C – Letisztult webes felület](01C-WEB-FELULET.md)** – a következő fejlesztési feladat. A meglévő Otthontár funkcióira épülő reszponzív felület asztali és mobilböngészőre.
+4. [02 – Teljes offline leltár és előnézetek](02-TELJES-OFFLINE-LELTAR-ELOZETEK.md) – offline olvasás az új felületre építve.
+5. [03 – Offline módosítás, kamera és szinkron](03-OFFLINE-MODOSITAS-KAMERA-SZINKRON.md) – offline írás és szinkron.
+6. [04 – iPhone-teszt és átadás](04-IPHONE-TESZT-ADATVEDELEM-ATADAS.md) – eszközös átvétel.
 
-A `00-KOZOS-UTASITASOK.md` szabályai minden fázisra érvényesek. A fázisok nem indulnak el automatikusan.
+A [közös szabályok](00-KOZOS-UTASITASOK.md) minden fázisra érvényesek. A fázisok külön utasításra indulnak.
 
-## Következő feladat – átmeneti Windows-tesztszerver
+## Jelenlegi elérés
 
-**[01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md](01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md)** – D-011 szerint átmenetileg a bekapcsolt Windows fejlesztőgép a tesztszerver; Debian későbbre kerül. Az izolált natív indítás, privát HTTPS-beállító és GitHub-műveleti ügynök dev-ben elkészült; 71 PowerShell assertion sikeres. A valódi Windows/Tailscale/iPhone és innen indított vezérlési próba még szükséges; Fejlesztés alatt, nem lezárt fázis. Ezt követi a 02/03 offline fejlesztés.
+A webes alkalmazás címe `https://boroscode.com/otthontar/` (Cloudflare és alkalmazásfiók). A szerver privát üzemeltetési útvonala iPhone-ról iSH → SSH a Tailscale hálózatán. A [01B Windows-tesztkörnyezet](01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md) külön feladat, saját elfogadási feltételekkel. A 01C és az Ubuntu/Cloudflare útvonalra épülő iPhone-fázisok ennek aktiválása nélkül haladhatnak.
 
 ## Alapelvek
 
@@ -48,4 +48,4 @@ Minden végrehajtandó prompt az [egységes státuszszabályokat](../projekt/STA
 
 Aktuális összefoglaló: [projektállapot](../projekt/ALLAPOT.md).
 
-A 01B konkrét megoldási terve: [közös távoli szerverhozzáférés](../projekt/SZERVER-TAVOLI-HOZZAFERES.md). A javaslat külön kezeli a felhasználó helyi Windows-kezelését (később Debian SSH), a ChatGPT korlátozott műveleti csatornáját és az alkalmazásfiókokat.
+Az aktuális elérést és a külön Windows-tesztkörnyezetet a [távoli hozzáférés leírása](../projekt/SZERVER-TAVOLI-HOZZAFERES.md) követi.

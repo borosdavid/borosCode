@@ -17,7 +17,9 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 | D-009 | Közös távoli hozzáférés: Tailscale/SSH és privát GitHub-műveletsor | Kidolgozott javaslat; telepítés/kapcsolat nem igazolt | 2026-11-17 |
 | D-010 | Hibernate/JPA a meglévő Flyway-sémán, változatlan külső szerződéssel | Elfogadott architekturális irány; dev-megvalósítás ellenőrizve, felhasználói elfogadás nyitott | 2026-11-17 |
 | D-011 | Átmeneti Windows-tesztszerver a Debian telepítése előtt | Elfogadott; kód dev-ben, helyi aktiválás/élő próba hátravan | 2026-11-17 |
-| D-012 | BorosCode domain és védett Cloudflare-elérés az Otthontárhoz | Elfogadott tervezési irány | 2026-11-19 |
+| D-012 | BorosCode domain és védett Cloudflare-elérés az Otthontárhoz | A felhasználói címet a D-013 pontosítja | 2026-11-19 |
+| D-013 | Otthontár a BorosCode főoldal alatt | Elfogadott | 2026-11-23 |
+| D-014 | Jelenlegi elérés és webes felülettervezés az iPhone-fázisok előtt | Elfogadott fejlesztési irány | 2026-11-24 |
 
 ## D-001 – Fejlesztési és tesztágak
 
@@ -203,7 +205,17 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 
 **Indok és alternatíva:** a címsorban a BorosCode fődomain marad, és használható a meglévő alkalmazásbelépés. A D-012 korábbi, közvetlen aldomaines terve egyszerűbb proxybeállítás lenne. A választott megoldásban a főoldal és az Otthontár ugyanazon a böngészős originen van, ezért az alkalmazás munkamenete és PWA-hatálya az aloldal útvonalához igazodik.
 
-**Következmény:** a Worker, a Tunnel és az Access az ingyenes csomag korlátai között működik. A Windows-szerver, a Cloudflare-beállítás és az éles belépési próba biztosítja a tényleges elérést. [Megvalósítás és ellenőrzések](../roadmap/CLOUDFLARE-BOROSCODE-DOMAIN.md).
+**Következmény:** a Worker, a Tunnel és az Access az ingyenes csomag korlátai között működik. A jelenleg használt kiszolgálót és a szerver üzemeltetési útvonalát a [D-014](#d-014--jelenlegi-elérés-és-a-webes-felület-sorrendje) rögzíti. [Megvalósítás és ellenőrzések](../roadmap/CLOUDFLARE-BOROSCODE-DOMAIN.md).
+
+## D-014 – Jelenlegi elérés és a webes felület sorrendje
+
+**Döntési állapot:** Elfogadott, 2026-11-24.
+
+**Döntés:** az Otthontár webes eléréséhez a D-013 szerinti Cloudflare-es cím tartozik, Ubuntu háttérpéldánnyal. A szerver iPhone-os adminisztrációja iSH-ból, SSH-val a Tailscale hálózatán történik. A működő webes felület grafikai és használhatósági fejlesztését a [01C prompt](../prompts/01C-WEB-FELULET.md) írja le, a 02–04 offline iPhone-fázisok előtt.
+
+**Indok és sorrend:** a jelenlegi weboldal működése megfelelő a felhasználó szerint. Az új PWA-funkciók a közösen használt webes felületre épülnek, ezért az elrendezés, a vizuális rendszer és a mobilos használhatóság kialakítása megelőzi az offline funkciók beépítését. A D-011 szerinti külön Windows-próba a saját munkarendjében követhető.
+
+**Forrás:** a felhasználó 2026-11-24-i visszajelzése és kérése, valamint a [Cloudflare útvonal ellenőrzései](../roadmap/CLOUDFLARE-BOROSCODE-DOMAIN.md).
 
 ## Új döntés vagy módosítás
 

@@ -1,17 +1,17 @@
 # 01A – Alkalmazásfiókok és bejelentkezés
 
 > **Státusz:** Fejlesztés alatt  
-> **Pontosítás / akadály:** A fiókok és a bejelentkezés dev-megvalósítása elkészült. A natív Windows-fiókkarbantartás, Docker és a valódi HTTPS/iPhone próba hátravan.
+> **Pontosítás / akadály:** A fiókok és a bejelentkezés dev-megvalósítása elkészült. A kanonikus Cloudflare-es útvonalon az alkalmazásbelépés és a valódi iPhone-próba még dokumentálandó. A natív Windows-fiókkarbantartás és a Docker külön környezeti próba.
 > **Megvalósítás:** dev, [`815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c`](https://github.com/borosdavid/borosCode/commit/815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c).  
 > **Ellenőrzés:** 2026-11-18: dev [`f3c2f74`](https://github.com/borosdavid/borosCode/commit/f3c2f742fd57b4633a226f880d74685984549d1c), 18 egységteszt, 16 integrációs teszt MySQL 8.4.8-cal és 4 headless böngészős tesztcsoport sikeres. A V2 sémából meglévő tesztadatokkal sikerült V3/V4-re migrálni. Az első fiók létrehozása a becsomagolt JAR interaktív parancsával, majd az első belépés és a fotó megőrzése újraindítás után sikeres külön Linux/MySQL 8.4.8 sémán. [Automatizált próba](https://github.com/borosdavid/borosCode/commit/be040d584e1a26a10bfbc933ed5a2e53c43106db).
 > **Felhasználói teszt:** Nincs tesztágas átadás vagy elfogadás; a kötelező környezeti próbákig a prompt aktív marad.  
-> **Frissítve:** 2026-11-18. [Státuszszabályok](../projekt/STATUSZOK.md).
+> **Frissítve:** 2026-11-24. [Státuszszabályok](../projekt/STATUSZOK.md).
 
 ## Cél és kapcsolódás
 
 A [D-008 döntés](../projekt/DONTESI-NAPLO.md) alapján minden alkalmazáshasználó saját felhasználónévvel/jelszóval lépjen be. Kezdetben egy közös alkalmazásszintű jogosultság van: minden aktív, bejelentkezett fiók minden modulhoz és a közös adatokhoz hozzáfér. Nincs felhasználónként elkülönített leltár vagy új moduljogosultság-rendszer. Az alkalmazásfiók nem SSH-, Linux-, GitHub- vagy szerveradminisztrációs fiók.
 
-Ez az 01-es PWA-fázis hiányzó hozzáférésvédelmi részének körülhatárolt feladata. A 00A/JPA tényleges állapotát előbb ellenőrizd; a biztonságos telefonos 01/01B átadás feltétele az itt leírt belépés elkészülte. A fájl létezése önmagában nem indítja el az implementációt.
+Ez az 01-es PWA-fázis hiányzó hozzáférésvédelmi részének körülhatárolt feladata. A 00A/JPA tényleges állapotát előbb ellenőrizd; a biztonságos telefonos 01 átadás, illetve a külön Windows 01B kör feltétele az itt leírt belépés elkészülte. A fájl létezése önmagában nem indítja el az implementációt.
 
 ## Megvalósítási irány
 
@@ -43,7 +43,7 @@ Az első bejelentkezés és aktiválás online történik. A 02/03-as offline f�
 2. Helyes/hibás belépés, próbálkozáskorlát, kijelentkezés, sessionlejárat és letiltás tesztelve; nincs eltérő modulszerepkör.
 3. Session fixation és CSRF próbák; multipart és desktop műveletek is védettek. Jelszó csak megfelelő hashként kerül adatbázisba.
 4. 401 után a nyitott piszkozat/fotó megmarad, újrabelépés után szabályosan menthető.
-5. A tényleges HTTPS-proxyval Windows/iPhone böngészőpróba; tiltott host és nem megbízható proxy elutasítva.
+5. A `https://boroscode.com/otthontar/` címen asztali és iPhone Safari böngészőpróba. Ellenőrizd az alútvonalhoz tartozó munkamenetet, a belépés utáni visszairányítást, a kijelentkezést, valamint a tiltott hostok és a jogosulatlan közvetlen háttérhost-kérések elutasítását.
 6. Az offline cache/fiókváltás követelményeit a 02/03-as feladatokkal összehangolt tesztszerződés rögzíti; még nem elkészült offline funkcióról nem állítunk teljes tesztet.
 7. Automatizált releváns ellenőrzések és kitöltött átadási leírás; éles személyes profil érintetlen.
 

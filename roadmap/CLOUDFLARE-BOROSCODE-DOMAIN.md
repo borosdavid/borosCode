@@ -16,12 +16,12 @@
 | `otthontar-origin.boroscode.com` | A Worker szolgáltatási tokenjével elérhető háttérhost. |
 | `<projekt>.boroscode.com` | A további önálló fejlesztések opcionális címe. |
 
-A [D-013 döntés](../projekt/DONTESI-NAPLO.md#d-013--otthontár-a-boroscode-főoldal-alatt) az eredeti D-012 közvetlen aldomaines tervét az Otthontár esetében felváltja. Az ideiglenes szerver Windows, a későbbi szerverköltözéskor a felhasználói URL megtartható. [Dedikált Debian otthoni szerver](DEDIKALT-DEBIAN-OTTHONI-SZERVER.md)
+A [D-013 döntés](../projekt/DONTESI-NAPLO.md#d-013--otthontár-a-boroscode-főoldal-alatt) az eredeti D-012 közvetlen aldomaines tervét az Otthontár esetében felváltja. A jelenlegi háttérpéldány Ubuntu. A későbbi szerverköltözéskor a felhasználói URL megtartható. [Dedikált Debian otthoni szerver](DEDIKALT-DEBIAN-OTTHONI-SZERVER.md)
 
 ## Üzembe helyezés és próba
 
 Az Ubuntu-példányhoz a loopback webszolgáltatás `http://127.0.0.1:18740`. A Tunnel a `boroscode.com` Host fejléc mellett `otthontar-origin.boroscode.com` értéket továbbít az `X-Forwarded-Host` fejlécben. A dev példányon ezt a `PROXY_FORWARDED_HOST` értékkel kell engedélyezni.
 
-1. Az elkülönített Windows-tesztpéldányt a friss dev kódból indítsuk. A tunnel csak a webszolgáltatáshoz továbbít. Az Access Service Auth szabálya és a tunnel JWT-ellenőrzése védi a háttérhostot. A főoldali Worker a két hozzá tartozó titkot a Cloudflare saját tárolójából olvassa. [Lépésről lépésre](https://github.com/borosdavid/borosCode-website/blob/71a04e009cfe5a159e595c708c3091c059409106/README.md#otthont%C3%A1r-a-f%C5%91oldalr%C3%B3l)
-2. Windowsról és iPhone-ról ellenőrizzük a HTTPS-t, a be- és kijelentkezést, a leltárt és a fotófeltöltést. A háttérhost közvetlen hozzáférését is próbáljuk ki érvényes szolgáltatási token nélkül.
-3. A korábbi helyi és Tailscale-cím külön böngészős origin. A mobileszközre telepített kezdőképernyős ikont és a meglévő offline adatokat az átállás előtt külön ellenőrizzük. A privát Tailscale-próba és a szerveradminisztráció terve a [01B feladatban](../prompts/01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md) követhető.
+1. Az Ubuntu-példány fejlesztői frissítésének menete a [kódhoz tartozó útmutatóban](https://github.com/borosdavid/borosCode/blob/ffeecbe0e4745b99be76e194a85e80190971f3e2/docs/KNOWHOW-ubuntu-frissites.md) található. A tunnel az alkalmazás webszolgáltatásához továbbít. Az Access Service Auth szabálya és a tunnel JWT-ellenőrzése védi a háttérhostot. A főoldali Worker a két hozzá tartozó titkot a Cloudflare saját tárolójából olvassa. [Lépésről lépésre](https://github.com/borosdavid/borosCode-website/blob/71a04e009cfe5a159e595c708c3091c059409106/README.md#otthont%C3%A1r-a-f%C5%91oldalr%C3%B3l)
+2. Asztali böngészőből és iPhone-ról ellenőrizzük a HTTPS-t, a be- és kijelentkezést, a leltárt és a fotófeltöltést. A háttérhost közvetlen hozzáférését is próbáljuk ki érvényes szolgáltatási token nélkül.
+3. A korábbi helyi és Tailscale-cím külön böngészős origin. A mobileszközre telepített kezdőképernyős ikont és a meglévő offline adatokat az átállás előtt külön ellenőrizzük. A telefonos szerveradminisztráció iSH-ból, SSH-val történik a Tailscale hálózatán. [Hozzáférési útvonalak](../projekt/SZERVER-TAVOLI-HOZZAFERES.md).

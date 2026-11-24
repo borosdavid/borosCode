@@ -1,15 +1,15 @@
 # 01B – Átmeneti Windows-tesztszerver és távoli vezérlés
 
 > **Státusz:** Fejlesztés alatt
-> **Pontosítás / akadály:** D-011 szerint a Debian telepítése későbbre kerül; most a bekapcsolt Windows fejlesztőgép a tesztszerver. Az élő Windows/Tailscale/privát GitHub-kapcsolat még nincs aktiválva/igazolva.
+> **Pontosítás / akadály:** Ez a D-011 szerint előkészített külön Windows-tesztkörnyezet. Az élő Windows/Tailscale/privát GitHub-kapcsolat még igazolásra vár. A használatban lévő webes útvonal az Ubuntu-példányhoz vezet Cloudflare-en, a telefonos adminisztráció iSH és Tailscale feletti SSH.
 > **Megvalósítás:** dev [`f3c2f74`](https://github.com/borosdavid/borosCode/commit/f3c2f742fd57b4633a226f880d74685984549d1c), az alapimplementáció: [cf19142](https://github.com/borosdavid/borosCode/commit/cf191426810ded4ef4b362d56c35735165321cb4).
 > **Ellenőrzés:** 77 ellenőrzés sikeres PowerShell 7.5.13/Linux alatt, köztük a hibás build előtti leállítás megelőzése és a sor folytatása egy átírt kérés után. A GitHub futtatóján a kódolási javítás után Windows PowerShell 5.1 alatt is sikeres a 77 ellenőrzés, és az Edge PWA-próba is átment. A helyi folyamatkezelés és az alkalmazás privát GitHub-vezérlése a PowerShell-próbában szimulált. [CI futás](https://github.com/borosdavid/borosCode/actions/runs/44285364279).
 > **Felhasználói teszt:** Nincs átadva; A tényleges gépen a DPAPI/ACL, natív MySQL/Java, élő privát GitHub-vezérlés és iPhone HTTPS hátravan. [Eszközpróbák](https://github.com/borosdavid/borosCode/blob/16ad22ba72ed86d0a806f5f6a58d2b851fdf2af3/docs/windows-tesztszerver-01b.md#ellenőrzések-és-hátralévő-próbák).
-> **Frissítve:** 2026-11-18. [Státuszszabályok](../projekt/STATUSZOK.md).
+> **Frissítve:** 2026-11-24. [Státuszszabályok](../projekt/STATUSZOK.md).
 
 ## Cél és elfogadott változás
 
-A felhasználó 2026-11-17-i utasítása alapján egyelőre a Windows fejlesztőgépen fusson izolált tesztszerver, amíg a gép be van kapcsolva. A Debian-laptop dedikált szerepe megmarad hosszú távú tervként; a mostani feladatnak nem előfeltétele a laptop hardverfelmérése vagy telepítése. A Windows elalvása/kikapcsolása az online elérést megszünteti; ébresztés és folyamatos üzem külön feladat.
+A felhasználó 2026-11-17-i utasítása alapján készült egy elkülönített Windows-tesztszerver a fejlesztőgéphez, amely bekapcsolt állapotban használható. A Debian-laptop dedikált szerepe megmarad hosszú távú tervként; a mostani feladatnak nem előfeltétele a laptop hardverfelmérése vagy telepítése. A Windows elalvása/kikapcsolása az online elérést megszünteti; ébresztés és folyamatos üzem külön feladat.
 
 A [közös promptszabályok](00-KOZOS-UTASITASOK.md), [munkarend](../AGENTS.md), [D-011 döntés](../projekt/DONTESI-NAPLO.md) és [aktuális hozzáférési terv](../projekt/SZERVER-TAVOLI-HOZZAFERES.md) követendő. Más asztali beszélgetés belső állapotát nem látjuk automatikusan; commitok és riportok jelentik a közös ellenőrzési pontot.
 
@@ -40,4 +40,4 @@ Kikapcsolt gépnél, hiányzó tailnet-/repo-hozzáférésnél nincs kész szerv
 
 A teljes 01B körben hátravan a kulturált leállítás igazolása, előre engedélyezett szűrt hibakivonat, ellenőrzött build/teszt riportok megosztása, szükség szerint automatizált indulás és külön telepítési folyamat. Ezek nem jelentenek általános shell-jogot. A Debian-migrációnál újra igazolandó a szolgáltatáskezelés, tartós tárolás, külső mentés/visszaállítás és az állandó privát HTTPS origin; a mostani natív PowerShell-indító nem vihető át változtatás nélkül Linuxra.
 
-A 02/03 offline fázisok külön feladatok. A 01B a hiányzó élő elfogadási feltételek miatt aktív marad, nem kerül a kesz mappába. Minden fejlesztés dev-be, a tervek külön mainbe; tesztági kiadás csak a munkarendi feltételek teljesülésekor, kitöltött átadási lappal és címkével.
+A 01C webes felület és az Ubuntu/Cloudflare útvonalra épülő 02–04 iPhone-fázisok ettől a Windows-próbától függetlenül haladhatnak. A 01B a hiányzó élő elfogadási feltételek miatt aktív marad, nem kerül a kesz mappába. Minden fejlesztés dev-be, a tervek külön mainbe; tesztági kiadás csak a munkarendi feltételek teljesülésekor, kitöltött átadási lappal és címkével.

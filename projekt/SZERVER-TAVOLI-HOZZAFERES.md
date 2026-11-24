@@ -1,18 +1,21 @@
 # Közös távoli szerverhozzáférés
 
-**Frissítve:** 2026-11-17. D-011 alapján az első célpont a Windows fejlesztőgép, amíg be van kapcsolva; a D-007 szerinti dedikált Debian-szerver későbbi lépés. A kód dev-be került, az élő kapcsolat még nem igazolt.
+**Frissítve:** 2026-11-24. A jelenlegi alkalmazáspéldány Ubuntu alatt érhető el. A privát iPhone-os üzemeltetést a felhasználó iSH-val és Tailscale-lel végzi.
 
 ## Jelenlegi megoldás és jogosultságok
 
 | Szerep | Kapcsolat | Jogosultság |
 |---|---|---|
-| Alkalmazásfelhasználó | Tailscale + privát HTTPS + alkalmazásbeli felhasználónév/jelszó | Azonos teljes alkalmazásjog a közös tesztadatokon |
-| Dávid mint gépüzemeltető | Saját Windows-fiók, helyi PowerShell-segédek | Build, fiókkarbantartás, tesztindítás és helyi konfiguráció |
-| ChatGPT-munkamenet | GitHub-csatlakozó → külön privát műveleti repo → kifelé kapcsolódó Windows-ügynök | Öt rögzített művelet az izolált natív tesztprofilon |
+| Alkalmazásfelhasználó | `https://boroscode.com/otthontar/` → Cloudflare Worker/Tunnel → Ubuntu, alkalmazásfiókos belépéssel | A közös leltár és az alkalmazás funkciói |
+| Dávid mint gépüzemeltető | iPhone → iSH → SSH a Tailscale privát hálózatán → Ubuntu | Az Ubuntu-fiókhoz rendelt üzemeltetési jogok |
 
-Nincs Windows SSH vagy általános távoli asztal automatikusan telepítve. A későbbi Debianhoz Tailscale/SSH és saját kulcsok tervezettek. A hálózati és alkalmazásbelépés külön védelem, az alkalmazásfiók nem szerveradmin-fiók.
+A telefonról indított frissítés és a verzióellenőrzés a [dev Ubuntu útmutatójában](https://github.com/borosdavid/borosCode/blob/ffeecbe0e4745b99be76e194a85e80190971f3e2/docs/KNOWHOW-ubuntu-frissites.md) található. Az alkalmazásfiók kizárólag az Otthontár funkcióira jogosít. A privát SSH-hozzáférést a felhasználó a saját eszközéről használja.
 
-## Elkészült fejlesztés
+## 01B – Külön Windows-tesztkörnyezet
+
+Az alábbi útvonalak és elfogadási próbák a D-011 szerint előkészített, elkülönített Windowshoz tartoznak. A natív helyi kezelés a Windows-fiók és a PowerShell-segédek feladata. A ChatGPT-műveleti csatorna terve a külön privát GitHub-repót olvasó Windows-ügynök, öt rögzített művelettel. Az élő műveleti kapcsolat még igazolásra vár.
+
+### Elkészült fejlesztés
 
 A dev [`cf191426810ded4ef4b362d56c35735165321cb4`](https://github.com/borosdavid/borosCode/commit/cf191426810ded4ef4b362d56c35735165321cb4) tartalmazza:
 
@@ -50,7 +53,7 @@ A konkrét parancsok, séma, leállítás/visszavonás és tesztlista a [verzió
 4. Innen status-kérés valós válasszal, majd helyi módosításengedély után start/health/verzió/restart/stop. Személyes profil ellenőrzése változatlanságra.
 5. Lejárat, jogosultság-visszavonás, hálózati kiesés, ismétlés/ütközés/timeout élő próbája.
 
-**Igazolt:** 71 sikeres PowerShell assertion Linux/PowerShell 7.5.13 alatt, a parser/protokoll/napló/buildjegyzék és mock GitHub/HTTPS/folyamatkezelés körében. **Még nincs igazolva:** Windows PowerShell 5.1, tényleges DPAPI/ACL/CIM/Java/MySQL, létrehozott privát repo, innen működő vezérlés vagy iPhone HTTPS. Ezért a 01B Fejlesztés alatt, nem átadott tesztkiadás.
+**Igazolt:** 77 automatizált PowerShell-ellenőrzés, köztük szimulált GitHub/HTTPS és folyamatkezelés. A [CI-futás](https://github.com/borosdavid/borosCode/actions/runs/44285364279) Windows PowerShell 5.1 alatt is átment. **Még igazolandó a saját Windows-gépen:** DPAPI/ACL/CIM/Java/MySQL, a privát repóhoz kapcsolt élő vezérlés és a Windows-os Tailscale HTTPS eszközpróbája. Ezért a 01B Fejlesztés alatt, nem átadott tesztkiadás.
 
 ## Üzem és későbbi Debian
 

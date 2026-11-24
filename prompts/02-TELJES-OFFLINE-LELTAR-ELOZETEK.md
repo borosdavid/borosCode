@@ -1,14 +1,14 @@
 # 02 – Teljes leltár offline, minden fényképből kis előnézet
 
 > **Státusz:** Tervezett  
-> **Pontosítás / akadály:** Előfeltétel a JPA-állapot rendezése és a biztonságos elérés; teljes offline leltár még nincs igazolva.  
+> **Pontosítás / akadály:** Előfeltétel a [01C webes felület](01C-WEB-FELULET.md), a működő JPA-alap és a védett iPhone-os elérés a Cloudflare-es címen.  
 > **Megvalósítás:** Nincs igazolt megvalósítási commit.  
 > **Ellenőrzés:** A terv/feladatleírás létezése ellenőrizve; implementációs teszt nincs igazolva.  
 > **Felhasználói teszt:** Nincs átadva; elfogadás nincs igazolva.  
-> **Frissítve:** 2026-11-17. [Státuszszabályok](../projekt/STATUSZOK.md).
+> **Frissítve:** 2026-11-24. [Státuszszabályok](../projekt/STATUSZOK.md).
 
 
-Olvasd el a `prompts/00-KOZOS-UTASITASOK.md` és `01-PWA-HTTPS-MOBIL-ALAP.md` fájlokat. Elsőként vizsgáld meg a 01-es fázis aktuális eredményét. Ha nincs kész vagy nincs biztonságos HTTPS origin, jelezd az akadályt, és ne állítsd késznek a mobilos megoldást.
+Olvasd el a [közös szabályokat](00-KOZOS-UTASITASOK.md), a [PWA-alap](01-PWA-HTTPS-MOBIL-ALAP.md) és a [webes felület](01C-WEB-FELULET.md) leírását. Az offline olvasást a 01C-ben kialakított leltárnézetre építsd. Az eszközpróbát a `https://boroscode.com/otthontar/` címről telepített PWA-val végezd.
 
 ## Feladat
 A telefon tárolja helyben a **teljes leltár metaadatait** (helyszínek, tárgyak, műveletek, státuszok, eladás, lomtár, áthelyezések, képlista, sorrend, borító, verziók; a valós adatmodell szerint) és **minden egyes tárgy minden fényképének kisméretű előnézetét**. Az eredeti teljes méretű képek ne legyenek a tömeges offline letöltés részei. Offline minden tárgy és kis fotója megtekinthető legyen, a képek hiányát és a szinkronizálás készültségét pontosan jelezze.

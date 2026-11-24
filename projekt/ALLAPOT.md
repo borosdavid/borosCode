@@ -1,14 +1,14 @@
 # Projektállapot – Otthontár
 
-**Frissítve:** 2026-11-23. Ez a `main` ágon karbantartott állapotfelvétel, nem élő szervermonitor és nem a `main` kódjának funkciólistája.
+**Frissítve:** 2026-11-24. Ez a `main` ágon karbantartott állapotfelvétel, nem élő szervermonitor és nem a `main` kódjának funkciólistája.
 
 ## Most hol tartunk?
 
-- D-013: az Ubuntu-példány `boroscode.com/otthontar/` címe a Cloudflare Tunnelen keresztül megnyitja az Otthontár belépőoldalát. A háttérhost token nélkül elutasítja a kérést. A saját fiókos belépés, a fotófeltöltés és az iPhone-próba hátravan. [Cloudflare-terv](../roadmap/CLOUDFLARE-BOROSCODE-DOMAIN.md)
-- Elfogadott alkalmazáskövetelmény (D-008): felhasználónév/jelszó, azonos teljes alkalmazás-hozzáférés minden aktív fióknak. A belépés a dev ágon elkészült: [`815dcb2`](https://github.com/borosdavid/borosCode/commit/815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c); a valódi MySQL-integráció sikeres. A Windows/iPhone átadás hátravan.
-- D-011: a Debian telepítése későbbre kerül; átmenetileg a bekapcsolt Windows fejlesztőgép a tesztszerver. A 01B Windows-segédprogramok és privát GitHub-ügynök a dev ágon elkészültek ([cf19142](https://github.com/borosdavid/borosCode/commit/cf191426810ded4ef4b362d56c35735165321cb4)). A javított dev-verzió [`f3c2f74`](https://github.com/borosdavid/borosCode/commit/f3c2f742fd57b4633a226f880d74685984549d1c) 77 PowerShell-ellenőrzésen ment át. Élő Windows/Tailscale/vezérlési kapcsolat még nincs igazolva.
+- A felhasználó 2026-11-24-i visszajelzése szerint az Otthontár weboldala megfelelően működik. A kanonikus cím `https://boroscode.com/otthontar/`, az Ubuntu-példány Cloudflare Tunnelen át érhető el. A mobilos szerveradminisztráció útvonala iSH és SSH a Tailscale hálózatán. A Cloudflare-en végzett saját fiókos belépés, fotófeltöltés és iPhone PWA-átvétel dokumentált próbája még hátravan. [Hozzáférés](SZERVER-TAVOLI-HOZZAFERES.md) · [Cloudflare-terv](../roadmap/CLOUDFLARE-BOROSCODE-DOMAIN.md)
+- Elfogadott alkalmazáskövetelmény (D-008): felhasználónév/jelszó, azonos teljes alkalmazás-hozzáférés minden aktív fióknak. A belépés a dev ágon elkészült: [`815dcb2`](https://github.com/borosdavid/borosCode/commit/815dcb2cacd55b5477ae8066fa1c7d48c4b6a83c); a valódi MySQL-integráció sikeres. A Cloudflare-es iPhone-átadás és a külön Windows-környezeti próba hátravan.
+- D-011: a Windows fejlesztőgéphez elkülönített tesztszerver készült. A 01B Windows-segédprogramok és privát GitHub-ügynök a dev ágon elkészültek ([cf19142](https://github.com/borosdavid/borosCode/commit/cf191426810ded4ef4b362d56c35735165321cb4)). A javított dev-verzió [`f3c2f74`](https://github.com/borosdavid/borosCode/commit/f3c2f742fd57b4633a226f880d74685984549d1c) 77 PowerShell-ellenőrzésen ment át. Élő Windows/Tailscale/vezérlési kapcsolat még nincs igazolva.
 
-- A helyi PWA-alap a `dev` ágon van; a telefonról megnyitható, védett HTTPS-elérés még nincs igazolva.
+- A PWA-alap a `dev` ágon van. A november 24-i [CI-futás](https://github.com/borosdavid/borosCode/actions/runs/45331467488) Java/MySQL és PowerShell feladata sikeres volt. Az Edge és a Chromium böngészőteszt a tárgylista betöltésénél leállt.
 - A teljes offline leltár, a tartós offline szerkesztés és a kétirányú szinkron még további fejlesztés.
 - A JPA-átállás a `dev` ágon igazolt és feltöltött: [`dae1224627a983217296ffe2dd47a339caacdb59`](https://github.com/borosdavid/borosCode/commit/dae1224627a983217296ffe2dd47a339caacdb59). Az újrafuttatott Maven/24 Java-teszt és a 7 Windowsos acceptance csoport sikeres; a külön PWA offline deep-link próba Edge alatt sikertelen, kivizsgálása nyitott.
 - A `teszt` ág jelenlegi alkalmazáskódja induló alapállapot, nem átadott PWA-tesztkiadás.
@@ -16,24 +16,24 @@
 
 ## Következő teendő és akadályok
 
-1. A 01B Windows-tesztszerver helyi aktiválása: friss dev build, natív tesztprofil és fiók, Tailscale Windows/iPhone HTTPS, külön privát műveleti repo és helyi DPAPI-token. Innen valódi status-válasz, majd a vezérlési próbák. A Debian hardverfelmérése/telepítése most nem előfeltétel.
-2. A JPA megvalósítása és dev-be mentése elkészült. Külön tesztágas átadás még nincs; a dev meglévő PWA offline hibájának kivizsgálása és a Docker-futtatás ellenőrzése hátravan.
-3. Az 01-es fázis hozzáférésvédelmének és telefonos HTTPS-elérésének befejezése, majd tesztkiadás.
-4. Ezután a teljes offline olvasás (02), offline írás/szinkron (03), végső iPhone-próbák (04).
+1. [01C – letisztult webes felület](../prompts/01C-WEB-FELULET.md) a működő alkalmazásra építve.
+2. Az 01 és 01A meglévő PWA- és hozzáférésvédelmi ellenőrzései a kanonikus Cloudflare-es címen. Az iPhone-os offline használat előfeltétele az igazolt telepítés és belépés.
+3. A 01C felületére épül a teljes offline olvasás (02), az offline írás és szinkron (03), majd a végső iPhone-átvétel (04).
+
+A 00A Docker-próbája és a 01B Windows/privát GitHub-vezérlés élő átvétele külön nyitott ellenőrzés.
 
 **Hosszú távú gépszerepek (D-007; D-011 szerint későbbre halasztva):** a Debian 13/Xfce laptop kizárólag szerver; tervezett alapja Docker Engine/Compose, Tailscale/SSH és privát HTTPS. A fejlesztés Windowsról és iPhone-ról történik. A Windows helyi fejlesztést/buildet/tesztet szolgál; az iPhone fejlesztések kezdeményezését és követését, valamint PWA-próbákat. Az iPhone-ról indított munka tényleges végrehajtási helyét és a telepítési csatornát még igazolni kell.
-
-**Most szükséges:** a Windows helyi indítása és eszközös ellenőrzése, valamint a privát vezérlőrepó létrehozása/csatlakoztatása és az innen működő kapcsolat igazolása. **Későbbre marad:** a laptop hardvere/telepítése, Debian-jogosultságok és a külső mentés. A kiválasztott összeállítás még nem kész telepítés. Tailscale vagy azonos ChatGPT-fiók önmagában nem ad ebből a beszélgetésből géphozzáférést.
 
 ## Végrehajtási feladatok
 
 | Feladat | Státusz | Igazolt eredmény / következő feltétel |
 |---|---|---|
 | [00A – JPA](../prompts/00A-HIBERNATE-JPA-ATALLAS.md) | Fejlesztés alatt | Kód elkészült és dev-be feltöltve; 24 Java-teszt és 7 Windowsos csoport sikeres; külön tesztátadás/elfogadás még nincs |
-| [01 – PWA és HTTPS](../prompts/01-PWA-HTTPS-MOBIL-ALAP.md) | Fejlesztés alatt | Helyi PWA kész; Windows/Edge offline deep-link próba sikertelen, hozzáférés és valódi iPhone-átadás hiányzik |
-| [01A – alkalmazásfiókok](../prompts/01A-FELHASZNALOI-FIOKOK.md) | Fejlesztés alatt | Fiókok/session, CSRF és fiókváltási védelem dev-be feltöltve; 18 egységteszt, 16 valódi MySQL-integrációs teszt és 4 böngészős csoport sikeres; Windows/HTTPS/iPhone hátravan |
+| [01 – PWA és HTTPS](../prompts/01-PWA-HTTPS-MOBIL-ALAP.md) | Fejlesztés alatt | Cloudflare-en elérhető a belépőoldal. A böngészős regresszió ellenőrzése és a valódi iPhone-átadás hátravan |
+| [01A – alkalmazásfiókok](../prompts/01A-FELHASZNALOI-FIOKOK.md) | Fejlesztés alatt | Fiókok/session, CSRF és fiókváltási védelem dev-be feltöltve; 18 egységteszt, 16 valódi MySQL-integrációs teszt és 4 böngészős csoport sikeres; a Cloudflare-es iPhone-átvétel és a külön Windows/Docker próba hátravan |
 | [01B – Windows-tesztszerver és vezérlés](../prompts/01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md) | Fejlesztés alatt | Kód dev f3c2f74; 77 PowerShell-ellenőrzés sikeres; valós Windows/HTTPS/privát repo és innen működő vezérlés még hiányzik |
-| [02 – offline leltár](../prompts/02-TELJES-OFFLINE-LELTAR-ELOZETEK.md) | Tervezett | Előfeltétel a JPA-állapot és a védett elérés rendezése |
+| [01C – letisztult webes felület](../prompts/01C-WEB-FELULET.md) | Tervezett | Következő fejlesztés, a meglévő webes funkciókra épül |
+| [02 – offline leltár](../prompts/02-TELJES-OFFLINE-LELTAR-ELOZETEK.md) | Tervezett | A 01C felületére és a védett iPhone PWA-elérésre épül |
 | [03 – offline szerkesztés/szinkron](../prompts/03-OFFLINE-MODOSITAS-KAMERA-SZINKRON.md) | Tervezett | A 02-es konzisztens olvasási/változásnapló-alapjára épül |
 | [04 – iPhone és átadás](../prompts/04-IPHONE-TESZT-ADATVEDELEM-ATADAS.md) | Tervezett | Előző fázisok és elérhető eszközös tesztkörnyezet szükséges |
 

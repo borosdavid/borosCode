@@ -25,7 +25,8 @@ A sorrend irányadó, nem végleges ütemterv. A részletes tervek önálló Mar
 - Hibernate ORM + Spring Data JPA átállás – részletes Codex-prompt: [00A-HIBERNATE-JPA-ATALLAS.md](../prompts/00A-HIBERNATE-JPA-ATALLAS.md)
 - Megbízható biztonsági mentés és visszaállítás; hozzáférésvédelem és jogosultságok
 
-### 2. iOS Otthontár és offline-first működés
+### 2. Webes felület és iPhone-os offline működés
+- Az offline fázisok előtti feladat a [01C – letisztult webes felület](../prompts/01C-WEB-FELULET.md).
 - iPhone PWA, teljes leltár és kis előnézetek offline, eredeti képek online igény szerint
 - Offline fényképezés, szerkesztés, kétirányú szinkronizáció
 - Codex-promptok: [01–04](../prompts/)
@@ -75,11 +76,11 @@ A sorrend irányadó, nem végleges ütemterv. A részletes tervek önálló Mar
 - Részletes koncepció: [AI-FEJLESZTES-ES-SZERVERAUTOMATIZALAS.md](AI-FEJLESZTES-ES-SZERVERAUTOMATIZALAS.md)
 
 ### 11. Saját domain és Cloudflare-elérés
-- A `boroscode.com` nyilvános projektfőoldal, az `boroscode.com/otthontar/` a későbbi védett Otthontár-cím. Az önálló fejlesztések külön aldomaint kaphatnak.
-- A kód elkészült, az éles Cloudflare Tunnel és Access aktiválása, valamint az iPhone-próba hátravan.
+- A `boroscode.com` nyilvános projektfőoldal, a `boroscode.com/otthontar/` a védett Otthontár-cím. Az önálló fejlesztések külön aldomaint kaphatnak.
+- A Cloudflare Tunnel és Access mögötti Ubuntu-példány elérhető. A dokumentált saját fiókos belépési, fotó- és iPhone-próba hátravan.
 - Részletes terv: [CLOUDFLARE-BOROSCODE-DOMAIN.md](CLOUDFLARE-BOROSCODE-DOMAIN.md)
 
-Az új pontok sorszáma nem kötött megvalósítási sorrend: a közös kezdőképernyő az önálló modulok belépési kerete lehet. Az új termékirány nem módosítja a jelenleg következő távoli hozzáférési feladatot: D-011 szerint átmenetileg a bekapcsolt Windows-gép a tesztszerver, a D-007 szerinti dedikált Debian későbbre kerül.
+Az új pontok sorszáma nem kötött megvalósítási sorrend: a közös kezdőképernyő az önálló modulok belépési kerete lehet. Az aktuális fejlesztési sorrendet a [promptok indexe](../prompts/README.md) tartalmazza.
 
 ## Tervezési státuszok
 
