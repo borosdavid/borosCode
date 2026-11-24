@@ -150,7 +150,7 @@ function cardMarkup(item, sourceQuery) {
         );
     return `<article class="card${item.status === 'SOLD' ? ' sold' : ''}">
         <div class="card-thumb">${thumb}</div>
-        <div><h2>${esc(item.name)}</h2><p>${esc(place)}</p><span class="tag">${esc(state)}</span></div>
+        <div class="card-details"><h2>${esc(item.name)}</h2><p>${esc(place)}</p><span class="tag">${esc(state)}</span></div>
         <div class="actions card-actions">
             ${sale && item.status !== 'SOLD' ? '<button class="primary" data-action="sold">Eladva</button>' : ''}
             ${cardActions}
@@ -164,18 +164,47 @@ async function list(filters={}) {
     const title=moving?'Költöztetés':trash?'Lomtár':sale?'Eladás':'Tárgyak';
     const create = !trash && !moving ? `<a class="button" href="${places.length ? appUrl('leltar/uj') + sourceQuery : appUrl('leltar/beallitasok')}">
         <span aria-hidden="true">＋</span>${places.length ? 'Új tárgy' : 'Első helyszín felvétele'}</a>` : '';
-    content.innerHTML=`<div class="heading"><h1>${title}</h1>${create}</div>
+    const overview = page === 'targyak';
+    const summary = overview ? `<dl class="inventory-summary" aria-label="Leltár áttekintése">
+        <div><dt>Tárgy a leltárban</dt><dd>${rows.length}</dd></div>
+        <div><dt>Helyszín</dt><dd>${places.length}</dd></div>
+        <div><dt>Borítóképes tárgy</dt><dd>${rows.filter(row => row.cover).length}</dd></div>
+    </dl>` : '';
+    const viewPicker = overview ? `<div class="view-picker" role="group" aria-label="Tárgylista nézete">
+        <button type="button" data-view="gallery">Fotónézet</button>
+        <button type="button" data-view="list">Lista</button>
+    </div>` : '';
+    content.innerHTML=`<div class="heading${overview ? ' inventory-heading' : ''}"><h1>${title}</h1>${create}</div>
+        ${summary}
         <div class="bar" role="group" aria-label="Keresés és szűrés">
             <label>Keresés<input id="itemSearch" type="search" placeholder="Tárgy neve vagy helyszíne" autocomplete="off"></label>
             <label>Helyszín<select id="locationFilter"><option value="">Minden helyszín</option>${options()}</select></label>
             ${!sale && !trash && !moving ? '<label class="checkbox"><input type="checkbox" id="saleFilter"> Csak eladó tárgyak</label>' : ''}
         </div>
-        <p class="results" role="status"></p><div class="cards"></div>`;
+        <div class="results-row"><p class="results" role="status"></p>${viewPicker}</div>
+        <div class="cards"></div>`;
     const filter = content.querySelector('#locationFilter');
     const search = content.querySelector('#itemSearch');
     const saleFilter = content.querySelector('#saleFilter');
     const results = content.querySelector('.results');
     const cards = content.querySelector('.cards');
+    if (overview) {
+        const buttons = [...content.querySelectorAll('.view-picker button')];
+        const key = appUrl('inventory-view');
+        const selectView = view => {
+            cards.dataset.view = view;
+            for (const button of buttons) {
+                button.setAttribute('aria-pressed', String(button.dataset.view === view));
+            }
+        };
+        let savedView;
+        try { savedView = sessionStorage.getItem(key); } catch { /* Storage may be unavailable. */ }
+        selectView(savedView === 'list' ? 'list' : 'gallery');
+        for (const button of buttons) button.addEventListener('click', () => {
+            selectView(button.dataset.view);
+            try { sessionStorage.setItem(key, button.dataset.view); } catch { /* Keep the current view. */ }
+        });
+    }
     filter.value = filters.place ?? '';
     search.value = filters.query ?? '';
     if (saleFilter) saleFilter.checked = filters.onlySale ?? false;

@@ -312,3 +312,135 @@ dialog .actions { justify-content: flex-end; }
     .sign-out { padding-inline: .45rem; }
     .card-thumb { width: 4.5rem; }
 }
+
+/* The sign-in artwork uses the application's palette, with no remote assets. */
+.login-page {
+    min-height: 100dvh;
+    display: grid;
+    place-items: center;
+    padding: clamp(.9rem, 4vw, 4rem);
+    background: #eeeee5;
+}
+.login-layout {
+    width: min(100%, 69rem);
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    border-radius: 24px;
+    overflow: hidden;
+    background: var(--surface);
+    box-shadow: 0 1.25rem 4rem #183d331e;
+}
+.login-cover {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    min-height: 35rem;
+    padding: clamp(1.5rem, 5vw, 3.7rem);
+    background: radial-gradient(ellipse at 75% 76%, #39664b, transparent 57%), var(--sidebar);
+    color: #f7f3e7;
+}
+.login-brand { font: 600 1.3rem/1.2 Georgia, serif; }
+.login-cover-title {
+    margin-top: clamp(1.4rem, 4vw, 3rem);
+    font: 500 clamp(3rem, 6vw, 5.25rem)/.97 Georgia, serif;
+    letter-spacing: -.045em;
+}
+.moving-art {
+    position: absolute;
+    right: 5%;
+    bottom: 3%;
+    width: min(81%, 26rem);
+    aspect-ratio: 1.34;
+    z-index: -1;
+    background: radial-gradient(ellipse at 48% 84%, #142d25a8, transparent 58%);
+}
+.box {
+    position: absolute;
+    inset: auto;
+    background: linear-gradient(90deg, #0000 96%, #2f170e19), var(--box-color);
+    box-shadow: .18rem .25rem .55rem #1b140c27;
+    border-radius: 1px;
+}
+.box::before, .box::after { content: ''; position: absolute; }
+.box::before {
+    bottom: 100%;
+    left: 0;
+    width: 100%;
+    height: 24%;
+    background: linear-gradient(90deg, #0000 42%, #fff5 43% 53%, #0000 54%), var(--box-top);
+    transform: skewX(-47deg);
+    transform-origin: bottom left;
+}
+.box::after {
+    top: -24%;
+    left: 100%;
+    height: 124%;
+    width: 20%;
+    background: var(--box-side);
+    clip-path: polygon(0 19.35%, 100% 0, 100% 80.65%, 0 100%);
+}
+.box-tall { width: 33%; height: 47%; right: 24%; bottom: 23%; --box-color: #e5ba78; --box-top: #f1d29a; --box-side: #ae7944; }
+.box-wide { width: 45%; height: 34%; left: 5%; bottom: 12%; --box-color: #c89156; --box-top: #e3b77d; --box-side: #926139; }
+.box-small { width: 30%; height: 27%; right: 10%; bottom: 7%; --box-color: #e8cf9b; --box-top: #f1ddb2; --box-side: #bf9a63; }
+.login-panel { align-self: center; padding: clamp(1.6rem, 5.8vw, 4.8rem); min-width: 0; }
+.login-panel h1 { margin-bottom: 1.65rem; font-size: clamp(2.1rem, 4.2vw, 3.25rem); }
+.login-panel form { display: grid; gap: 1rem; }
+.login-panel input, .login-panel button { min-height: 3.125rem; }
+.login-panel button { margin-top: .45rem; }
+
+.sidebar { background: #e9efe6; color: var(--text); border-inline-end: 1px solid #d9e3d7; }
+.sidebar a:focus-visible, .sign-out:focus-visible { outline-color: #ad591b; }
+.tabs a, .sign-out { color: #345144; }
+.tabs a:hover, .sign-out:hover { color: #183d33; background: #dce8dc; }
+.tabs [aria-current], .tabs [aria-current]:hover { background: var(--sidebar); color: #f3f8f3; }
+#logout-form { border-color: #c9d8cb; }
+.inventory-heading {
+    min-height: 8.25rem;
+    padding: clamp(1rem, 3vw, 2.15rem);
+    border-radius: 18px;
+    margin-bottom: .85rem;
+    background: linear-gradient(115deg, #183d33, #2e6150);
+    color: #f5f3e9;
+}
+.inventory-heading .button { background: #f3e9cf; color: #234e3c; border-color: #f3e9cf; }
+.inventory-heading .button:hover { background: #fff8e7; }
+.inventory-heading .button:focus-visible { outline-color: #ffd594; }
+.inventory-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; margin: 0 0 1.1rem; }
+.inventory-summary > div { display: grid; gap: .1rem; padding: .75rem 1rem; background: #e7eee4; border-radius: 10px; }
+.inventory-summary dt { color: #40584a; font-size: .86rem; }
+.inventory-summary dd { grid-row: 1; margin: 0; font: 500 clamp(1.5rem, 3.7vw, 2.4rem)/1.1 Georgia, serif; }
+.results-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .4rem; margin: .85rem 0 .65rem; }
+.results-row .results { margin: 0; }
+.view-picker { display: flex; flex-wrap: wrap; gap: .2rem; padding: .18rem; border-radius: 9px; background: #e7eee4; }
+.view-picker button { border-color: transparent; background: transparent; color: #3c5849; }
+.view-picker button[aria-pressed="true"] { background: var(--surface); border-color: #c4d3c4; color: #1e513b; }
+.cards[data-view="gallery"] { grid-template-columns: repeat(auto-fill, minmax(min(100%, 15.5rem), 1fr)); gap: .85rem; }
+.cards[data-view="gallery"] .card { min-width: 0; display: flex; flex-direction: column; align-items: stretch; padding: 0; overflow: hidden; gap: 0; }
+.cards[data-view="gallery"] .card-thumb { width: 100%; aspect-ratio: 16 / 10; border-radius: 0; background: #e6ede4; }
+.cards[data-view="gallery"] .card-thumb img { object-fit: contain; }
+.cards[data-view="gallery"] .card-details { padding: .9rem 1rem .75rem; }
+.cards[data-view="gallery"] .card-actions { padding: .6rem .9rem; border-top: 1px solid var(--border); justify-content: space-between; margin-top: auto; }
+.cards[data-view="gallery"] .empty { grid-column: 1 / -1; }
+
+@media (max-width: 46rem) {
+    .login-layout { grid-template-columns: minmax(0, 1fr); max-width: 34rem; border-radius: 18px; }
+    .login-cover { min-height: clamp(10.75rem, 40vw, 15rem); padding: 1.2rem 1.35rem; }
+    .login-cover-title { margin-top: 1.15rem; font-size: clamp(2.3rem, 8vw, 3.25rem); }
+    .moving-art { width: 52%; right: 0; bottom: 2%; opacity: .8; }
+    .login-panel h1 { margin-bottom: 1.1rem; }
+}
+@media (max-width: 30rem) {
+    .inventory-heading { min-height: 6.2rem; }
+    .inventory-summary { gap: .35rem; }
+    .inventory-summary > div { padding: .55rem .45rem; }
+    .inventory-summary dt { font-size: .77rem; }
+}
+@media (max-width: 41rem) {
+    .cards[data-view="gallery"] {
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.75rem), 1fr));
+        gap: .6rem;
+    }
+    .cards[data-view="gallery"] .card-details { padding: .65rem; }
+    .cards[data-view="gallery"] .card-actions { padding: .5rem; gap: .2rem; justify-content: flex-start; }
+    .cards[data-view="gallery"] .card-actions > * { padding-inline: .55rem; }
+}

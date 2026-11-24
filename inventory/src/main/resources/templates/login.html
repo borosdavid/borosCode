@@ -6,18 +6,27 @@
     <title>Bejelentkezés · Otthontár</title>
     <link rel="stylesheet" th:href="@{/inventory.css}">
 </head>
-<body class="entry-page">
-<main class="entry-panel">
-    <div class="brand"><img th:src="@{/icons/icon-192.png}" width="44" height="44" alt=""> Otthontár</div>
-    <h1>Bejelentkezés</h1>
-    <p class="entry-intro">Lépj be a közös költözési leltárba.</p>
-    <p class="notice" th:if="${param.error}" role="alert">Sikertelen bejelentkezés. Ellenőrizd az adatokat. Túl sok próbálkozás után várj 15 percet.</p>
-    <p class="notice" th:if="${param.logout}" role="status">Kijelentkeztél.</p>
-    <form th:action="@{/login}" method="post">
-        <label>Felhasználónév<input name="username" autocomplete="username" maxlength="64" required></label>
-        <label>Jelszó<input name="password" type="password" autocomplete="current-password" required></label>
-        <button class="primary">Bejelentkezés</button>
-    </form>
+<body class="login-page">
+<main class="login-layout">
+    <div class="login-cover">
+        <p class="login-brand">Otthontár</p>
+        <p class="login-cover-title">Költözési<br>leltár</p>
+        <div class="moving-art" aria-hidden="true">
+            <span class="box box-tall"></span>
+            <span class="box box-wide"></span>
+            <span class="box box-small"></span>
+        </div>
+    </div>
+    <section class="login-panel" aria-labelledby="login-title">
+        <h1 id="login-title">Bejelentkezés</h1>
+        <p class="notice" th:if="${param.error}" role="alert">Sikertelen bejelentkezés. Ellenőrizd az adatokat. Túl sok próbálkozás után várj 15 percet.</p>
+        <p class="notice" th:if="${param.logout}" role="status">Kijelentkeztél.</p>
+        <form th:action="@{/login}" method="post">
+            <label>Felhasználónév<input name="username" autocomplete="username" maxlength="64" required></label>
+            <label>Jelszó<input name="password" type="password" autocomplete="current-password" required></label>
+            <button class="primary">Bejelentkezés</button>
+        </form>
+    </section>
 </main>
 </body>
 </html>

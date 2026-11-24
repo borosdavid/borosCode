@@ -2,7 +2,7 @@
 
 A megvalósítás a [`50aa09b` main commit 01C promptjára](https://github.com/borosdavid/borosCode/blob/50aa09b2bdb119d5dfa029e9cd64db6b36715cfe/prompts/01C-WEB-FELULET.md) épül.
 
-Az asztali oldalsáv és a mobilos navigáció ugyanazokat a leltárnézeteket éri el. A tárgylista kis fotót, nevet, helyszínt és műveleti állapotot mutat. A név és helyszín szerinti keresés ékezet nélkül is működik, a helyszín- és eladásszűrővel együtt. A bejelentkezés, az adatlap, a fotók, a beállítások és az offline indítóoldal közös stílust használ.
+Az asztali oldalsáv és a mobilos navigáció ugyanazokat a leltárnézeteket éri el. A képernyő tetején a tárgyak, helyszínek és borítóképes tárgyak száma látszik. A **Fotónézet** nagyobb előnézeteket használ, a **Lista** több tárgyat fér el egymás alatt. A belépőképernyő külön, rajzolt költözési borítót kapott. A név és helyszín szerinti keresés ékezet nélkül is működik, a helyszín- és eladásszűrővel együtt. A bejelentkezés, az adatlap, a fotók, a beállítások és az offline indítóoldal közös stílust használ.
 
 ## Előkészítés
 
@@ -13,7 +13,7 @@ A műveleteket külön tesztfiókkal és elkülönített adatbázissal, fotókö
 | Nézet | Próba | Elvárt eredmény |
 |---|---|---|
 | Belépés | Nyisd meg az elkülönített példány leltárát, lépj be tesztfiókkal, majd lépj ki | A belépő, a leltár és a kijelentkezés útvonala az alkalmazás előtagján belül marad |
-| Tárgylista | Keress egy ékezetes nevű teszttárgyra ékezet nélkül, válassz helyszínt, kapcsold be az eladásszűrőt | A szűrők együtt működnek, látszik az eredmények száma és a találat nélküli állapot |
+| Tárgylista | Válts fotónézet és lista között, keress ékezet nélkül, válassz helyszínt és próbáld az eladásszűrőt | A választott nézetet újratöltés után is megjegyzi a böngészőlap. A szűrők együtt működnek, az eredmények száma látható |
 | Adatlap | Hozz létre egy fotós próbatárgyat, mentsd, nyisd meg újra, válassz borítóképet | Az előnézet a listában megjelenik, az adatlapon megnyitható az eredeti kép |
 | Műveletek | Rögzíts eladást és hajts végre költöztetést külön próbatárgyakon. Tegyél lomtárba és állíts vissza egy teszttárgyat | Minden művelet a meglévő szabályok szerint működik, a változás látható a listán |
 | Elrendezés és fókusz | Próbáld ki asztali böngészőben és kb. 390 px szélességen. Használd a Tab billentyűt és nagyítsd a szöveget | A vezérlők elérhetők, a fókusz követhető, a tartalom vízszintes görgetés nélkül olvasható |

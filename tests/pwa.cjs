@@ -36,6 +36,7 @@ async function fixturePage(filename, prefix) {
         html = html.replace(/<header th:replace="[^"]*"><\/header>/, header)
             .replace(/th:attr="data-app-root=@\{\/\},data-upload-limit-mib=[^"]+"/, `data-app-root="${prefix}/" data-upload-limit-mib="200"`);
     }
+    if (filename === 'login') html = html.replace(/<p[^>]*th:if="[^"]*"[^>]*>[^<]*<\/p>/g, '');
     return html.replace(/th:(src|href|action)="@\{([^}]+)\}"/g, (_, attribute, value) => `${attribute}="${prefix}${value}"`);
 }
 
@@ -87,8 +88,9 @@ const server = http.createServer(async (req,res) => {
             const data = lists[route] ?? [];
             res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(data));return;
         }
-        if(route==='/leltar'||route.startsWith('/leltar/')||route==='/offline.html') {
-            const html = await fixturePage(route === '/offline.html' ? 'offline' : 'inventory/index', prefix);
+        if(route==='/leltar'||route.startsWith('/leltar/')||route==='/offline.html'||route==='/login') {
+            const template = {'/offline.html':'offline', '/login':'login'}[route] ?? 'inventory/index';
+            const html = await fixturePage(template, prefix);
             res.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});res.end(html);return;
         }
         if(failAsset && route==='/manifest.webmanifest'){res.writeHead(503);res.end();return;}
@@ -107,6 +109,11 @@ async function browserChecks(browser, base, prefix) {
     const page=await context.newPage();
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     try {
+        await page.goto(origin+'/login');
+        await page.getByRole('heading',{name:'Bejelentkezés',exact:true}).waitFor();
+        assert.equal(await page.locator('.login-panel form').getAttribute('action'),prefix+'/login');
+        assert.equal(await page.locator('.moving-art').isVisible(),true);
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
         let releaseItems;
         blockItems = new Promise(resolve => { releaseItems = resolve; });
         try {
@@ -132,6 +139,15 @@ async function browserChecks(browser, base, prefix) {
         assert.equal(await page.evaluate(()=>document.activeElement.getAttribute('href')),'#content');
         await page.keyboard.press('Enter');
         assert.equal(await page.evaluate(()=>document.activeElement.id),'content');
+        const view = page.getByRole('group',{name:'Tárgylista nézete'});
+        assert.equal(await view.getByRole('button',{name:'Fotónézet'}).getAttribute('aria-pressed'),'true');
+        assert.deepEqual(await page.locator('.inventory-summary dd').allTextContents(),['2','2','1']);
+        await view.getByRole('button',{name:'Lista',exact:true}).click();
+        assert.equal(await page.locator('.cards').getAttribute('data-view'),'list');
+        await page.reload();
+        await view.getByRole('button',{name:'Lista',exact:true,pressed:true}).waitFor();
+        await view.getByRole('button',{name:'Fotónézet'}).click();
+        assert.equal(await page.locator('.cards').getAttribute('data-view'),'gallery');
         const search = page.getByRole('searchbox',{name:'Keresés'});
         await search.fill('allolampa');
         assert.equal(await page.locator('.card').count(),1);
