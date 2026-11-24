@@ -5,8 +5,8 @@ After=otthontar-inventory.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/bash %h/otthontar-ubuntu-teszt/borosCode/scripts/Backup-Ubuntu.sh --run
-# Replace ExecStart only if this verified repository path differs.
+ExecStart=/usr/bin/bash %h/.local/lib/otthontar/Backup-Ubuntu.sh --run
+# Installed independent of the live Otthontár application checkout.
 TimeoutStartSec=2h
 UMask=0077
 Nice=10
