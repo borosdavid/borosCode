@@ -1,7 +1,16 @@
 # 01D – Otthontár napi, titkosított Ubuntu biztonsági mentése
 
 **Implementáció:** `scripts/Backup-Ubuntu.sh`, `scripts/Verify-Backup-Ubuntu.sh`, `scripts/systemd/otthontar-backup.{service,timer}`, `scripts/tests/Backup-Ubuntu.Tests.sh`.  
-**2026-11-24-i állapot:** fejlesztés a `dev` ágon. **Nem telepítettük az Ubuntu szerverre**, és nincs éles adatos mentés/visszaállítási igazolás. Az alábbiakat a gépen kell ellenőrizni.
+**2026-11-24-i állapot:** az Ubuntu-példány helyi mentése üzembe helyezve. A telepített szkriptek forrása a `dev` ág [`95e6c4f`](https://github.com/borosdavid/borosCode/commit/95e6c4f) commitja. A közös projektutasítások forrása a `main` ág `5921afa` commitja.
+
+## Az Ubuntu-példány üzembe helyezési naplója
+
+- A két szkript külön felhasználói programkönyvtárba került (`~/.local/lib/otthontar/`). Az `age` 1.3.2 hivatalos kiadását SHA-256 ellenőrzéssel telepítettük ugyanott a `bin/` könyvtárba. A systemd szolgáltatás a meglévő, alkalmazás mellé telepített MySQL 9.7.4 klienst használja.
+- A felhasználó a védett szerveren egyszerűbb kulcskezelést választott. A titkosított `.tar.age` formátum megmaradt. A kulcspár helyben készült, a privát kulcs a felhasználó privát konfigurációs könyvtárában van. A szerver vagy lemez elvesztése esetén a mentés és a kulcs együtt elveszhet. Az alábbi általános útmutató külön eszközön tárolt kulcsa választható telepítési mód.
+- A mentés a meglévő helyi MySQL-admin opciófájlt használja a kapcsolódáshoz. Az Inventory és a MySQL helyi konfigurációja bekerül a titkosított archívumba. A mentés az alkalmazásfrissítés zárfájlját is használja.
+- A kiesés nélküli `--check` sikeres. Az első éles mentés elkészült a `~/otthontar-backups/` könyvtárban, 600-as fájljogosultsággal. Az Inventory a mentés után aktív. A visszafejtés, a tartalomlista és a SHA-256 ellenőrzés sikeres.
+- A visszaállítási próba külön, hálózati elérés nélküli MySQL-példányban futott. Mind a 8 tábla és minden táblánál a rekordszám egyezett. A forrás és a visszaállított fotómappa üres volt, ezért valódi fotófájlra nincs visszaállítási bizonyíték.
+- A napi timer engedélyezett és aktív, a felhasználói linger engedélyezve van. Az első automatikus futás a bekapcsoláskor 2026-11-25 03:17:59 CET-re volt ütemezve. Az automatikus futás eredménye ekkor még ellenőrzésre várt.
 
 ## 0. Mit csinál és milyen korlátai vannak?
 
