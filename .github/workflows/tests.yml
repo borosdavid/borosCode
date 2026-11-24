@@ -84,6 +84,20 @@ jobs:
         run: npm exec --prefix tests -- playwright-core install --with-deps --only-shell chromium
       - run: npm test --prefix tests
 
+
+  ubuntu-backup:
+    name: Ubuntu backup fixture tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Bash syntax and backup integration fixtures
+        run: |
+          bash -n scripts/Backup-Ubuntu.sh scripts/Verify-Backup-Ubuntu.sh scripts/tests/Backup-Ubuntu.Tests.sh
+          bash scripts/tests/Backup-Ubuntu.Tests.sh
+
   powershell:
     name: Windows PowerShell tests
     runs-on: windows-2022
