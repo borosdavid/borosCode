@@ -1,9 +1,9 @@
-# Megvalósult roadmap-tervek
+# A dokumentum átköltözött a privát tudástárba
 
-Ide kerülnek azok a roadmap-leírások, amelyek teljes célja megvalósult, és az adott elfogadási feltételek teljesülését ellenőriztük. A fejlesztő a lezáráskor automatikusan áthelyezi és a main ágra menti őket. Egy részfeladat elkészülte vagy egy végrehajtási prompt megírása önmagában nem zárja le a teljes tervet.
+**Ez csak átirányító, nem végrehajtható prompt és nem hiteles roadmap.**
 
-Megőrizzük az eredeti tervet, a lezárás dátumát, a megvalósító commitok/PR-ek és teszteredmények hivatkozását, valamint az átadási dokumentum elérési útját. Az aktív tervek a [szülőmappában](../README.md), a rendezési szabályok a [gyökér AGENTS.md-ben](../../AGENTS.md) találhatók.
+A legfrissebb tartalom: [roadmap/kesz/README.md](https://github.com/borosdavid/borosCode-knowledge/blob/main/projects/otthontar/roadmap/kesz/README.md)
 
-## Lezárt tervek
+Az érvényes változat a **privát** `borosdavid/borosCode-knowledge` repository `main` ágán van. A Codexnek a valódi privát fájlt és annak `AGENTS.md` munkarendjét kell beolvasnia. Ha nincs hozzáférés, kérj jogosultságot; ne a régi commitot vagy ezt a hivatkozót hajtsd végre.
 
-Jelenleg nincs teljes egészében megvalósult, ide áthelyezhető roadmap-terv. Az Android, a költözési naptár, az asztali bővítés és a sport-/táplálkozásnapló továbbra is az aktív tervek között marad.
+Költözés: 2026-11-24. Az alkalmazáskód a `borosdavid/borosCode` repóban marad.

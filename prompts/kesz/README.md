@@ -1,11 +1,9 @@
-# Elkészült fejlesztési feladatok
+# A dokumentum átköltözött a privát tudástárba
 
-Ide kerülnek a teljesen megvalósított és az előírt ellenőrzésekkel igazolt promptok. Az áthelyezést a fejlesztő a lezárás részeként automatikusan elvégzi, és a main ágra menti.
+**Ez csak átirányító, nem végrehajtható prompt és nem hiteles roadmap.**
 
-A leírás az eredeti követelmények mellett tartalmazza a lezárás dátumát, a megvalósító commit/PR hivatkozását, a teszteredményeket és az átadási dokumentumot. Az aktív feladatok a [szülőmappában](../README.md), a közös szabályok a [gyökér AGENTS.md-ben](../../AGENTS.md) vannak.
+A legfrissebb tartalom: [prompts/kesz/README.md](https://github.com/borosdavid/borosCode-knowledge/blob/main/projects/otthontar/prompts/kesz/README.md)
 
-## Lezárt feladatok
+Az érvényes változat a **privát** `borosdavid/borosCode-knowledge` repository `main` ágán van. A Codexnek a valódi privát fájlt és annak `AGENTS.md` munkarendjét kell beolvasnia. Ha nincs hozzáférés, kérj jogosultságot; ne a régi commitot vagy ezt a hivatkozót hajtsd végre.
 
-Jelenleg nincs ide áthelyezett feladatleírás.
-
-2026. november 17-i ellenőrzés: a JPA-átállás Windows-oldali eredménye még nem ellenőrizhető a dev ágon; a 01-es PWA-fázisból a telefonos HTTPS/jogosultság és a szükséges eszközpróba hátravan; a 01B Windows-kapcsolat még előkészített feladat. Ezek a leírások ezért aktívak maradnak. Ez a bejegyzés állapotfelvétel, nem későbbi feladatok lezárását tiltó szabály.
+Költözés: 2026-11-24. Az alkalmazáskód a `borosdavid/borosCode` repóban marad.
