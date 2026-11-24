@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.*;
+import java.util.regex.Pattern;
 import org.springframework.context.annotation.*;
 import org.springframework.security.authentication.*;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -26,6 +27,17 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Configuration
 @EnableWebSecurity
 public class AccountSecurity {
+  // Spring's content-versioned resource names must be readable before login.
+  // Keep the allowlist restricted to known static file stems and 32-hex fingerprints.
+  private static final Pattern PUBLIC_VERSIONED_ASSET =
+      Pattern.compile(
+          "^/(?:inventory-[0-9a-f]{32}\\.(?:css|js)|(?:auth|photo-input|pwa|sw)-[0-9a-f]{32}\\.js|manifest-[0-9a-f]{32}\\.webmanifest)$");
+
+  static boolean publicVersionedAsset(HttpServletRequest request) {
+    return Set.of("GET", "HEAD").contains(request.getMethod())
+        && PUBLIC_VERSIONED_ASSET.matcher(request.getServletPath()).matches();
+  }
+
   static boolean api(HttpServletRequest request) {
     String path = LocalAccessFilter.applicationPath(request);
     return path.equals("/api") || path.startsWith("/api/");
@@ -67,6 +79,8 @@ public class AccountSecurity {
                         "/manifest.webmanifest",
                         "/icons/**",
                         "/actuator/health")
+                    .permitAll()
+                    .requestMatchers(AccountSecurity::publicVersionedAsset)
                     .permitAll()
                     .anyRequest()
                     .authenticated())
