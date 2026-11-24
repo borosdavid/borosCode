@@ -3,8 +3,8 @@ set -euo pipefail
 umask 077
 
 branch=${1:-dev}
-if [[ $# -gt 1 || ( "$branch" != dev && "$branch" != teszt ) ]]; then
-  printf 'Használat: %s [dev|teszt]\n' "$0" >&2
+if [[ $# -gt 1 || ( "$branch" != dev && "$branch" != teszt && "$branch" != main ) ]]; then
+  printf 'Használat: %s [dev|teszt|main]\n' "$0" >&2
   exit 2
 fi
 
