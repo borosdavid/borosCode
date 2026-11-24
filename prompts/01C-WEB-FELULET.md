@@ -1,10 +1,10 @@
 # 01C – Letisztult, reszponzív Otthontár webes felület
 
 > **Státusz:** Fejlesztés alatt  
-> **Pontosítás / akadály:** A felhasználó szerint a jelenlegi weboldal megfelelően működik. A feladat a használatban lévő funkciók egységes felületének kialakítása az iPhone-os offline fejlesztés előtt.  
-> **Megvalósítás:** Nincs igazolt megvalósítási commit.  
-> **Ellenőrzés:** A felület és az átvételi feltételek ellenőrzése folyamatban.  
-> **Felhasználói teszt:** Nincs átadva.  
+> **Pontosítás / akadály:** Az új felület elkészült és a `dev` ágon ellenőriztük. A címkézett tesztkiadás és az iPhone Safari-próba hátravan.  
+> **Megvalósítás:** [`dev`, `0786545`](https://github.com/borosdavid/borosCode/commit/078654512a87b4b6f62f5566c5322b532659df68).  
+> **Ellenőrzés:** 2026-11-24, `0786545`: [sikeres CI](https://github.com/borosdavid/borosCode/actions/runs/45348571638) Java/MySQL integrációval, a becsomagolt szolgáltatások próbájával, Chromium és Edge PWA-teszttel, valamint Windows PowerShell-ellenőrzéssel. A böngészőpróbák a gyökér és az `/otthontar/` útvonalon is lefutottak. [Kézi próbamenet](https://github.com/borosdavid/borosCode/blob/078654512a87b4b6f62f5566c5322b532659df68/docs/web-felulet-01c.md).  
+> **Felhasználói teszt:** Nincs címkézett tesztágas átadás. A jelenlegi munkamenet GitHub-hozzáférése a szükséges annotált tag közzétételéhez nem elegendő.  
 > **Frissítve:** 2026-11-24. [Státuszszabályok](../projekt/STATUSZOK.md).
 
 ## Cél
