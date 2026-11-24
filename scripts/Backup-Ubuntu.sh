@@ -63,6 +63,11 @@ fi
 
 [[ -d "$BACKUP_DIR" && ! -L "$BACKUP_DIR" ]] || { echo "A mentési könyvtár hiányzik vagy symlink." >&2; exit 1; }
 [[ -w "$BACKUP_DIR" ]] || { echo "A mentési könyvtár nem írható." >&2; exit 1; }
+if [[ -n "${UPDATE_LOCK:-}" ]]; then
+  [[ "$UPDATE_LOCK" = /* && -d "$(dirname -- "$UPDATE_LOCK")" ]] || { echo "Érvénytelen UPDATE_LOCK útvonal" >&2; exit 1; }
+  exec 8>"$UPDATE_LOCK"
+  flock -n 8 || { echo "Az alkalmazás frissítése folyamatban; mentés elhalasztva." >&2; exit 1; }
+fi
 backup_perm=$(stat -c '%a' -- "$BACKUP_DIR")
 if (( 8#$backup_perm & 8#077 )); then echo "A mentési könyvtár legyen 700 jogosultságú." >&2; exit 1; fi
 exec 9>"$BACKUP_DIR/.backup.lock"
@@ -97,9 +102,11 @@ echo "Inventory írásainak leállítása és konzisztens pillanatkép készít�
 systemctl --user stop "$INVENTORY_SERVICE"
 stopped=1
 # InnoDB transaction-consistent SQL dump; all application writes must use Inventory.
-mysqldump --defaults-extra-file="$MYSQL_DEFAULTS_FILE" \
-  --single-transaction --quick --no-tablespaces --set-gtid-purged=OFF \
-  --routines --triggers --databases "$MYSQL_DATABASE" >"$stage/database.sql"
+dump_opts=(--single-transaction --quick --routines --triggers --databases)
+dump_help=$(mysqldump --help 2>&1)
+if [[ "$dump_help" == *"--no-tablespaces"* ]]; then dump_opts+=(--no-tablespaces); fi
+if [[ "$dump_help" == *"--set-gtid-purged"* ]]; then dump_opts+=(--set-gtid-purged=OFF); fi
+mysqldump --defaults-extra-file="$MYSQL_DEFAULTS_FILE" "${dump_opts[@]}" "$MYSQL_DATABASE" >"$stage/database.sql"
 [[ -s "$stage/database.sql" ]] || { echo "Üres SQL dump!" >&2; exit 1; }
 cp -a -- "$PHOTO_DIR/." "$stage/photos/"
 for i in "${!CONFIG_FILES[@]}"; do
