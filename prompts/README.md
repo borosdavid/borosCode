@@ -19,7 +19,7 @@ A teljesen elkészült feladatok leírásai a **[kesz/](kesz/README.md)** almapp
 
 1. [00A – Hibernate/JPA-átállás](00A-HIBERNATE-JPA-ATALLAS.md) – a meglévő perzisztenciaalap.
 2. [01 – PWA és HTTPS](01-PWA-HTTPS-MOBIL-ALAP.md) és [01A – alkalmazásfiókok](01A-FELHASZNALOI-FIOKOK.md) – a használatban lévő webes alap és a hozzá tartozó PWA-ellenőrzések.
-3. **[01C – Letisztult webes felület](01C-WEB-FELULET.md)** – a következő fejlesztési feladat. A meglévő Otthontár funkcióira épülő reszponzív felület asztali és mobilböngészőre.
+3. **[01C – Letisztult webes felület](01C-WEB-FELULET.md)** – a felület implementációja a `dev` ágon elkészült ([a2982a4](https://github.com/borosdavid/borosCode/commit/a2982a4e90baea4194db17bd8eb0c88fb8613f7d)); a publikus bejelentkezőn már látható a 01C, de a verziózott CSS/JS-erőforrások 404-es problémája és a teljes felhasználói/tesztágas átvétel még nyitott. [Közös konzisztencia-vizsgálat](https://github.com/borosdavid/borosCode-knowledge/blob/main/reviews/2026-11-24-KONZISZTENCIA.md).
 4. [02 – Teljes offline leltár és előnézetek](02-TELJES-OFFLINE-LELTAR-ELOZETEK.md) – offline olvasás az új felületre építve.
 5. [03 – Offline módosítás, kamera és szinkron](03-OFFLINE-MODOSITAS-KAMERA-SZINKRON.md) – offline írás és szinkron.
 6. [04 – iPhone-teszt és átadás](04-IPHONE-TESZT-ADATVEDELEM-ATADAS.md) – eszközös átvétel.
