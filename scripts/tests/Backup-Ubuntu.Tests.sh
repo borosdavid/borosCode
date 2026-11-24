@@ -32,6 +32,7 @@ if [[ "$1" == "-d" ]]; then
   exit
 fi
 if [[ "$1" != "-r" || -z "$2" || "$3" != "-o" || -z "$4" ]]; then exit 2; fi
+if [[ "${MOCK_AGE_FAIL:-0}" == 1 ]]; then exit 88; fi
 cat > "$4"
 MOCK
 chmod +x "$tmp/bin/"*
