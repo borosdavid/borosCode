@@ -74,7 +74,9 @@ fi
 if MOCK_AGE_FAIL=1 bash "$repo/scripts/Backup-Ubuntu.sh" --run "$tmp/backup.conf"; then
   echo "Failed encryption should fail backup" >&2; exit 1
 fi
-grep -q 'start otthontar-inventory.service' "$MOCK_LOG"
+if grep -q 'stop otthontar-inventory.service' "$MOCK_LOG"; then
+  echo "Invalid age recipient must fail before stopping Inventory" >&2; exit 1
+fi
 mapfile -t after < <(find "$tmp/backups" -maxdepth 1 -type f -name 'otthontar-*.tar.age')
 [[ "${#after[@]}" -eq 1 ]] || { echo "Failed encryption altered archive count" >&2; exit 1; }
 
