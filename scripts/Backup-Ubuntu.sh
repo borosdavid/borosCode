@@ -116,7 +116,7 @@ for i in "${!CONFIG_FILES[@]}"; do
   cp -p -- "$file" "$stage/config/file-$i"
   printf 'file-%s=%s\\n' "$i" "$file" >> "$stage/config/origins.txt"
 done
-if ! systemctl --user start "$INVENTORY_SERVICE"; then
+if ! systemctl --user start "$INVENTORY_SERVICE" || ! systemctl --user is-active --quiet "$INVENTORY_SERVICE"; then
   echo "KRITIKUS: Inventory újraindítása sikertelen!" >&2; exit 1
 fi
 stopped=0
