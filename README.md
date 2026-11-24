@@ -8,6 +8,8 @@ A Debian beállítása későbbre marad. A bekapcsolt Windows-gépen elkülöní
 
 Az Ubuntu-példány frissítése a [telefonos frissítési útmutató](docs/KNOWHOW-ubuntu-frissites.md) szerint indítható.
 
+A megújult leltárfelület kipróbálásához kövesd a [01C ellenőrzőlistáját](docs/web-felulet-01c.md).
+
 ## Első indítás
 
 1. Ellenőrizd alább a futtatási előfeltételeket. Natív Windowson előbb futtasd a `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Build.ps1` parancsot. Ezután indítsd el az alkalmazást az **Inditas.cmd** fájllal.

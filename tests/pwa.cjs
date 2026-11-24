@@ -9,16 +9,35 @@ const types = {'.js':'text/javascript','.css':'text/css','.html':'text/html','.w
 let expiredSession = false, fixtureUser = 'account-1';
 let failSave = true, savedBody = '', savedHeader = '', nextWorker = false, failAsset = false;
 let dropSaveResponse = false, serverUnavailable = false, saveId;
+let blockItems, itemsUnavailable;
+const fixtureItems = [
+    {id:'fixture-1', name:'Állólámpa', place:'Lakás', location_id:'place-1', cover:'photo-1', status:'KEEP'},
+    {id:'fixture-2', name:'Szék a hosszú nevű tárgyak elrendezésének ellenőrzéséhez', place:'Raktár', location_id:'place-2', status:'LISTED'}
+];
+
+async function fixturePage(filename, prefix) {
+    const read = name => fs.readFile(path.join(root, 'templates', name + '.html'), 'utf8');
+    let html = await read(filename);
+    if (filename === 'inventory/index') {
+        const header = (await read('layout')).match(/<header[\s\S]+?<\/header>/)[0];
+        html = html.replace(/<header th:replace="[^"]*"><\/header>/, header)
+            .replace(/th:attr="data-app-root=@\{\/\},data-upload-limit-mib=[^"]+"/, `data-app-root="${prefix}/" data-upload-limit-mib="200"`);
+    }
+    return html.replace(/th:(src|href|action)="@\{([^}]+)\}"/g, (_, attribute, value) => `${attribute}="${prefix}${value}"`);
+}
+
 const server = http.createServer(async (req,res) => {
     if(serverUnavailable){req.socket.destroy();return;}
     const url = new URL(req.url,'http://localhost');
+    const prefix = url.pathname.startsWith('/otthontar/') ? '/otthontar' : '';
+    const route = url.pathname.slice(prefix.length);
     try {
         res.setHeader('Cache-Control','no-store');
-        if(url.pathname==='/auth/csrf') {res.setHeader('Content-Type','application/json');res.end(JSON.stringify({headerName:'X-CSRF-TOKEN',token:'fixture-token'}));return;}
-        if(url.pathname==='/login'&&req.method==='POST') {expiredSession=false;res.writeHead(204);res.end();return;}
-        if(url.pathname.startsWith('/api/')) {
+        if(route==='/auth/csrf') {res.setHeader('Content-Type','application/json');res.end(JSON.stringify({headerName:'X-CSRF-TOKEN',token:'fixture-token'}));return;}
+        if(route==='/login'&&req.method==='POST') {expiredSession=false;res.writeHead(204);res.end();return;}
+        if(route.startsWith('/api/')) {
             if(expiredSession){res.writeHead(401,{'Content-Type':'application/json'});res.end(JSON.stringify({detail:'Jelentkezz be újra.'}));return;}
-            if(url.pathname==='/api/session'){res.setHeader('Content-Type','application/json');res.end(JSON.stringify({id:fixtureUser,username:'alice',headerName:'X-CSRF-TOKEN',token:'fixture-token'}));return;}
+            if(route==='/api/session'){res.setHeader('Content-Type','application/json');res.end(JSON.stringify({id:fixtureUser,username:'alice',headerName:'X-CSRF-TOKEN',token:'fixture-token'}));return;}
 
             if(req.method==='POST') {
                 savedHeader=req.headers['x-otthontar-request'];
@@ -30,39 +49,91 @@ const server = http.createServer(async (req,res) => {
                 res.writeHead(failSave?413:200,{'Content-Type':'application/json'});
                 res.end(JSON.stringify(failSave?{detail:'Túl nagy kérés. A piszkozat megmarad.'}:{}));return;
             }
-            const data=url.pathname==='/api/places'?[{id:'place-1',name:'Lakás'}]:url.pathname==='/api/actions'?[{id:'KEEP',name:'Megtartjuk',kind:'CUSTOM',active:true}]:[];
+            if(route==='/api/photos/photo-1/small') {
+                const icon = await fs.readFile(path.join(root,'static/icons/icon-192.png'));
+                res.writeHead(200, {'Content-Type':'image/png'});res.end(icon);return;
+            }
+            if (route === '/api/items' && blockItems) await blockItems;
+            if (route === '/api/items' && itemsUnavailable) {
+                res.writeHead(503, {'Content-Type':'application/json'});
+                res.end(JSON.stringify({detail:'A tesztleltár átmenetileg nem elérhető.'}));return;
+            }
+            if (route === '/api/items' && url.searchParams.get('trash') === 'true') {
+                res.writeHead(200, {'Content-Type':'application/json'});res.end('[]');return;
+            }
+            const lists = {
+                '/api/items':fixtureItems,
+                '/api/places':[{id:'place-1',name:'Lakás'},{id:'place-2',name:'Raktár'}],
+                '/api/actions':[{id:'KEEP',name:'Megtartjuk',kind:'CUSTOM',active:true}]
+            };
+            const data = lists[route] ?? [];
             res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(data));return;
         }
-        if(url.pathname==='/leltar'||url.pathname.startsWith('/leltar/')) {
-            let html = await fs.readFile(path.join(root,'templates/inventory/index.html'),'utf8');
-            html=html.replace(/<header th:replace="[^"]*"><\/header>/,'<header><a class="brand" href="/leltar">Otthontár</a></header>');
-            res.writeHead(200,{'Content-Type':'text/html'});res.end(html);return;
+        if(route==='/leltar'||route.startsWith('/leltar/')||route==='/offline.html') {
+            const html = await fixturePage(route === '/offline.html' ? 'offline' : 'inventory/index', prefix);
+            res.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});res.end(html);return;
         }
-        if(failAsset && url.pathname==='/manifest.webmanifest'){res.writeHead(503);res.end();return;}
-        const file=path.join(root,'static',url.pathname);
+        if(failAsset && route==='/manifest.webmanifest'){res.writeHead(503);res.end();return;}
+        const file=path.join(root,'static',route);
         let data=await fs.readFile(file);
-        if(url.pathname==='/sw.js'&&nextWorker)data=Buffer.from(data.toString().replace('otthontar-shell-v3','otthontar-shell-v4'));
+        if(route==='/sw.js'&&nextWorker)data=Buffer.from(data.toString().replace(/const VERSION = cachePrefix \+ 'v\d+';/, "const VERSION = cachePrefix + 'test-candidate';"));
         res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(data);
     }catch{res.writeHead(404);res.end();}
 });
-(async()=>{
-    await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
-    const origin='http://127.0.0.1:'+server.address().port;
-    const executablePath=process.env.BROWSER_EXE || (process.platform==='win32'
-        ? 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe' : undefined);
-    const browser=await chromium.launch({executablePath,headless:true,args:['--no-sandbox']});
-    const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:3});
+async function browserChecks(browser, base, prefix) {
+    const origin = base + prefix;
+    expiredSession = false; fixtureUser = 'account-1'; failSave = true; savedBody = ''; savedHeader = '';
+    nextWorker = false; failAsset = false; dropSaveResponse = false; serverUnavailable = false; itemsUnavailable = false;
+    const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:3, serviceWorkers:'allow'});
     const page=await context.newPage();
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     try {
-        await page.goto(origin+'/leltar');
+        let releaseItems;
+        blockItems = new Promise(resolve => { releaseItems = resolve; });
+        try {
+            await page.goto(origin+'/leltar');
+            await page.getByRole('status').filter({hasText:'A leltár betöltése…'}).waitFor();
+        } finally { releaseItems(); blockItems = null; }
         await page.getByRole('heading',{name:'Tárgyak',exact:true}).waitFor();
         await page.evaluate(()=>navigator.serviceWorker.ready);
         await page.waitForFunction(()=>navigator.serviceWorker.controller);
-        const manifest=await (await fetch(origin+'/manifest.webmanifest')).json();
-        assert.equal(manifest.start_url,'/leltar');assert.equal(manifest.scope,'/leltar');
-        for(const icon of manifest.icons)assert.equal((await fetch(origin+icon.src)).status,200);
+        const manifestUrl = origin+'/manifest.webmanifest';
+        const manifest=await (await fetch(manifestUrl)).json();
+        assert.equal(new URL(manifest.start_url,manifestUrl).href,origin+'/leltar');
+        assert.equal(new URL(manifest.scope,manifestUrl).href,origin+'/leltar');
+        for(const icon of manifest.icons)assert.equal((await fetch(new URL(icon.src,manifestUrl))).status,200);
+        const shellKey = await page.evaluate(async()=>(await caches.keys()).find(key=>key.startsWith('otthontar-')));
+        assert.ok(shellKey);
+        assert.equal(await page.getByRole('navigation',{name:'Leltár'}).getByRole('link',{name:'Tárgyak',exact:true}).getAttribute('aria-current'),'page');
+        await page.locator('.card-thumb img').evaluate(img=>img.decode());
+        assert.equal(await page.locator('.card').first().getByRole('link',{name:'Adatlap'}).getAttribute('href'),prefix+'/leltar/fixture-1');
         assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+        await page.keyboard.press('Tab');
+        assert.equal(await page.evaluate(()=>document.activeElement.getAttribute('href')),'#content');
+        await page.keyboard.press('Enter');
+        assert.equal(await page.evaluate(()=>document.activeElement.id),'content');
+        const search = page.getByRole('searchbox',{name:'Keresés'});
+        await search.fill('allolampa');
+        assert.equal(await page.locator('.card').count(),1);
+        await page.locator('#locationFilter').selectOption('place-2');
+        await page.getByText('A keresés és a szűrők alapján nincs találat.').waitFor();
+        await search.fill('');
+        assert.equal(await page.locator('.card').count(),1);
+        await page.getByLabel('Csak eladó tárgyak').check();
+        await page.locator('#locationFilter').selectOption('');
+        assert.equal(await page.locator('.card').count(),1);
+        await page.getByLabel('Csak eladó tárgyak').uncheck();
+        await page.addStyleTag({content:'html { font-size: 125%; }'});
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+        await page.getByRole('link',{name:'Lomtár',exact:true}).click();
+        await page.getByText('A lomtár üres.').waitFor();
+        itemsUnavailable = true;
+        await page.goto(origin+'/leltar');
+        await page.getByRole('alert').filter({hasText:'A tesztleltár átmenetileg nem elérhető.'}).waitFor();
+        await page.getByText('A leltár nem töltődött be.').waitFor();
+        itemsUnavailable = false;
+        await page.getByRole('link',{name:'Újrapróbálás'}).click();
+        await page.getByRole('heading',{name:'Tárgyak',exact:true}).waitFor();
         await page.goto(origin+'/leltar/uj');
         await page.locator('[name=name]').fill('Mobilos teszt');
         await page.locator('[name=location]').selectOption('place-1');
@@ -128,6 +199,7 @@ const server = http.createServer(async (req,res) => {
         assert.ok(savedBody.includes('filename="test.jpg"'));
         await page.getByRole('heading',{name:'Tárgyak',exact:true}).waitFor();
         await page.setViewportSize({width:1280,height:900});
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
         await page.getByRole('link',{name:'Új tárgy',exact:true}).click();
         await page.locator('[name=name]').waitFor();
         assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
@@ -147,7 +219,7 @@ const server = http.createServer(async (req,res) => {
             const done=new Promise(resolve=>registration.addEventListener('updatefound',()=>{const worker=registration.installing;worker.addEventListener('statechange',()=>{if(worker.state==='redundant')resolve();});},{once:true}));
             await registration.update();await done;
         });
-        assert.ok((await page.evaluate(()=>caches.keys())).includes('otthontar-shell-v3'));
+        assert.ok((await page.evaluate(()=>caches.keys())).includes(shellKey));
         failAsset=false;
         await page.evaluate(async()=>{
             const registration=await navigator.serviceWorker.getRegistration();
@@ -161,10 +233,11 @@ const server = http.createServer(async (req,res) => {
         await page.close();
         const fresh=await context.newPage();
         await fresh.goto(origin+'/leltar');
-        await fresh.waitForFunction(async()=>(await caches.keys()).includes('otthontar-shell-v4')&&!(await caches.keys()).includes('otthontar-shell-v3'));
+        const nextKey = shellKey.replace(/v\d+$/, 'test-candidate');
+        await fresh.waitForFunction(async({nextKey,shellKey})=>(await caches.keys()).includes(nextKey)&&!(await caches.keys()).includes(shellKey),{nextKey,shellKey});
         const dbValue=await fresh.evaluate(()=>new Promise(resolve=>{const r=indexedDB.open('otthontar-retention-test');r.onsuccess=()=>{const db=r.result;const tx=db.transaction('drafts');const get=tx.objectStore('drafts').get('draft');get.onsuccess=()=>{resolve(get.result);db.close();};};}));
         assert.equal(dbValue,'keep');
-        const cached=await fresh.evaluate(async()=>({keys:await caches.keys(),urls:(await(await caches.open('otthontar-shell-v4')).keys()).map(r=>r.url)}));
+        const cached=await fresh.evaluate(async key=>({keys:await caches.keys(),urls:(await(await caches.open(key)).keys()).map(r=>r.url)}),nextKey);
         assert.ok(cached.keys.includes('unrelated-app'));assert.ok(!cached.urls.some(u=>u.includes('/api/')||/\/leltar/.test(u)));
         await fresh.waitForFunction(()=>navigator.serviceWorker.controller?.state==='activated');
         // Fail the actual HTTP connection, including fetches made by the service worker.
@@ -172,8 +245,21 @@ const server = http.createServer(async (req,res) => {
         await fresh.goto(origin+'/leltar/some-item');
         await fresh.getByRole('heading',{name:'A szerver nem érhető el'}).waitFor();
         assert.equal(await fresh.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
-        assert.equal(await fresh.evaluate(()=>fetch('/api/items').then(()=>true,()=>false)),false);
+        assert.equal(await fresh.evaluate(url=>fetch(url).then(()=>true,()=>false),origin+'/api/items'),false);
+        assert.ok(await fresh.locator('.entry-panel').evaluate(el=>getComputedStyle(el).borderRadius!=='0px'));
         assert.deepEqual(errors,[]);
-        console.log('OK: offline deep-link fallback, API exclusion, atomic failed update, deferred activation, cache and IndexedDB retention.');
-    }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
+        console.log(`OK: ${prefix || '/'} offline deep-link, themed shell, API exclusion, atomic update and cache retention.`);
+    }finally{await context.close();}
+}
+
+(async()=>{
+    await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+    const origin='http://127.0.0.1:'+server.address().port;
+    const executablePath=process.env.BROWSER_EXE || (process.platform==='win32'
+        ? 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe' : undefined);
+    const browser=await chromium.launch({executablePath,headless:true,args:['--no-sandbox']});
+    try {
+        await browserChecks(browser, origin, '');
+        await browserChecks(browser, origin, '/otthontar');
+    } finally { await browser.close(); await new Promise(resolve=>server.close(resolve)); }
 })().catch(error=>{console.error(error);process.exitCode=1;server.close();});

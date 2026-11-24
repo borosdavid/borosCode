@@ -1,3 +1,21 @@
-<!doctype html><html lang="hu" xmlns:th="http://www.thymeleaf.org"><body>
-<header th:fragment="header"><a class="brand" th:href="@{/leltar}"><span class="mark">⌂</span> Otthontár</a><nav aria-label="Modulok"><a th:href="@{/leltar}">Költözési leltár</a><form th:action="@{/logout}" method="post" id="logout-form"><button>Kijelentkezés</button></form></nav></header>
-</body></html>
+<!doctype html>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org">
+<body>
+<header class="sidebar" th:fragment="header">
+    <a class="brand" th:href="@{/leltar}">
+        <img th:src="@{/icons/icon-192.png}" width="38" height="38" alt="">
+        <span>Otthontár</span>
+    </a>
+    <nav class="tabs" aria-label="Leltár">
+        <a th:href="@{/leltar}"><span aria-hidden="true">⊞</span> Tárgyak</a>
+        <a th:href="@{/leltar/eladas}"><span aria-hidden="true">↗</span> Eladás</a>
+        <a th:href="@{/leltar/koltoztetes}"><span aria-hidden="true">⇄</span> Költöztetés</a>
+        <a th:href="@{/leltar/beallitasok}"><span aria-hidden="true">⚙</span> Beállítások</a>
+        <a th:href="@{/leltar/lomtar}"><span aria-hidden="true">▤</span> Lomtár</a>
+    </nav>
+    <form th:action="@{/logout}" method="post" id="logout-form">
+        <button class="sign-out"><span aria-hidden="true">↪</span> Kijelentkezés</button>
+    </form>
+</header>
+</body>
+</html>

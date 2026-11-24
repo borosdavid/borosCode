@@ -5,9 +5,8 @@
     const install = document.querySelector('#pwa-help');
     const note = document.querySelector('#pwa-update');
     const connectivity = () => {
-        status.textContent = navigator.onLine
-            ? 'Online mentéshez elérhető szerver szükséges.'
-            : 'Nincs hálózat. A piszkozatot tartsd nyitva; offline mentés még nincs.';
+        status.hidden = navigator.onLine;
+        status.textContent = navigator.onLine ? '' : 'Nincs hálózat. A piszkozatot hagyd nyitva, amíg újra elérhető a szerver.';
     };
     connectivity();
     window.addEventListener('online', connectivity);

@@ -3,7 +3,7 @@
 const appPath = path => new URL(path, self.location.href).pathname;
 const root = appPath('./');
 const cachePrefix = root === '/' ? 'otthontar-shell-' : `otthontar-context:${root}:shell-`;
-const VERSION = cachePrefix + 'v4';
+const VERSION = cachePrefix + 'v5';
 const OFFLINE = appPath('offline.html');
 const INVENTORY = appPath('leltar');
 const ASSETS = [OFFLINE, ...['inventory.css','inventory.js','auth.js','photo-input.js','pwa.js',

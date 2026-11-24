@@ -1,13 +1,24 @@
 'use strict';
 const content = document.querySelector('#content');
 const message = document.querySelector('#message');
+const confirmation = document.querySelector('#confirmation');
 const appUrl = AccountAuth.url;
 const page = location.pathname.slice(appUrl('leltar/').length) || 'targyak';
 const moving = page === 'koltoztetes';
 const sale = page === 'eladas', trash = page === 'lomtar';
 const statuses = {KEEP:'Megtartjuk', WAIT:'Meghirdetésre vár', LISTED:'Meghirdetve', SOLD:'Elkelt'};
 let actions = [], places = [], dirty = () => false;
-function warn(e) {message.textContent=e.message || String(e); message.hidden=false; message.scrollIntoView({block:'nearest'});}
+function warn(e) {
+    confirmation.hidden = true;
+    message.textContent = e.message || String(e);
+    message.hidden = false;
+    message.scrollIntoView({block:'nearest'});
+}
+function confirmChange(text) {
+    message.hidden = true;
+    confirmation.textContent = text;
+    confirmation.hidden = false;
+}
 function esc(v) {return String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 async function api(path, options) {
     const writing = options?.method && !['GET','HEAD','OPTIONS'].includes(options.method.toUpperCase());
@@ -16,7 +27,8 @@ async function api(path, options) {
     try {
         res=await fetch(appUrl('api/'+path), {...options, cache:'no-store', headers:{...options?.headers, ...authHeaders, 'X-Otthontar-Request':'1'}});
         raw=await res.text();
-    } catch (error) {
+    } catch (cause) {
+        const error = new Error('Megszakadt a kapcsolat. Próbáld újra.', {cause});
         error.outcomeUnknown = writing;
         throw error;
     }
@@ -52,7 +64,7 @@ function showActionSettings() {
         const input=f.elements[0],toggle=f.elements[2];
         const render=()=>{toggle.textContent=a.active?'Kikapcsolás':'Visszakapcsolás';f.classList.toggle('inactive',!a.active);};
         async function save(enabled,name){
-            try{await post({...a,name,active:enabled});a.active=enabled;a.name=name;input.defaultValue=name;render();message.textContent='Művelet mentve.';message.hidden=false;}catch(e){warn(e);}
+            try{await post({...a,name,active:enabled});a.active=enabled;a.name=name;input.defaultValue=name;render();confirmChange('Művelet mentve.');}catch(e){warn(e);}
         }
         toggle.onclick=()=>save(!a.active,a.name);
         f.onsubmit=e=>{e.preventDefault();save(a.active,input.value.trim());};
@@ -62,15 +74,15 @@ function showActionSettings() {
     create.onsubmit=async e=>{
         e.preventDefault();
         try{const name=create.elements[0].value.trim();await post({name,kind:create.elements[1].value,active:true});
-            actions=await api('actions');addRow(actions.find(a=>a.name===name));create.reset();message.textContent='Művelet hozzáadva.';message.hidden=false;
+            actions=await api('actions');addRow(actions.find(a=>a.name===name));create.reset();confirmChange('Művelet hozzáadva.');
         }catch(err){warn(err);}
     };
 }
 function placeForm(p) {
-    return '<form class="place" data-id="'+esc(p.id)+'"><input aria-label="Helyszín neve" required maxlength="180" value="'+esc(p.name)+'"><button>Mentés</button></form>';
+    return '<form class="place" data-id="'+esc(p.id)+'"><input aria-label="Helyszín neve" required maxlength="180" value="'+esc(p.name)+'"><button'+(p.id?'':' class="primary"')+'>'+ (p.id?'Mentés':'Hozzáadás')+'</button></form>';
 }
 function showPlaces() {
-    content.innerHTML='<h1>Beállítások</h1><section id="places"><h2>Új helyszín</h2>'+placeForm({})+'<h2>Helyszínek átnevezése</h2>'+places.map(placeForm).join('')+'</section><section id="actionSettings"><h2>Tárgyműveletek</h2></section>';
+    content.innerHTML='<div class="heading"><h1>Beállítások</h1></div><section id="places" class="panel"><h2>Új helyszín</h2>'+placeForm({})+'<h2>Helyszínek átnevezése</h2>'+places.map(placeForm).join('')+'</section><section id="actionSettings" class="panel"></section>';
     showActionSettings();
     const forms=[...content.querySelectorAll('#places form')];
     dirty=()=>[...content.querySelectorAll('input, select')].some(el=>el.tagName==='INPUT'?el.value!==el.defaultValue:el.value!==el.options[0].value);
@@ -84,11 +96,11 @@ function showPlaces() {
             else {f.elements[0].value='';}
             places=await api('places');
             if(!f.dataset.id) {const added=places.find(p=>p.name===name); const saved=document.createElement('div'); saved.innerHTML=placeForm(added); const extra=saved.firstElementChild; content.querySelector('#places').append(extra);extra.onsubmit=f.onsubmit;}
-            message.textContent='Helyszín mentve.';message.hidden=false;
+            confirmChange('Helyszín mentve.');
         } catch(err){warn(err);}
     };
 }
-function showSaleDialog(item,selectedPlace) {
+function showSaleDialog(item,filters) {
     const dialog=document.querySelector('#sale-dialog');
     const form=dialog.querySelector('form');
     const error=form.querySelector('[role=alert]');
@@ -112,46 +124,108 @@ function showSaleDialog(item,selectedPlace) {
             return;
         } finally {form.inert=false;}
         dialog.close();
-        try {await list(selectedPlace);} catch(err){warn(err);}
+        try {
+            await list(filters);
+            confirmChange('Eladás rögzítve.');
+            content.focus();
+        } catch(err) { warn(err); }
     };
     dialog.showModal();
 }
-async function list(selectedPlace='') {
+function searchable(value) {
+    return String(value ?? '').toLocaleLowerCase('hu').normalize('NFD').replace(/\p{M}/gu, '');
+}
+
+function cardMarkup(item, sourceQuery) {
+    const place = moving ? `${item.place} → ${places.find(p => p.id === item.destination_id)?.name ?? ''}` : item.place;
+    const state = moving ? actions.find(a => a.id === item.action_id)?.name : actionLabel(item);
+    const thumb = item.cover
+        ? `<img loading="lazy" alt="" src="${appUrl('api/photos/')}${esc(item.cover)}/small">`
+        : '<span aria-hidden="true">▧</span>';
+    const cardActions = trash
+        ? '<button data-action="restore">Visszaállítás</button><button class="quiet danger" data-action="purge">Végleges törlés</button>'
+        : `<a class="card-link" href="${appUrl('leltar/')}${esc(item.id)}${sourceQuery}">Adatlap</a>` + (
+            moving ? '<button class="primary" data-action="move">Költöztetés végrehajtása</button>'
+                : '<button class="quiet danger" data-action="trash">Lomtárba</button>'
+        );
+    return `<article class="card${item.status === 'SOLD' ? ' sold' : ''}">
+        <div class="card-thumb">${thumb}</div>
+        <div><h2>${esc(item.name)}</h2><p>${esc(place)}</p><span class="tag">${esc(state)}</span></div>
+        <div class="actions card-actions">
+            ${sale && item.status !== 'SOLD' ? '<button class="primary" data-action="sold">Eladva</button>' : ''}
+            ${cardActions}
+        </div>
+    </article>`;
+}
+
+async function list(filters={}) {
     const rows=await api('items?trash='+trash);
     const sourceQuery=(sale||moving)?'?from='+page:'';
     const title=moving?'Költöztetés':trash?'Lomtár':sale?'Eladás':'Tárgyak';
-    content.innerHTML='<div class="heading"><h1>'+title+'</h1>'+(trash||moving?'':'<a class="button" href="'+(places.length?appUrl('leltar/uj')+sourceQuery:appUrl('leltar/beallitasok'))+'">'+(places.length?'Új tárgy':'Első helyszín felvétele')+'</a>')+'</div><div class="bar"><label>Helyszín<select id="locationFilter"><option value="">Minden helyszín</option>'+options()+'</select></label>'+(!sale&&!trash&&!moving?'<label><span><input type="checkbox" id="saleFilter"> Csak eladó tárgyak</span></label>':'')+'</div><div class="cards"></div>';
-    const filter=content.querySelector('#locationFilter');
-    filter.value=selectedPlace;
+    const create = !trash && !moving ? `<a class="button" href="${places.length ? appUrl('leltar/uj') + sourceQuery : appUrl('leltar/beallitasok')}">
+        <span aria-hidden="true">＋</span>${places.length ? 'Új tárgy' : 'Első helyszín felvétele'}</a>` : '';
+    content.innerHTML=`<div class="heading"><h1>${title}</h1>${create}</div>
+        <div class="bar" role="group" aria-label="Keresés és szűrés">
+            <label>Keresés<input id="itemSearch" type="search" placeholder="Tárgy neve vagy helyszíne" autocomplete="off"></label>
+            <label>Helyszín<select id="locationFilter"><option value="">Minden helyszín</option>${options()}</select></label>
+            ${!sale && !trash && !moving ? '<label class="checkbox"><input type="checkbox" id="saleFilter"> Csak eladó tárgyak</label>' : ''}
+        </div>
+        <p class="results" role="status"></p><div class="cards"></div>`;
+    const filter = content.querySelector('#locationFilter');
+    const search = content.querySelector('#itemSearch');
+    const saleFilter = content.querySelector('#saleFilter');
+    const results = content.querySelector('.results');
+    const cards = content.querySelector('.cards');
+    filter.value = filters.place ?? '';
+    search.value = filters.query ?? '';
+    if (saleFilter) saleFilter.checked = filters.onlySale ?? false;
+    const currentFilters = () => ({place: filter.value, query: search.value, onlySale: saleFilter?.checked});
     const draw=()=>{
-        const cards=content.querySelector('.cards');
-        const visible=rows.filter(r=>(!moving || actions.some(a=>a.id===r.action_id && a.kind==='MOVE')) && (!filter.value||r.location_id===filter.value)&&(!(sale||document.querySelector('#saleFilter')?.checked)||r.status!=='KEEP'));
-        cards.innerHTML=visible.map(r=>'<article class="card '+(r.status==='SOLD'?'sold':'')+'">'+(r.cover?'<img alt="" src="'+appUrl('api/photos/')+esc(r.cover)+'/small">':'')+'<span class="tag">'+esc(moving ? actions.find(a=>a.id===r.action_id)?.name : actionLabel(r))+'</span><h2>'+esc(r.name)+'</h2><p>'+esc(r.place)+(moving?' → '+esc(places.find(p=>p.id===r.destination_id)?.name):'')+'</p>'+(sale&&r.status!=='SOLD'?'<button class="primary" data-action="sold">Eladva</button> ':'')+(trash?'<button data-action="restore">Visszaállítás</button> <button data-action="purge">Végleges törlés</button>':'<a href="'+appUrl('leltar/')+esc(r.id)+sourceQuery+'">Adatlap</a> '+(moving?'<button class="primary" data-action="move">Költöztetés végrehajtása</button>':'<button data-action="trash">Lomtárba</button>'))+'</article>').join('');
-        if(!visible.length) cards.innerHTML='<p class="empty">'+(moving?'Nincs költöztetésre kijelölt tárgy ezen a listán.':trash?'A Lomtár üres.':'Nincs megjeleníthető tárgy.')+'</p>';
+        const query = searchable(search.value.trim());
+        const visible = rows.filter(row =>
+            (!moving || actions.some(action => action.id === row.action_id && action.kind === 'MOVE')) &&
+            (!filter.value || row.location_id === filter.value) &&
+            (!(sale || saleFilter?.checked) || row.status !== 'KEEP') &&
+            (!query || [row.name, row.place].some(value => searchable(value).includes(query)))
+        );
+        results.textContent = `${visible.length} tárgy`;
+        cards.innerHTML = visible.map(row => cardMarkup(row, sourceQuery)).join('');
+        if (!visible.length) {
+            let empty = 'Nincs megjeleníthető tárgy.';
+            if (query || filter.value || saleFilter?.checked) empty = 'A keresés és a szűrők alapján nincs találat.';
+            else if (moving) empty = 'Nincs költöztetésre kijelölt tárgy.';
+            else if (trash) empty = 'A lomtár üres.';
+            cards.innerHTML = `<p class="empty">${empty}</p>`;
+        }
         [...cards.querySelectorAll('article')].forEach((card,i)=>{
             for(const b of card.querySelectorAll('button')) b.onclick=async()=>{
                 const action=b.dataset.action,r=visible[i];
-                if(action==='sold'){showSaleDialog(r,filter.value);return;}
+                if(action==='sold'){showSaleDialog(r,currentFilters());return;}
                 if(action==='purge'&&!confirm('Végleg törlöd a következő tárgyat és az összes fotóját? '+r.name))return;
                 b.disabled=true;
                 try {
                     await api('items/'+r.id+'/'+action+'?version='+r.version,{method:'POST'});
-                    await list(filter.value);
-                    if(action==='move'){
-                        message.textContent=r.name+' áthelyezve: '+places.find(p=>p.id===r.destination_id)?.name;
-                        message.hidden=false;
-                    }
+                    await list(currentFilters());
+                    const labels = {move: 'Tárgy áthelyezve.', trash: 'Tárgy a lomtárba helyezve.',
+                        restore: 'Tárgy visszaállítva.', purge: 'Tárgy végleg törölve.'};
+                    confirmChange(labels[action]);
+                    content.focus();
                 } catch(e){b.disabled=false;warn(e);}
             };
         });
     };
-    content.querySelector('.bar').onchange=draw;draw();
+    filter.addEventListener('change', draw);
+    saleFilter?.addEventListener('change', draw);
+    search.addEventListener('input', draw);
+    draw();
 }
 function editor(item) {
     content.replaceChildren(document.querySelector('#editor').content.cloneNode(true));
     const form=content.querySelector('form'), fields=form.elements;
     const source=new URLSearchParams(location.search).get('from');
     const returnPath=['koltoztetes','eladas'].includes(source)?appUrl('leltar/'+source):appUrl('leltar');
+    form.querySelector('.back-link').href = returnPath;
+    form.querySelector('h1').textContent = item.id ? item.name : 'Új tárgy';
     const id=item.id || crypto.randomUUID();
     let version=item.version||0, photos=item.photos||[], pending=[], cover=item.cover||'', baseline;
     const keys=['actionId','destination','name','description','location','status','asking','link','actual','soldDate'];
@@ -179,10 +253,24 @@ function editor(item) {
         const host=form.querySelector('#gallery');host.replaceChildren();
         for(const r of rows){
             const figure=document.createElement('figure');
-            figure.innerHTML=(r.original?'':'<a target="_blank" rel="noopener" href="'+appUrl('api/photos/')+esc(r.key)+'/original">')+'<img alt="'+esc(r.label)+'" src="'+esc(r.src)+'">'+(r.original?'':'</a>')+'<figcaption>'+esc(r.label)+'</figcaption><button type="button" class="cover">'+(r.key===cover?'Borítókép':'Legyen borítókép')+'</button>'+(r.original?' <button class="remove" type="button">Kivétel</button>':'');
+            const selected = r.key === cover;
+            const image = `<img alt="${esc(r.label)}" src="${esc(r.src)}">`;
+            figure.innerHTML = (r.original ? image : `<a target="_blank" rel="noopener" href="${appUrl('api/photos/')}${esc(r.key)}/original">${image}</a>`) +
+                `<figcaption>${esc(r.label)}</figcaption><div class="actions"><button type="button" class="cover" aria-pressed="${selected}">${selected ? 'Borítókép' : 'Legyen borítókép'}</button>` +
+                (r.original ? '<button class="remove quiet danger" type="button">Kivétel</button>' : '') + '</div>';
             if(r.error){const error=document.createElement('p');error.setAttribute('role','alert');error.textContent=r.error;figure.append(error);figure.querySelector('.cover').disabled=true;}
-            figure.querySelector('.cover').onclick=()=>{cover=r.key;gallery();};
-            if(r.original) figure.querySelector('.remove').onclick=()=>{pending=pending.filter(p=>p!==r);URL.revokeObjectURL(r.src);gallery();};
+            figure.querySelector('.cover').onclick=()=>{
+                cover = r.key;
+                for (const [index, button] of [...host.querySelectorAll('.cover')].entries()) {
+                    const pressed = rows[index].key === cover;
+                    button.setAttribute('aria-pressed', String(pressed));
+                    button.textContent = pressed ? 'Borítókép' : 'Legyen borítókép';
+                }
+            };
+            if(r.original) figure.querySelector('.remove').onclick=()=>{
+                pending=pending.filter(p=>p!==r);URL.revokeObjectURL(r.src);gallery();
+                form.querySelector('#picker').focus();
+            };
             host.append(figure);
         }
     }
@@ -265,16 +353,26 @@ function editor(item) {
     };
 }
 (async()=>{
+    const source = new URLSearchParams(location.search).get('from');
+    const section = ['eladas','koltoztetes','lomtar','beallitasok'].includes(page) ? page
+        : page === 'helyszinek' ? 'beallitasok' : ['eladas','koltoztetes'].includes(source) ? source : '';
+    const activePath = appUrl(section ? 'leltar/'+section : 'leltar');
+    document.querySelectorAll('.tabs a').forEach(link=>{
+        if(link.pathname===activePath)link.setAttribute('aria-current','page');
+    });
     await AccountAuth.init();
     [places,actions]=await Promise.all([api('places'),api('actions')]);
-    document.querySelectorAll('.tabs a').forEach(a=>{if(a.pathname===location.pathname)a.setAttribute('aria-current','page');});
     if(['helyszinek','beallitasok'].includes(page))showPlaces();
     else if(['targyak','eladas','koltoztetes','lomtar'].includes(page))await list();
     else editor(page==='uj'?{}:await api('items/'+page));
-})().catch(warn);
+})().catch(error=>{
+    warn(error);
+    content.innerHTML='<div class="empty"><p>A leltár nem töltődött be.</p><a class="card-link" href="">Újrapróbálás</a></div>';
+}).finally(()=>content.removeAttribute('aria-busy'));
 document.querySelector('#logout-form')?.addEventListener('submit',event=>{
     if(dirty()&&!confirm('A nyitott, még nem mentett módosítások és fotók elvesznek. Biztosan kijelentkezel?'))event.preventDefault();
 });
 document.addEventListener('otthontar-reauthenticated',()=>{
-    warn(new Error('Újra bejelentkeztél. A piszkozat megmaradt; a mentést kézzel indítsd újra.'));
+    if (content.querySelector('#itemform')) confirmChange('Újra bejelentkeztél. A piszkozat megmaradt. A mentéshez nyomd meg újra a Mentés gombot.');
+    else location.reload();
 });
