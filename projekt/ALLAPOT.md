@@ -16,7 +16,7 @@
 
 ## Következő teendő és akadályok
 
-1. A [01C webes felület](../prompts/01C-WEB-FELULET.md) Ubuntu-frissítése és címkézett tesztátadása. [Kézi próbamenet](https://github.com/borosdavid/borosCode/blob/a2982a4e90baea4194db17bd8eb0c88fb8613f7d/docs/web-felulet-01c.md).
+1. A [01C webes felület](../prompts/01C-WEB-FELULET.md) esetén a `dev` implementáció elkészült, és a publikus belépőn az átdolgozott HTML már megfigyelhető; a Worker verziózott CSS/JS/manifest útvonalainak 404-es hibáját javítani, majd az Ubuntu teljes futó verzióját és a hitelesített működést ellenőrizni kell. Csak ezután jöhet a címkézett tesztátadás. [Kézi próbamenet](https://github.com/borosdavid/borosCode/blob/a2982a4e90baea4194db17bd8eb0c88fb8613f7d/docs/web-felulet-01c.md).
 2. Az 01 és 01A meglévő PWA- és hozzáférésvédelmi ellenőrzései a kanonikus Cloudflare-es címen. Az iPhone-os offline használat előfeltétele az igazolt telepítés és belépés.
 3. A 01C felületére épül a teljes offline olvasás (02), az offline írás és szinkron (03), majd a végső iPhone-átvétel (04).
 
@@ -32,7 +32,7 @@ A 00A Docker-próbája és a 01B Windows/privát GitHub-vezérlés élő átvét
 | [01 – PWA és HTTPS](../prompts/01-PWA-HTTPS-MOBIL-ALAP.md) | Fejlesztés alatt | Cloudflare-en elérhető a belépőoldal. A böngészős regresszió ellenőrzése és a valódi iPhone-átadás hátravan |
 | [01A – alkalmazásfiókok](../prompts/01A-FELHASZNALOI-FIOKOK.md) | Fejlesztés alatt | Fiókok/session, CSRF és fiókváltási védelem dev-be feltöltve; 18 egységteszt, 16 valódi MySQL-integrációs teszt és 4 böngészős csoport sikeres; a Cloudflare-es iPhone-átvétel és a külön Windows/Docker próba hátravan |
 | [01B – Windows-tesztszerver és vezérlés](../prompts/01B-WINDOWS-TAVOLI-ELERES-VEZERLES.md) | Fejlesztés alatt | Kód dev f3c2f74; 77 PowerShell-ellenőrzés sikeres; valós Windows/HTTPS/privát repo és innen működő vezérlés még hiányzik |
-| [01C – letisztult webes felület](../prompts/01C-WEB-FELULET.md) | Fejlesztés alatt | Új belépő, leltár-összesítő és váltható nézetek a [`dev` ágon](https://github.com/borosdavid/borosCode/commit/a2982a4e90baea4194db17bd8eb0c88fb8613f7d). Helyi Chromium-próba és [CI](https://github.com/borosdavid/borosCode/actions/runs/45352285164). Az Ubuntu-frissítés és az eszközös átvétel hátravan |
+| [01C – letisztult webes felület](../prompts/01C-WEB-FELULET.md) | Fejlesztés alatt | Új belépő, leltár-összesítő és váltható nézetek a [`dev` ágon](https://github.com/borosdavid/borosCode/commit/a2982a4e90baea4194db17bd8eb0c88fb8613f7d). Helyi Chromium-próba és [CI](https://github.com/borosdavid/borosCode/actions/runs/45352285164). A futó Ubuntu build teljes azonosítása, a verziózott CSS/JS hibák javítása és az eszközös átvétel hátravan |
 | [02 – offline leltár](../prompts/02-TELJES-OFFLINE-LELTAR-ELOZETEK.md) | Tervezett | A 01C felületére és a védett iPhone PWA-elérésre épül |
 | [03 – offline szerkesztés/szinkron](../prompts/03-OFFLINE-MODOSITAS-KAMERA-SZINKRON.md) | Tervezett | A 02-es konzisztens olvasási/változásnapló-alapjára épül |
 | [04 – iPhone és átadás](../prompts/04-IPHONE-TESZT-ADATVEDELEM-ATADAS.md) | Tervezett | Előző fázisok és elérhető eszközös tesztkörnyezet szükséges |
