@@ -1,21 +1,78 @@
 <!doctype html>
-<html lang="hu" xmlns:th="http://www.thymeleaf.org"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Költözési leltár · Otthontár</title><link rel="stylesheet" th:href="@{/inventory.css}"><script defer th:src="@{/inventory.js}"></script></head>
-<body><header th:replace="~{layout :: header}"></header>
-<main><nav class="tabs" aria-label="Leltár"><a href="/leltar">Tárgyak</a><a href="/leltar/eladas">Eladás</a><a href="/leltar/koltoztetes">Költöztetés</a><a href="/leltar/beallitasok">Beállítások</a><a href="/leltar/lomtar">Lomtár</a></nav>
-<p id="message" role="alert" hidden></p><section id="content" aria-live="polite">Betöltés…</section></main>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#183d33">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Otthontár">
+    <title>Költözési leltár · Otthontár</title>
+    <link rel="manifest" th:href="@{/manifest.webmanifest}">
+    <link rel="apple-touch-icon" th:href="@{/icons/icon-180.png}">
+    <link rel="stylesheet" th:href="@{/inventory.css}">
+    <script defer th:src="@{/auth.js}"></script>
+    <script defer th:src="@{/photo-input.js}"></script>
+    <script defer th:src="@{/pwa.js}"></script>
+    <script defer th:src="@{/inventory.js}"></script>
+</head>
+<body class="workspace" th:attr="data-app-root=@{/},data-upload-limit-mib=${uploadLimitMiB}">
+<a class="skip-link" href="#content">Ugrás a tartalomra</a>
+<header th:replace="~{layout :: header}"></header>
+<main class="workspace-main">
+    <p id="connection-status" class="notice" role="status" hidden></p>
+    <p id="pwa-update" class="notice" role="status" hidden></p>
+    <p id="message" class="notice" role="alert" hidden></p>
+    <p id="confirmation" class="notice" role="status" hidden></p>
+    <section id="content" tabindex="-1" aria-busy="true">
+        <p class="empty" role="status">A leltár betöltése…</p>
+    </section>
+    <aside class="pwa-info" aria-label="Telepítés">
+        <details><summary>Telepítés iPhone-ra</summary><p id="pwa-help"></p></details>
+    </aside>
+</main>
 <dialog id="sale-dialog" aria-labelledby="sale-title">
-<form>
-<h2 id="sale-title">Eladás rögzítése</h2><p class="item-name"></p>
-<label>Tényleges eladási ár (Ft)<input name="actual" type="number" min="0" max="999999999999.99" step="0.01" required autofocus></label>
-<label>Eladás dátuma<input name="soldDate" type="date" required></label>
-<p role="alert" hidden></p>
-<div class="actions"><button type="button">Mégse</button><button class="primary">Mentés</button></div>
-</form>
+    <form>
+        <h2 id="sale-title">Eladás rögzítése</h2>
+        <p class="item-name"></p>
+        <label>Tényleges eladási ár (Ft)<input name="actual" type="number" min="0" max="999999999999.99" step="0.01" required autofocus></label>
+        <label>Eladás dátuma<input name="soldDate" type="date" required></label>
+        <p role="alert" hidden></p>
+        <div class="actions"><button type="button">Mégse</button><button class="primary">Mentés</button></div>
+    </form>
 </dialog>
-<template id="editor"><form id="itemform"><div class="heading"><h1>Tárgy adatlapja</h1><button class="primary">Mentés</button></div>
-<fieldset><legend>Tárgy adatai</legend><label>Név<input name="name" maxlength="200" required></label>
-<label>Helyszín<select name="location" required></select></label><label class="wide">Leírás<textarea name="description" maxlength="12000" rows="3"></textarea></label></fieldset>
-<fieldset><legend>Tervezett művelet</legend><label>Művelet<select name="actionId"></select></label><label data-move hidden>Célhelyszín<select name="destination"></select></label><button data-complete hidden type="button">Áthelyezés végrehajtása</button><label data-sale hidden>Eladási állapot<select name="status"><option value="WAIT">Meghirdetésre vár</option><option value="LISTED">Meghirdetve</option><option value="SOLD">Elkelt</option></select></label>
-<label data-sale hidden>Irányár (Ft)<input name="asking" type="number" min="0" step=".01"></label><label data-sale hidden>Marketplace-link<input name="link" type="url"></label><label data-sold hidden>Tényleges ár (Ft)<input name="actual" type="number" min="0" step=".01"></label><label data-sold hidden>Eladás dátuma<input name="soldDate" type="date"></label></fieldset>
-<fieldset><legend>Fotók</legend><label class="wide">JPG-k hozzáadása<input id="picker" type="file" accept=".jpg,.jpeg,image/jpeg" multiple></label><div id="gallery" class="gallery wide"></div></fieldset>
-<section id="conflict" hidden></section><button class="primary">Mentés</button> <a href="/leltar">Vissza a leltárhoz</a></form></template></body></html>
+<template id="editor">
+    <form id="itemform" class="editor">
+        <a class="back-link" th:href="@{/leltar}">← Vissza a leltárhoz</a>
+        <div class="heading"><h1>Tárgy adatlapja</h1><button class="primary">Mentés</button></div>
+        <fieldset>
+            <legend>Tárgy adatai</legend>
+            <label>Név<input name="name" maxlength="200" required></label>
+            <label>Helyszín<select name="location" required></select></label>
+            <label class="wide">Leírás<textarea name="description" maxlength="12000" rows="3"></textarea></label>
+        </fieldset>
+        <fieldset>
+            <legend>Tervezett művelet</legend>
+            <label>Művelet<select name="actionId"></select></label>
+            <label data-move hidden>Célhelyszín<select name="destination"></select></label>
+            <button data-complete hidden type="button">Áthelyezés végrehajtása</button>
+            <label data-sale hidden>Eladási állapot<select name="status">
+                <option value="WAIT">Meghirdetésre vár</option><option value="LISTED">Meghirdetve</option><option value="SOLD">Elkelt</option>
+            </select></label>
+            <label data-sale hidden>Irányár (Ft)<input name="asking" type="number" min="0" step=".01"></label>
+            <label data-sale hidden>Marketplace-link<input name="link" type="url"></label>
+            <label data-sold hidden>Tényleges ár (Ft)<input name="actual" type="number" min="0" step=".01"></label>
+            <label data-sold hidden>Eladás dátuma<input name="soldDate" type="date"></label>
+        </fieldset>
+        <fieldset class="photo-panel">
+            <legend>Fotók</legend>
+            <div id="gallery" class="gallery wide"></div>
+            <label>Fotók kiválasztása<input id="picker" type="file" accept="image/*,.heic,.heif" multiple aria-describedby="photo-help"></label>
+            <label>Fotó készítése<input id="camera" type="file" accept="image/*" capture="environment" aria-describedby="photo-help"></label>
+            <p id="photo-help" class="wide form-hint">Legfeljebb 20 MiB képenként és <span th:text="${uploadLimitMiB}">200</span> MiB mentésenként. A nem mentett fotók a nyitott lapon maradnak.</p>
+        </fieldset>
+        <section id="conflict" class="notice" hidden></section>
+        <div class="editor-actions"><button class="primary">Mentés</button></div>
+    </form>
+</template>
+</body>
+</html>

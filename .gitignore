@@ -1,6 +1,7 @@
 .local/
 .env
 target/
+node_modules/
 *.log
 data/
 .vscode/*.local.json

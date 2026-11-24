@@ -2,23 +2,39 @@ package hu.boros.inventory;
 
 import java.nio.file.*;
 import java.util.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.dao.*;
 import org.springframework.http.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 @Controller
 class Pages {
+  private final long uploadLimitMiB;
+
+  Pages(@Value("${spring.servlet.multipart.max-request-size:200MB}") DataSize uploadLimit) {
+    uploadLimitMiB = uploadLimit.toMegabytes();
+  }
+
   @GetMapping("/")
   String home() {
     return "redirect:/leltar";
   }
 
+  @GetMapping("/offline.html")
+  String offline() {
+    return "offline";
+  }
+
   @GetMapping({"/leltar", "/leltar/{page}"})
-  String inventory() {
+  String inventory(Model model) {
+    model.addAttribute("uploadLimitMiB", uploadLimitMiB);
     return "inventory/index";
   }
 }
@@ -30,11 +46,13 @@ public class Web {
   final Photos photos;
 
   private final Actions actions;
+  private final ItemSaves itemSaves;
 
-  Web(Ledger ledger, Photos photos, Actions actions) {
+  Web(Ledger ledger, Photos photos, Actions actions, ItemSaves itemSaves) {
     this.ledger = ledger;
     this.photos = photos;
     this.actions = actions;
+    this.itemSaves = itemSaves;
   }
 
   @GetMapping("/actions")
@@ -69,8 +87,16 @@ public class Web {
 
   @PostMapping(value = "/items", consumes = "multipart/form-data")
   Object save(
-      @RequestPart Ledger.Draft draft, @RequestPart(required = false) List<MultipartFile> files) {
-    ledger.save(draft, files == null ? List.of() : files);
+      @RequestPart Ledger.Draft draft,
+      @RequestPart(required = false) List<MultipartFile> files,
+      @RequestHeader(name = "X-Otthontar-Save-Id", required = false) UUID operation,
+      @AuthenticationPrincipal AccountSecurity.LoginUser user) {
+    var uploads = files == null ? List.<MultipartFile>of() : files;
+    if (operation != null) {
+      if (user == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+      return itemSaves.save(user.id, operation, draft, uploads);
+    }
+    ledger.save(draft, uploads);
     return ledger.item(draft.id());
   }
 
@@ -90,9 +116,7 @@ public class Web {
     var path = photos.path(id.toString(), size.equals("small"));
     if (!Set.of("small", "original").contains(size)
         || !Files.exists(path)
-        || photos.db.queryForObject(
-                "SELECT COUNT(*) FROM photo WHERE id=?", Integer.class, id.toString())
-            == 0) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        || !photos.exists(id.toString())) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     return new FileSystemResource(path);
   }
 

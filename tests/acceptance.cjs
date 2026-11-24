@@ -1,20 +1,40 @@
 // Run against the isolated Windows test profile only.
-const { chromium } = require(process.env.PLAYWRIGHT_CORE || '../.local/package');
 const assert = require('node:assert/strict');
 
 const fs = require('node:fs');
 const {execFileSync} = require('node:child_process');
 const path = require('node:path');
+const localPlaywright = path.resolve(__dirname, '../.local/package');
+const { chromium } = require(process.env.PLAYWRIGHT_CORE || (fs.existsSync(localPlaywright) ? localPlaywright : 'playwright-core'));
 const origin = 'http://127.0.0.1:18740';
 const run = Date.now().toString(36);
 const state = path.resolve('.local/acceptance');
 const start = (...args) => execFileSync('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/Start.ps1','-TestRun','-Native','-NoBrowser',...args],{timeout:180000,stdio:'inherit'});
 (async()=>{
     const browser=await chromium.launch({executablePath: process.env.BROWSER_EXE || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true});
-    const page=await browser.newPage();
+    const context=await browser.newContext();
+    const page=await context.newPage();
     page.setDefaultTimeout(10000);
+    const username=process.env.OTTHONTAR_TEST_USERNAME, password=process.env.OTTHONTAR_TEST_PASSWORD;
+    assert.ok(username&&password,'Külön tesztfiók szükséges: OTTHONTAR_TEST_USERNAME és OTTHONTAR_TEST_PASSWORD.');
+    async function login(){
+        await page.goto(origin+'/login');
+        await page.getByLabel('Felhasználónév',{exact:true}).fill(username);
+        await page.getByLabel('Jelszó',{exact:true}).fill(password);
+        await page.getByRole('button',{name:'Bejelentkezés',exact:true}).click();
+        await page.waitForURL(origin+'/leltar');
+    }
+    async function request(url,options={}){
+        const headers={...options.headers};
+        if(options.method==='POST'){
+            const session=await(await page.request.get(origin+'/api/session')).json();
+            headers[session.headerName]=session.token;headers['X-Otthontar-User']=session.id;
+        }
+        const r=await page.request.fetch(url,{method:options.method||'GET',headers});
+        return {ok:r.ok(),status:r.status(),json:()=>r.json(),arrayBuffer:()=>r.body()};
+    }
     const field=(name)=>page.locator('[name="'+name+'"]');
-    const get=async route=>{const res=await fetch(origin+'/api/'+route,{headers:{connection:'close'}});assert.ok(res.ok);return res.json();};
+    const get=async route=>{const res=await request(origin+'/api/'+route,{headers:{connection:'close'}});assert.ok(res.ok);return res.json();};
     async function save(){
         const savedName=await field('name').inputValue();
         const source=new URL(page.url()).searchParams.get('from');
@@ -32,7 +52,7 @@ const start = (...args) => execFileSync('powershell.exe',['-NoProfile','-Executi
     }
     async function place(name){
         await page.goto(origin+'/leltar/beallitasok');
-        const form=page.locator('form').first();
+        const form=page.locator('#places form').first();
         await form.locator('input').fill(name);
         const response=page.waitForResponse(r=>r.url().endsWith('/api/places')&&r.request().method()==='POST');
         await form.locator('button').click();assert.ok((await response).ok());
@@ -40,6 +60,7 @@ const start = (...args) => execFileSync('powershell.exe',['-NoProfile','-Executi
         return (await get('places')).find(p=>p.name===name).id;
     }
     try{
+        await login();
         const locations=[];
         for(const n of ['Lakás','Garázs','Raktár'])locations.push(await place(n+run));
         await page.goto(origin+'/leltar/uj');
@@ -52,7 +73,7 @@ const start = (...args) => execFileSync('powershell.exe',['-NoProfile','-Executi
         const id=await save();let row=await get('items/'+id);
         assert.equal(row.photos.length,2);assert.equal(row.cover,row.photos[0].id);
         assert.equal(row.description,'Olvasólámpa');
-        const original=await fetch(origin+'/api/photos/'+row.cover+'/original');
+        const original=await request(origin+'/api/photos/'+row.cover+'/original');
         assert.deepEqual(Buffer.from(await original.arrayBuffer()),files[0].buffer);
         await page.locator('.cover').nth(1).click();await save();row=await get('items/'+id);
         assert.equal(row.cover,row.photos[1].id);
@@ -88,7 +109,7 @@ const start = (...args) => execFileSync('powershell.exe',['-NoProfile','-Executi
         assert.ok((await moved).ok());
         await moveCard.waitFor({state:'detached'});
         assert.equal((await get('items/'+id)).action_id,null);
-        const repeat=await fetch(origin+'/api/items/'+id+'/move?version='+planned.version,{method:'POST'});
+        const repeat=await request(origin+'/api/items/'+id+'/move?version='+planned.version,{method:'POST',headers:{'X-Otthontar-Request':'1'}});
         assert.equal(repeat.status,409);
         await visit();
         planned=await get('items/'+id);assert.equal(planned.location_id,locations[1]);assert.equal(planned.destination_id,null);
@@ -123,7 +144,7 @@ const start = (...args) => execFileSync('powershell.exe',['-NoProfile','-Executi
         assert.equal((await get('items/'+id)).sold_date,'2026-11-13');
         const fourth=await place('Új lakás'+run);await visit();assert.equal(await field('location').locator('option:checked').innerText(),'Pince'+run);
         await field('location').selectOption(fourth);await save();
-        async function restart(){start('-Stop');start();}
+        async function restart(){start('-Stop');start();await login();}
         await restart();await visit();row=await get('items/'+id);
         assert.equal(row.location_id,fourth);assert.equal(Number(row.actual),11000);assert.equal(row.sold_date,'2026-11-13');assert.equal(row.photos.length,2);
         console.log('OK: áthelyezés és teljes újraindítás.');
@@ -140,7 +161,7 @@ const start = (...args) => execFileSync('powershell.exe',['-NoProfile','-Executi
         await action('/lomtar','Végleges törlés',false);await action('/lomtar','Visszaállítás');
         assert.equal((await get('items/'+id)).cover,row.cover);
         console.log('OK: Lomtár, megszakítás és visszaállítás.');
-        await visit();const other=await browser.newPage();await other.goto(origin+'/leltar/'+id);
+        await visit();const other=await context.newPage();await other.goto(origin+'/leltar/'+id);
         await other.locator('[name=name]').waitFor();await field('description').fill('Új leírás');await save();
         await other.locator('[name=description]').fill('Másik piszkozat');await other.locator('#picker').setInputFiles(files[0]);
         await other.getByRole('button',{name:'Mentés',exact:true}).first().click();await other.locator('#conflict').waitFor();
@@ -153,7 +174,7 @@ const start = (...args) => execFileSync('powershell.exe',['-NoProfile','-Executi
         await page.locator('.tabs a').first().click({noWaitAfter:true});await page.waitForTimeout(200);
         assert.ok(warned);assert.equal(await field('description').inputValue(),'Piszkozat');
         await field('description').fill('Másik piszkozat');await page.locator('.tabs a').first().click();await page.waitForURL(origin+'/leltar');
-        const closing=await browser.newPage();
+        const closing=await context.newPage();
         await closing.goto(origin+'/leltar/'+id);
         await closing.locator('[name=name]').click();
         await closing.locator('[name=name]').fill('Mentetlen név');
@@ -169,7 +190,7 @@ const start = (...args) => execFileSync('powershell.exe',['-NoProfile','-Executi
         await closed;
         console.log('OK: ütközés, piszkozat, navigáció és lapbezárás.');
         await visit();
-        await page.locator('#picker').setInputFiles({name:'hamis.jpg',mimeType:'image/jpeg',buffer:Buffer.from('bad')});
+        await page.locator('#picker').setInputFiles({name:'hamis.jpg',mimeType:'image/jpeg',buffer:Buffer.from([0xff,0xd8,0xff,0xd9])});
         await page.getByRole('button',{name:'Mentés',exact:true}).first().click();await page.getByText('Érvénytelen JPG: hamis.jpg').waitFor();
         await page.locator('.remove').click();await page.locator('#picker').setInputFiles(files[0]);
         await page.route('**/api/items',r=>r.abort(),{times:1});
@@ -178,7 +199,7 @@ const start = (...args) => execFileSync('powershell.exe',['-NoProfile','-Executi
         row=await get('items/'+id);
         await action('','Lomtárba');await action('/lomtar','Végleges törlés');
         for(const photo of row.photos)for(const ext of ['.jpg','.small.jpg'])assert.ok(!fs.existsSync(path.join(state,'photos',photo.id+ext)));
-        assert.equal((await fetch(origin+'/api/items/'+id)).status,404);
+        assert.equal((await request(origin+'/api/items/'+id)).status,404);
         console.log('OK: hibás JPG, megszakítás, újrapróbálás és végleges fájltörlés.');
     }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

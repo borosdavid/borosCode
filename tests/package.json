@@ -1,0 +1,10 @@
+{
+  "name": "otthontar-browser-tests",
+  "private": true,
+  "scripts": {
+    "test": "node pwa.cjs"
+  },
+  "devDependencies": {
+    "playwright-core": "1.57.0"
+  }
+}
