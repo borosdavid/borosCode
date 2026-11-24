@@ -10,7 +10,6 @@ import java.time.Duration;
 import java.util.*;
 import org.slf4j.*;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.*;
@@ -21,15 +20,21 @@ import org.springframework.web.server.ResponseStatusException;
 public class Photos {
   final Path root;
   final URI processor;
-  final JdbcTemplate db;
+  final PhotoRepository photoRecords;
+  final FileCleanupRepository cleanup;
   final HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();
   final Logger log = LoggerFactory.getLogger(Photos.class);
 
-  Photos(@Value("${app.photos}") String path, @Value("${app.imaging}") String url, JdbcTemplate db)
+  Photos(
+      @Value("${app.photos}") String path,
+      @Value("${app.imaging}") String url,
+      PhotoRepository photoRecords,
+      FileCleanupRepository cleanup)
       throws IOException {
     root = Files.createDirectories(Path.of(path).toAbsolutePath());
     processor = URI.create(url + "/thumbnail");
-    this.db = db;
+    this.photoRecords = photoRecords;
+    this.cleanup = cleanup;
   }
 
   Path path(String id, boolean small) {
@@ -49,7 +54,7 @@ public class Photos {
     TransactionSynchronizationManager.registerSynchronization(
         new TransactionSynchronization() {
           public void afterCompletion(int status) {
-            if (status == STATUS_ROLLED_BACK) remove(id);
+            if (status == STATUS_ROLLED_BACK && !remove(id)) cleanup.enqueueRollback(id);
           }
         });
     try {
@@ -90,7 +95,11 @@ public class Photos {
 
   @Scheduled(fixedDelay = 10000)
   public void cleanup() {
-    for (String id : db.queryForList("SELECT id FROM file_cleanup LIMIT 100", String.class))
-      if (remove(id)) db.update("DELETE FROM file_cleanup WHERE id=?", id);
+    for (var entry : cleanup.findTop100ByOrderByIdAsc())
+      if (remove(entry.id)) cleanup.deleteById(entry.id);
+  }
+
+  boolean exists(String id) {
+    return photoRecords.existsById(id);
   }
 }
