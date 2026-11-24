@@ -1,9 +1,9 @@
 # 01C – Letisztult, reszponzív Otthontár webes felület
 
 > **Státusz:** Fejlesztés alatt  
-> **Pontosítás / akadály:** Az új felület elkészült és a `dev` ágon ellenőriztük. A címkézett tesztkiadás és az iPhone Safari-próba hátravan.  
-> **Megvalósítás:** [`dev`, `0786545`](https://github.com/borosdavid/borosCode/commit/078654512a87b4b6f62f5566c5322b532659df68).  
-> **Ellenőrzés:** 2026-11-24, `0786545`: [sikeres CI](https://github.com/borosdavid/borosCode/actions/runs/45348571638) Java/MySQL integrációval, a becsomagolt szolgáltatások próbájával, Chromium és Edge PWA-teszttel, valamint Windows PowerShell-ellenőrzéssel. A böngészőpróbák a gyökér és az `/otthontar/` útvonalon is lefutottak. [Kézi próbamenet](https://github.com/borosdavid/borosCode/blob/078654512a87b4b6f62f5566c5322b532659df68/docs/web-felulet-01c.md).  
+> **Pontosítás / akadály:** A visszajelzés után új belépőoldal, leltár-összesítő, fotónézet és kompakt listanézet készült. Az Ubuntu-példány frissítése, a címkézett tesztkiadás és az iPhone Safari-próba hátravan.  
+> **Megvalósítás:** [`dev`, `a2982a4`](https://github.com/borosdavid/borosCode/commit/a2982a4e90baea4194db17bd8eb0c88fb8613f7d).  
+> **Ellenőrzés:** 2026-11-24, `a2982a4`. A helyi Chromium-próba sikeres a gyökér- és az `/otthontar/` útvonalon, beleértve a belépő elrendezését és a nézetváltást. A CI Java/MySQL, Edge és PowerShell feladata sikeres. A CI Chromium-böngésző telepítése még futott a státusz rögzítésekor. [CI](https://github.com/borosdavid/borosCode/actions/runs/45352285164). [Kézi próbamenet](https://github.com/borosdavid/borosCode/blob/a2982a4e90baea4194db17bd8eb0c88fb8613f7d/docs/web-felulet-01c.md).  
 > **Felhasználói teszt:** Nincs címkézett tesztágas átadás. A jelenlegi munkamenet GitHub-hozzáférése a szükséges annotált tag közzétételéhez nem elegendő.  
 > **Frissítve:** 2026-11-24. [Státuszszabályok](../projekt/STATUSZOK.md).
 
