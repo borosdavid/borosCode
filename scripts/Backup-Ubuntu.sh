@@ -39,6 +39,9 @@ for path in "$BACKUP_DIR" "$PHOTO_DIR" "$MYSQL_DEFAULTS_FILE"; do
   [[ "$path" = /* ]] || { echo "Csak abszolút útvonalak engedélyezettek: $path" >&2; exit 1; }
 done
 [[ -d "$PHOTO_DIR" && ! -L "$PHOTO_DIR" ]] || { echo "A fényképkönyvtár hiányzik vagy symlink." >&2; exit 1; }
+if [[ -n "$(find "$PHOTO_DIR" -type l -print -quit)" ]]; then
+  echo "A fényképkönyvtár symlinket tartalmaz, kézi ellenőrzés szükséges." >&2; exit 1
+fi
 [[ -f "$MYSQL_DEFAULTS_FILE" && ! -L "$MYSQL_DEFAULTS_FILE" ]] || { echo "A MySQL-opciófájl hiányzik vagy symlink." >&2; exit 1; }
 db_perm=$(stat -c '%a' -- "$MYSQL_DEFAULTS_FILE")
 if (( 8#$db_perm & 8#077 )); then echo "MySQL-opciófájl csak a tulajdonos számára legyen olvasható." >&2; exit 1; fi
@@ -74,7 +77,7 @@ cleanup() {
   trap - EXIT
   trap '' INT TERM HUP
   if (( stopped )); then
-    if ! systemctl --user start "$INVENTORY_SERVICE"; then
+    if ! systemctl --user start "$INVENTORY_SERVICE" || ! systemctl --user is-active --quiet "$INVENTORY_SERVICE"; then
       echo "KRITIKUS: az Inventory újraindítása sikertelen, kézi beavatkozás szükséges!" >&2
       status=1
     fi
