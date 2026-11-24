@@ -1,5 +1,8 @@
 # Otthontár
 
+> **Fejlesztési tervek és promptok (2026-11-24-től):** a hiteles, naprakész feladatleírások és roadmapek a **privát** [borosCode-knowledge / Otthontár](https://github.com/borosdavid/borosCode-knowledge/blob/main/projects/otthontar/README.md) repóban vannak. A helyi `prompts/` és `roadmap/` fájlok csak átirányítók; a helyi Codexnek külön hozzáférést kell adni a privát repóhoz. A kód és a kódhoz kötött teszt- és átadási dokumentáció továbbra is ebben a repóban marad.
+
+
 Magyar nyelvű, helyi alkalmazás. Első modulja a költözési leltár. A háztartás közös adatokat használ egy Windows-gépen.
 
 ## Első indítás
