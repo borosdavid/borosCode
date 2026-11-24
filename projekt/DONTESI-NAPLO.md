@@ -20,6 +20,7 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 | D-012 | BorosCode domain és védett Cloudflare-elérés az Otthontárhoz | A felhasználói címet a D-013 pontosítja | 2026-11-19 |
 | D-013 | Otthontár a BorosCode főoldal alatt | Elfogadott | 2026-11-23 |
 | D-014 | Jelenlegi elérés és webes felülettervezés az iPhone-fázisok előtt | Elfogadott fejlesztési irány | 2026-11-24 |
+| D-015 | Ubuntu-mentés helyi kulcskezelése | Elfogadott | 2026-11-24 |
 
 ## D-001 – Fejlesztési és tesztágak
 
@@ -216,6 +217,14 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 **Indok és sorrend:** a jelenlegi weboldal működése megfelelő a felhasználó szerint. Az új PWA-funkciók a közösen használt webes felületre épülnek, ezért az elrendezés, a vizuális rendszer és a mobilos használhatóság kialakítása megelőzi az offline funkciók beépítését. A D-011 szerinti külön Windows-próba a saját munkarendjében követhető.
 
 **Forrás:** a felhasználó 2026-11-24-i visszajelzése és kérése, valamint a [Cloudflare útvonal ellenőrzései](../roadmap/CLOUDFLARE-BOROSCODE-DOMAIN.md).
+
+## D-015 – Az Ubuntu-mentés helyi kulcskezelése
+
+**Döntési állapot:** Elfogadott, 2026-11-24, az Ubuntu-példányra.
+
+A felhasználó a szerver védett elhelyezése miatt egyszerűbb kulcskezelést kért. Az archívum `age` titkosítású maradt, a privát kulcs ugyanazon a szerveren, a felhasználó privát konfigurációs könyvtárában van. Külön eszközön is tárolható lenne, de a választott megoldás egyszerűbb helyi üzemeltetést tesz lehetővé. Gép- vagy lemezvesztéskor a mentés és a kulcs együtt elveszhet.
+
+[Üzembe helyezési bizonyíték](https://github.com/borosdavid/borosCode/blob/694a1701787b11188b38a4e298b2d6eccc8d19ed/docs/KNOWHOW-ubuntu-napi-mentes.md).
 
 ## Új döntés vagy módosítás
 
