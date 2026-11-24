@@ -114,7 +114,7 @@ cp -a -- "$PHOTO_DIR/." "$stage/photos/"
 for i in "${!CONFIG_FILES[@]}"; do
   file="${CONFIG_FILES[i]}"
   cp -p -- "$file" "$stage/config/file-$i"
-  printf 'file-%s=%s\\n' "$i" "$file" >> "$stage/config/origins.txt"
+  printf 'file-%s=%s\n' "$i" "$file" >> "$stage/config/origins.txt"
 done
 if ! systemctl --user start "$INVENTORY_SERVICE" || ! systemctl --user is-active --quiet "$INVENTORY_SERVICE"; then
   echo "KRITIKUS: Inventory újraindítása sikertelen!" >&2; exit 1
