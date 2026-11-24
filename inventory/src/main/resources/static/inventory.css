@@ -80,7 +80,6 @@ h2 { font-size: 1.15rem; line-height: 1.25; }
     text-align: start;
     font-weight: 600;
 }
-.tabs span, .sign-out span { flex: 0 0 1.15em; text-align: center; }
 .tabs a:hover, .sign-out:hover { color: white; background: #ffffff17; }
 .tabs [aria-current] { background: #e4eee4; color: #1e4736; }
 .tabs [aria-current]:hover { background: #f0f5ee; color: #1e4736; }
@@ -296,12 +295,11 @@ dialog .actions { justify-content: flex-end; }
     .sidebar .brand { margin-inline: .2rem; }
     .tabs { grid-row: 2; grid-column: 1 / -1; display: flex; gap: .25rem; flex-wrap: wrap; }
     .tabs a { padding: .4rem .65rem; }
-    .tabs a span { display: none; }
     #logout-form { margin: 0; border: 0; padding: 0; }
     .workspace-main { padding-top: 1.6rem; }
 }
 @media (max-width: 41rem) {
-    .bar { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+    .bar { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: .5rem; }
     .bar > label:first-child { grid-column: 1 / -1; }
     .card { grid-template-columns: auto minmax(0, 1fr); gap: .55rem .8rem; }
     .card-actions { grid-column: 1 / -1; justify-content: flex-start; }
@@ -312,6 +310,5 @@ dialog .actions { justify-content: flex-end; }
     .sidebar .brand { font-size: 1.35rem; }
     .sidebar .brand img { width: 32px; height: 32px; }
     .sign-out { padding-inline: .45rem; }
-    .sign-out span { display: none; }
     .card-thumb { width: 4.5rem; }
 }

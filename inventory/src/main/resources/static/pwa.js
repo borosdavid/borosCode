@@ -20,12 +20,12 @@
         try {
             const registration = await navigator.serviceWorker.register(AccountAuth.url('sw.js'), {scope: AccountAuth.url('leltar'), updateViaCache: 'none'});
             const waiting = () => {
-                if (registration.waiting) {
-                    note.hidden = false;
-                    note.textContent = 'Frissítés érhető el. Mentsd az adatlapot, majd zárd be az összes Otthontár-lapot és nyisd meg újra.';
-                }
+                const updateReady = Boolean(registration.active && registration.waiting);
+                note.hidden = !updateReady;
+                if (updateReady) note.textContent = 'Frissítés érhető el. Mentsd az adatlapot, majd zárd be az Otthontár-lapokat, és nyisd meg újra.';
             };
             waiting();
+            navigator.serviceWorker.addEventListener('controllerchange', waiting);
             registration.addEventListener('updatefound', () => {
                 registration.installing?.addEventListener('statechange', waiting);
             });

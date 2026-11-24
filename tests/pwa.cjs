@@ -10,10 +10,23 @@ let expiredSession = false, fixtureUser = 'account-1';
 let failSave = true, savedBody = '', savedHeader = '', nextWorker = false, failAsset = false;
 let dropSaveResponse = false, serverUnavailable = false, saveId;
 let blockItems, itemsUnavailable;
-const fixtureItems = [
-    {id:'fixture-1', name:'Állólámpa', place:'Lakás', location_id:'place-1', cover:'photo-1', status:'KEEP'},
-    {id:'fixture-2', name:'Szék a hosszú nevű tárgyak elrendezésének ellenőrzéséhez', place:'Raktár', location_id:'place-2', status:'LISTED'}
+const sampleItems = [
+    {id:'fixture-1', name:'Állólámpa', place:'Lakás', location_id:'place-1', cover:'photo-1', status:'KEEP', action_id:'MOVE', destination_id:'place-2', version:1},
+    {id:'fixture-2', name:'Szék a hosszú nevű tárgyak elrendezésének ellenőrzéséhez', place:'Raktár', location_id:'place-2', status:'LISTED', action_id:'SALE', version:1}
 ];
+let fixtureItems;
+
+function changeFixtureItem(item, operation) {
+    if (operation === 'sold') item.status = 'SOLD';
+    if (operation === 'trash' || operation === 'restore') item.trashed = operation === 'trash';
+    if (operation === 'move') {
+        item.location_id = item.destination_id;
+        item.place = 'Raktár';
+        item.action_id = null;
+        item.destination_id = null;
+    }
+    item.version++;
+}
 
 async function fixturePage(filename, prefix) {
     const read = name => fs.readFile(path.join(root, 'templates', name + '.html'), 'utf8');
@@ -39,6 +52,13 @@ const server = http.createServer(async (req,res) => {
             if(expiredSession){res.writeHead(401,{'Content-Type':'application/json'});res.end(JSON.stringify({detail:'Jelentkezz be újra.'}));return;}
             if(route==='/api/session'){res.setHeader('Content-Type','application/json');res.end(JSON.stringify({id:fixtureUser,username:'alice',headerName:'X-CSRF-TOKEN',token:'fixture-token'}));return;}
 
+            const transition = route.match(/^\/api\/items\/(fixture-\d+)\/(sold|move|trash|restore)$/);
+            if (req.method === 'POST' && transition) {
+                const item = fixtureItems.find(row => row.id === transition[1]);
+                req.resume();
+                changeFixtureItem(item, transition[2]);
+                res.writeHead(204);res.end();return;
+            }
             if(req.method==='POST') {
                 savedHeader=req.headers['x-otthontar-request'];
                 saveId=req.headers['x-otthontar-save-id'];
@@ -58,13 +78,11 @@ const server = http.createServer(async (req,res) => {
                 res.writeHead(503, {'Content-Type':'application/json'});
                 res.end(JSON.stringify({detail:'A tesztleltár átmenetileg nem elérhető.'}));return;
             }
-            if (route === '/api/items' && url.searchParams.get('trash') === 'true') {
-                res.writeHead(200, {'Content-Type':'application/json'});res.end('[]');return;
-            }
             const lists = {
-                '/api/items':fixtureItems,
+                '/api/items':fixtureItems.filter(item => !!item.trashed === (url.searchParams.get('trash') === 'true')),
                 '/api/places':[{id:'place-1',name:'Lakás'},{id:'place-2',name:'Raktár'}],
-                '/api/actions':[{id:'KEEP',name:'Megtartjuk',kind:'CUSTOM',active:true}]
+                '/api/actions':[{id:'KEEP',name:'Megtartjuk',kind:'CUSTOM',active:true},
+                    {id:'MOVE',name:'Költöztetés',kind:'MOVE',active:true},{id:'SALE',name:'Eladás',kind:'SALE',active:true}]
             };
             const data = lists[route] ?? [];
             res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(data));return;
@@ -84,6 +102,7 @@ async function browserChecks(browser, base, prefix) {
     const origin = base + prefix;
     expiredSession = false; fixtureUser = 'account-1'; failSave = true; savedBody = ''; savedHeader = '';
     nextWorker = false; failAsset = false; dropSaveResponse = false; serverUnavailable = false; itemsUnavailable = false;
+    fixtureItems = structuredClone(sampleItems);
     const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:3, serviceWorkers:'allow'});
     const page=await context.newPage();
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -97,6 +116,7 @@ async function browserChecks(browser, base, prefix) {
         await page.getByRole('heading',{name:'Tárgyak',exact:true}).waitFor();
         await page.evaluate(()=>navigator.serviceWorker.ready);
         await page.waitForFunction(()=>navigator.serviceWorker.controller);
+        assert.equal(await page.locator('#pwa-update').isVisible(),false);
         const manifestUrl = origin+'/manifest.webmanifest';
         const manifest=await (await fetch(manifestUrl)).json();
         assert.equal(new URL(manifest.start_url,manifestUrl).href,origin+'/leltar');
@@ -134,6 +154,24 @@ async function browserChecks(browser, base, prefix) {
         itemsUnavailable = false;
         await page.getByRole('link',{name:'Újrapróbálás'}).click();
         await page.getByRole('heading',{name:'Tárgyak',exact:true}).waitFor();
+        await page.getByRole('link',{name:'Költöztetés',exact:true}).click();
+        await page.getByRole('button',{name:'Költöztetés végrehajtása'}).click();
+        await page.getByText('Tárgy áthelyezve.',{exact:true}).waitFor();
+        await page.getByText('Nincs költöztetésre kijelölt tárgy.').waitFor();
+        await page.getByRole('link',{name:'Eladás',exact:true}).click();
+        await page.locator('#locationFilter').selectOption('place-2');
+        await page.getByRole('button',{name:'Eladva'}).click();
+        const saleDialog = page.getByRole('dialog',{name:'Eladás rögzítése'});
+        await saleDialog.getByRole('spinbutton').fill('3500');
+        await saleDialog.getByRole('button',{name:'Mentés',exact:true}).click();
+        await page.getByText('Eladás · Elkelt',{exact:true}).waitFor();
+        assert.equal(await page.locator('#locationFilter').inputValue(),'place-2');
+        await page.getByRole('button',{name:'Lomtárba'}).click();
+        await page.getByText('Tárgy a lomtárba helyezve.',{exact:true}).waitFor();
+        await page.getByRole('link',{name:'Lomtár',exact:true}).click();
+        await page.getByRole('button',{name:'Visszaállítás'}).click();
+        await page.getByText('Tárgy visszaállítva.',{exact:true}).waitFor();
+        console.log(`OK: ${prefix || '/'} search, loading, errors, sale, move, trash and restore.`);
         await page.goto(origin+'/leltar/uj');
         await page.locator('[name=name]').fill('Mobilos teszt');
         await page.locator('[name=location]').selectOption('place-1');
