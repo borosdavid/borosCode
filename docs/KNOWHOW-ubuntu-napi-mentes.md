@@ -61,7 +61,7 @@ mysqldump --version
 mysql --version
 ```
 
-A script a `mysqldump --set-gtid-purged=OFF` kapcsolót használja; ha a telepített kliens nem támogatja, **ne indíts éles mentést**, hanem a kliensverzióhoz igazítsuk, előbb izolált tesztelve.
+A szkript a rendelkezésre álló kliens alapján csak akkor kapcsolja be a `--set-gtid-purged=OFF` és `--no-tablespaces` paramétereket, ha a `mysqldump --help` szerint elérhetők; így MySQL és MariaDB-klienssel is indítható a megfelelő jogosultságok ellenőrzése után. A valódi dump/restore kompatibilitást ettől még külön próbáld ki.
 
 ## 3. Age titkosítókulcs – fontos!
 
@@ -113,6 +113,8 @@ MYSQL_DATABASE="inventory"
 AGE_RECIPIENT="age1IDE_A_SAJAT_NYILVANOS_CIMZETTED"
 INVENTORY_SERVICE="otthontar-inventory.service"
 RETAIN_DAYS=14
+# Ugyanaz a zárolás, amit az Update-Ubuntu.sh használ: ne versenyezzenek.
+UPDATE_LOCK="$HOME/otthontar-ubuntu-teszt/borosCode/.local/ubuntu/update.lock"
 # A szükséges helyi konfigurációk (például a futó Inventory konfigurációja):
 CONFIG_FILES=(
   "$HOME/.config/otthontar/mysql-backup.cnf"
@@ -126,7 +128,7 @@ A `backup.conf` szándékosan **megbízható Bash-konfigurációként** van bet�
 chmod 600 ~/.config/otthontar/backup.conf
 ```
 
-A `PHOTO_DIR` és a helyi konfigurációk pontos útvonalát kötelezően ellenőrizd. A `CONFIG_FILES` lista az archívumba titkosítva kerül; az archívumot és a kulcsot ennek megfelelően védd. Az `AGE_RECIPIENT` mezőbe **ne** a privát kulcsot írd!
+Az `UPDATE_LOCK` csak akkor legyen beállítva, ha a helyi `Update-Ubuntu.sh` valóban ezt a zárfájlt használja, és a szülőmappa létezik és írható. Ezzel a mentés és az alkalmazásfrissítés nem futhat egyszerre. A `PHOTO_DIR` és a helyi konfigurációk pontos útvonalát kötelezően ellenőrizd. A `CONFIG_FILES` lista az archívumba titkosítva kerül; az archívumot és a kulcsot ennek megfelelően védd. Az `AGE_RECIPIENT` mezőbe **ne** a privát kulcsot írd!
 
 ## 5. Kézi, biztonságos előellenőrzés
 
