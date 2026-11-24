@@ -31,9 +31,9 @@ if [[ "$1" == "-d" ]]; then
   cat "${@: -1}"
   exit
 fi
-if [[ "$1" != "-r" || -z "$2" || "$3" != "-o" || -z "$4" ]]; then exit 2; fi
+if [[ "$1" != "-r" || -z "$2" ]]; then exit 2; fi
 if [[ "${MOCK_AGE_FAIL:-0}" == 1 ]]; then exit 88; fi
-cat > "$4"
+if [[ "${3:-}" == "-o" ]]; then cat > "$4"; else cat; fi
 MOCK
 chmod +x "$tmp/bin/"*
 export MOCK_LOG="$tmp/systemctl.log"
