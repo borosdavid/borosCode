@@ -2,6 +2,12 @@
 
 **Frissítve:** 2026-11-24. Ez a `main` ágon karbantartott állapotfelvétel, nem élő szervermonitor és nem a `main` kódjának funkciólistája.
 
+## 01D napi Ubuntu-mentés – 2026-11-24
+
+**Állapot: Fejlesztés alatt, szerveres aktiválásra vár.** A [privát 01D feladat](https://github.com/borosdavid/borosCode-knowledge/blob/main/projects/otthontar/prompts/01D-UBUNTU-NAPI-BIZTONSAGI-MENTES.md) alapján a `dev` ágban elkészült az [adatbázis-, fénykép- és konfigurációmentő szkript](https://github.com/borosdavid/borosCode/blob/dev/scripts/Backup-Ubuntu.sh), a [titkosított archívum ellenőrző](https://github.com/borosdavid/borosCode/blob/dev/scripts/Verify-Backup-Ubuntu.sh), a napi systemd timer mintája és a [lépésről lépésre Ubuntu útmutató](https://github.com/borosdavid/borosCode/blob/dev/docs/KNOWHOW-ubuntu-napi-mentes.md). A CI Ubuntu fixture tesztje mockolt MySQL/systemd/age eszközökkel sikeres korábbi dev commiton; a teljes legfrissebb CI eredmény külön ellenőrizendő. A felhasználói/üzemi átvétel feltétele: helyszíni `--check`, valódi age archívum, elkülönített visszaállítás, időzítő és naplóellenőrzés. **Éles Ubuntu telepítés, automatikus napi mentés még nem történt.**
+
+A napi mentés egy archívumfájlt készít futásonként, a fotók és DB konzisztenciája miatt az Inventory szolgáltatást a pillanatkép elkészültéig leállítja. A csak ugyanazon szerveren tartott mentés nem véd gépvesztés ellen; külső titkosított másodpéldány külön további feladat.
+
 ## Most hol tartunk?
 
 - A felhasználó 2026-11-24-i visszajelzése szerint az Otthontár weboldala megfelelően működik. A kanonikus cím `https://boroscode.com/otthontar/`, az Ubuntu-példány Cloudflare Tunnelen át érhető el. A mobilos szerveradminisztráció útvonala iSH és SSH a Tailscale hálózatán. A Cloudflare-en végzett saját fiókos belépés, fotófeltöltés és iPhone PWA-átvétel dokumentált próbája még hátravan. [Hozzáférés](SZERVER-TAVOLI-HOZZAFERES.md) · [Cloudflare-terv](https://github.com/borosdavid/borosCode-knowledge/blob/main/projects/otthontar/roadmap/CLOUDFLARE-BOROSCODE-DOMAIN.md)
