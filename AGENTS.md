@@ -16,18 +16,15 @@ A felhasználó 2026. november 17-i utasítása:
 
 ## Promptok, roadmapek és verzióhoz kötött dokumentáció
 
-A felhasználó 2026. november 17-i döntése alapján a `prompts/` és `roadmap/` hiteles, aktuális forrása a `main` ág, beleértve a `kesz/` archívumokat és indexeket. Ez felváltja a korábbi, mindhárom ágra kötelező dokumentációszinkront.
+**2026-11-24-i felhasználói döntés (a régi 2026-11-17-i szabály helyébe lép):** az Otthontár promptjai és roadmapjei, beleértve a `kesz/` archívumokat és indexeket, kizárólag a **privát** [`borosdavid/borosCode-knowledge/main/projects/otthontar/`](https://github.com/borosdavid/borosCode-knowledge/tree/main/projects/otthontar) repo alatt szerkesztendők. A kódrepo `prompts/` és `roadmap/` régi fájljai csak átirányítók; a `dev` és `teszt` ágon esetleg megmaradt régi másolatok nem hitelesek.
 
-- Új terveket, promptokat, státuszokat és archiválásokat kizárólag a `main` ágon szerkessz és commitolj/pusholj, külön dokumentációs commitban. Ehhez nem szükséges kész alkalmazásverzió vagy újabb megerősítés.
-- A `dev` és `teszt` ágakon meglévő példányok maradhatnak, és normál Git-összevonással frissülhetnek, de nem hiteles források. Nem kell őket törölni vagy automatikusan szinkronizálni.
-- Feladatkezdéskor frissítsd a távoli `main` és a munkához használt ág állapotát. A promptot és közös utasításait az `origin/main` megfelelő commitjából olvasd (például `git show origin/main:prompts/<feladat>.md`), és rögzítsd a felhasznált `main` commitot a fejlesztési/átadási riportban. Ehhez ne merge-öld a teljes `main` ágat a munkádba.
-- Fejlesztés közben felmerülő tervpontosítást külön, tiszta munkafán vagy dokumentációs commitban ments a `main` ágra; ne keverd bele az alkalmazáskódot, és ne veszítsd el a helyi fejlesztést.
-- A tervek státuszai a teljes projektre vonatkoznak. Add meg a megvalósítás ágát és commitját, az ellenőrzések eredményét és a felhasználói teszt állapotát. A `main` tervei előrébb járhatnak az ottani alkalmazáskódnál.
-- A műszaki dokumentáció (például telepítés, API, konfiguráció, architektúra), a teszteredmények és az átadási útmutatók a hozzájuk tartozó kódot követik: a `dev` ágon készülnek, a kóddal együtt kerülnek a `teszt`, majd külön kiadáskor a `main` ágra. A gyökér `README.md` futtatási állításai is az adott ág kódját írják le.
-- Az `AGENTS.md` és a `docs/branch-workflow.md` közös munkarendi szabályait minden használt ágon tartsd aktuálisan, kizárólag a szabályváltozások átvitelével. E kivétel nem jelenti az összes dokumentáció szinkronizálását.
-- A távoli ág változásakor ellenőrizd és fésüld össze az új módosításokat; ne használj force push-t vagy vak könyvtármásolást. A `main` tervmódosításai miatt ne emelj át félkész alkalmazáskódot.
+- Feladatkezdéskor olvasd el a privát tudástár `AGENTS.md`, `projects/otthontar/README.md`, `projects/otthontar/prompts/00-KOZOS-UTASITASOK.md` és a kiválasztott prompt **legfrissebb main** változatát, és jegyezd fel a tudástár commitját. Ehhez a helyi/Ubuntu Codexnek külön privát GitHub-hozzáférés vagy friss klón kell. Ha nincs, kérj hozzáférést; ne használj elavult másolatot.
+- Új promptot, roadmapet és archiválást a privát tudástár `main` ágába commitolj. A részletes projektstátuszok és döntési bizonyítékok továbbra is a `borosCode/main/projekt/` mappában élnek, a közös keresztprojektes állapot pedig a privát tudástárban hivatkozik rájuk. A terv nincs automatikusan megvalósítva.
+- Az alkalmazásfejlesztés továbbra is a `dev` ágra kerül; a `teszt` ágra csak az ellenőrzött átadási feltételek után emelj át. Ne merge-öld a teljes privát tudástárat az alkalmazáskódba.
+- A műszaki dokumentáció, API, tesztjegyzőkönyvek és kiadási útmutatók a hozzájuk tartozó kódot követik: `dev`, majd ellenőrzött `teszt`, külön kiadáskor `main`.
+- Az `AGENTS.md` és `docs/branch-workflow.md` munkarendi szabályait minden használt ágon tartsd naprakészen, csak a szabályváltozások átvitelével. Ne használj force push-t, és a párhuzamos változásokat fésüld össze.
 
-Ez fejlesztői munkarend, nem folyamatos háttérszinkron.
+Ez nem folyamatos háttérszinkron: a privát GitHub-változatot minden munkamenetnek ténylegesen be kell olvasnia.
 
 ## Együttműködés és adatvédelem
 
@@ -41,16 +38,16 @@ Ez fejlesztői munkarend, nem folyamatos háttérszinkron.
 
 A felhasználó kérése alapján a teljesen elkészült folyamatok leírásait automatikusan helyezd át a megfelelő `kesz/` almappába:
 
-- `prompts/<feladat>.md` → `prompts/kesz/<feladat>.md`
-- `roadmap/<terv>.md` → `roadmap/kesz/<terv>.md`
+- `borosCode-knowledge/projects/otthontar/prompts/<feladat>.md` → `.../prompts/kesz/<feladat>.md`
+- `borosCode-knowledge/projects/otthontar/roadmap/<terv>.md` → `.../roadmap/kesz/<terv>.md`
 
-Ezt a feladat lezárásának részeként végezd el külön kérés nélkül, a dokumentáció áthelyezését és indexfrissítését külön commitban a `main` ágra mentsd; a hozzá tartozó fejlesztést a `dev` ágra commitold/pushold. Ez fejlesztői munkarend, nem időzített háttérfolyamat.
+Ezt a feladat lezárásának részeként végezd el külön kérés nélkül, a dokumentáció áthelyezését és indexfrissítését külön commitban a **privát tudástár main** ágára mentsd; a hozzá tartozó fejlesztést a **borosCode dev** ágra commitold/pushold. Ez fejlesztői munkarend, nem időzített háttérfolyamat.
 
 Áthelyezés előtt ellenőrizd a tényleges kódot, az adott feladat elfogadási feltételeit és a szükséges teszteredményeket. A részben elkészült, blokkolt, még nem hozzáférhető vagy kötelező elfogadási próbára váró feladat leírása az aktív mappában maradjon; rögzítsd, mi hiányzik. A pusztán elkészített prompt nem kész megvalósítás. Roadmap-tervet csak a teljes leírt cél teljesülésekor archiválj; részfeladat befejezésekor frissítsd a státuszt, de a tágabb terv maradjon aktív.
 
 Az áthelyezett leírást őrizd meg teljes egészében. Egészítsd ki lezárási dátummal, a megvalósító commit(ok)/PR hivatkozásával, a teszteredményekkel és az átadási dokumentum helyével. Ne találj ki bizonyítékot. Az aktív szülőindexből a befejezett feladatot vedd ki az aktív sorrendből, és hivatkozd az archívum indexében. Javítsd a befelé és kifelé mutató relatív linkeket és a régi útvonalra hivatkozó dokumentumokat/szkripteket. Azonos nevű meglévő archív fájlt ne írj felül.
 
-A `README.md` indexek, a `prompts/00-KOZOS-UTASITASOK.md` és a `prompts/SABLON.md` az aktív mappában maradnak, mert folyamatosan használt útmutatók. Újranyitott feladatnál a leírás visszakerülhet az aktív mappába, a korábbi lezárási előzmény megőrzésével. Az archiválás nem helyettesíti a `teszt` ágra emelés külön feltételeit.
+A privát tudástár `README.md` indexei, a `projects/otthontar/prompts/00-KOZOS-UTASITASOK.md` és a `projects/otthontar/prompts/SABLON.md` az aktív mappában maradnak, mert folyamatosan használt útmutatók. Újranyitott feladatnál a leírás visszakerülhet az aktív mappába, a korábbi lezárási előzmény megőrzésével. Az archiválás nem helyettesíti a `teszt` ágra emelés külön feltételeit.
 
 ## Feladatok nyomon követése
 
@@ -60,4 +57,10 @@ A központi [projektállapotot](https://github.com/borosdavid/borosCode/blob/mai
 
 Minden valóban átadott alkalmazás-tesztverzióhoz készíts kitöltött átadási lapot és változáslistát a kód mellett, majd annotált, nem átírható `teszt-ÉÉÉÉ.HH.NN.SORSZÁM` címkét a teszt ág pontos kiadási commitjára. Kövesd a main [tesztverzió-eljárását](https://github.com/borosdavid/borosCode/blob/main/projekt/TESZTVERZIOK.md). Dokumentációs változást vagy hiányzó hozzáférésű PWA-t ne címkézz átadott alkalmazásverziónak.
 
-A fontos termék-, architektúra- és munkarendi döntéseket a main [döntési naplójában](https://github.com/borosdavid/borosCode/blob/main/projekt/DONTESI-NAPLO.md) rögzítsd indokkal, alternatívákkal és bizonyítékkal. Válaszd külön az elfogadott irányt és a még nyitott javaslatot; a régi döntés felváltásának előzménye maradjon meg. A `projekt/` központi tervei és sablonjai a promptokhoz hasonlóan csak mainben szerkesztendők.
+A fontos termék-, architektúra- és munkarendi döntéseket a kódrepo main [döntési naplójában](https://github.com/borosdavid/borosCode/blob/main/projekt/DONTESI-NAPLO.md) rögzítsd indokkal, alternatívákkal és bizonyítékkal. Válaszd külön az elfogadott irányt és a még nyitott javaslatot; a régi döntés felváltásának előzménye maradjon meg. A `projekt/` központi tervei és sablonjai a promptokhoz hasonlóan csak mainben szerkesztendők.
+
+## Közös, több gépen használható tudástár
+
+**Kötelező munkamenet-kezdés:** minden fejlesztési, telepítési vagy rendszerbeállítási feladat megkezdésekor olvasd el a különálló, **privát** [`borosdavid/borosCode-knowledge`](https://github.com/borosdavid/borosCode-knowledge) repó `main` ágának legfrissebb `AGENTS.md`, `knowledge/KOZOS_TUDASTAR.md`, `knowledge/ALLAPOT.md` fájljait, szükség esetén a `knowledge/DONTESI_NAPLO.md` fájlt is. **Ez az egyetlen központi, hiteles tudástár** mind a nyilvános, mind a nem nyilvános projektinformációkhoz. A helyi `knowledge/KOZOS_TUDASTAR.md` csak átirányító.
+
+A feladatspecifikus promptokat, a projekt saját státuszait, a valódi kódot és a fenti ágszabályokat továbbra is ellenőrizd. Az ellenőrzött, közös jelentőségű új kontextust és döntést a privát tudástárba dokumentáld, külön commitban a privát repo `main` ágán; a `borosCode` alkalmazásfejlesztési ágszabályait ez nem módosítja. Ha a privát repo nem olvasható, jelezd, ne találgass. Jelszót, API tokent, privát kulcsot és érzékeny adatállományt privát GitHub-repóba se commitolj. A GitHubra nem commitolt helyi és más beszélgetésbeli munkát ez továbbra sem teszi automatikusan láthatóvá.
