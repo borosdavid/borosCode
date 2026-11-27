@@ -49,7 +49,7 @@ public class Imaging {
           g.dispose();
         }
         var bytes = new ByteArrayOutputStream();
-        ImageIO.write(out, "jpg", bytes);
+        ImageIO.write(JpegOrientation.apply(out, JpegOrientation.read(input)), "jpg", bytes);
         return bytes.toByteArray();
       } finally {
         reader.dispose();

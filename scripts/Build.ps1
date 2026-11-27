@@ -5,4 +5,6 @@ if(Test-Path .local/jdk-25.0.5/bin/javac.exe){$env:JAVA_HOME=(Resolve-Path .loca
 $arguments=@('-B','-ntp','-Dmaven.repo.local=.local/m2')
 if(Test-Path .local/settings.xml){$arguments+=@('-s','.local/settings.xml')}
 & $maven @arguments verify
-exit $LASTEXITCODE
+if($LASTEXITCODE){exit $LASTEXITCODE}
+& (Join-Path $PSScriptRoot 'Write-BuildInfo.ps1')
+exit 0

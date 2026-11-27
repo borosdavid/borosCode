@@ -1,0 +1,111 @@
+name: Otthontár tests
+
+on:
+  push:
+    branches: [dev, teszt, main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  java-mysql:
+    name: Java, MySQL and first-account smoke test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:8.4.8
+        env:
+          MYSQL_ROOT_PASSWORD: ci-mysql-fixture
+          MYSQL_ROOT_HOST: '%'
+          MYSQL_DATABASE: inventory_jpa_test
+        ports:
+          - 3306/tcp
+        options: >-
+          --health-cmd="mysqladmin --protocol=TCP --host=127.0.0.1 ping --silent"
+          --health-interval=5s
+          --health-timeout=4s
+          --health-retries=20
+    env:
+      OTTHONTAR_TEST_DB_PASSWORD: ci-mysql-fixture
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Run Java and MySQL integration tests
+        env:
+          MYSQL_TEST_PORT: ${{ job.services.mysql.ports['3306'] }}
+        run: |
+          mvn -B -ntp -Pmysql-it verify \
+            "-Dtest.db.url=jdbc:mysql://127.0.0.1:${MYSQL_TEST_PORT}/inventory_jpa_test" \
+            -Dtest.db.user=root
+      - name: Test the packaged CLI and services on a fresh schema
+        env:
+          MYSQL_CONTAINER_ID: ${{ job.services.mysql.id }}
+          MYSQL_TEST_PORT: ${{ job.services.mysql.ports['3306'] }}
+          OTTHONTAR_SMOKE_DB_USER: root
+          OTTHONTAR_SMOKE_DB_PASSWORD: ci-mysql-fixture
+        run: |
+          docker exec -e MYSQL_PWD="$OTTHONTAR_TEST_DB_PASSWORD" "$MYSQL_CONTAINER_ID" \
+            mysql --user=root --execute='CREATE DATABASE inventory_jpa_test_cli CHARACTER SET utf8mb4'
+          export OTTHONTAR_SMOKE_DB_URL="jdbc:mysql://127.0.0.1:${MYSQL_TEST_PORT}/inventory_jpa_test_cli"
+          python3 tests/first-account-smoke.py
+
+  browser:
+    name: ${{ matrix.browser }} PWA tests
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - browser: Chromium
+            os: ubuntu-24.04
+          - browser: Edge
+            os: windows-2022
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: tests/package-lock.json
+      - run: npm ci --ignore-scripts --prefix tests
+      - if: runner.os == 'Linux'
+        run: npm exec --prefix tests -- playwright-core install --with-deps --only-shell chromium
+      - run: npm test --prefix tests
+
+
+  ubuntu-backup:
+    name: Ubuntu backup fixture tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Bash syntax and backup integration fixtures
+        run: |
+          bash -n scripts/Backup-Ubuntu.sh scripts/Verify-Backup-Ubuntu.sh scripts/tests/Backup-Ubuntu.Tests.sh
+          bash scripts/tests/Backup-Ubuntu.Tests.sh
+
+  powershell:
+    name: Windows PowerShell tests
+    runs-on: windows-2022
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Run the remote-control suite on Windows PowerShell 5.1
+        shell: powershell
+        run: .\scripts\tests\Remote-Control.Tests.ps1

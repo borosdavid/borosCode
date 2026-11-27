@@ -2,11 +2,11 @@ package hu.boros.inventory;
 
 import static org.springframework.http.HttpStatus.*;
 
+import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.*;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,11 +31,28 @@ public class Ledger {
 
   record Place(UUID id, String name) {}
 
-  final JdbcTemplate db;
+  final EntityManager entities;
+  final LocationRepository locations;
+  final ItemRepository items;
+  final ActionRepository actions;
+  final PhotoRepository photoRecords;
+  final FileCleanupRepository cleanup;
   final Photos photos;
 
-  Ledger(JdbcTemplate db, Photos photos) {
-    this.db = db;
+  Ledger(
+      EntityManager entities,
+      LocationRepository locations,
+      ItemRepository items,
+      ActionRepository actions,
+      PhotoRepository photoRecords,
+      FileCleanupRepository cleanup,
+      Photos photos) {
+    this.entities = entities;
+    this.locations = locations;
+    this.items = items;
+    this.actions = actions;
+    this.photoRecords = photoRecords;
+    this.cleanup = cleanup;
     this.photos = photos;
   }
 
@@ -49,8 +66,11 @@ public class Ledger {
           CONFLICT, "A tétel időközben megváltozott. Hasonlítsd össze az adatokat.");
   }
 
-  List<Map<String, Object>> places() {
-    return db.queryForList("SELECT id,name FROM location ORDER BY name");
+  @Transactional(readOnly = true)
+  public List<InventoryViews.PlaceView> places() {
+    return locations.findAllByOrderByNameAsc().stream()
+        .map(location -> new InventoryViews.PlaceView(location.id, location.name))
+        .toList();
   }
 
   @Transactional
@@ -58,30 +78,30 @@ public class Ledger {
     require(
         p.name() != null && !p.name().isBlank() && p.name().strip().length() <= 180,
         "Adj meg 1–180 karakteres helyszínnevet.");
-    if (p.id() == null)
-      db.update("INSERT INTO location VALUES(?,?)", UUID.randomUUID().toString(), p.name().strip());
-    else
-      changed(
-          db.update("UPDATE location SET name=? WHERE id=?", p.name().strip(), p.id().toString()));
+    if (p.id() == null) {
+      entities.persist(new LocationEntity(UUID.randomUUID().toString(), p.name().strip()));
+      locations.flush();
+    } else changed(locations.rename(p.id().toString(), p.name().strip()));
   }
 
-  List<Map<String, Object>> items(boolean trash) {
-    return db.queryForList(
-        "SELECT i.*,l.name AS place FROM item i JOIN location l ON i.location_id=l.id WHERE trashed=? ORDER BY (status='SOLD'), i.name, i.id",
-        trash);
+  @Transactional(readOnly = true)
+  public List<InventoryViews.ItemView> items(boolean trash) {
+    return items.listed(trash).stream()
+        .map(item -> InventoryViews.item(item, item.location.getName(), null))
+        .toList();
   }
 
-  Map<String, Object> item(UUID id) {
-    var rows = db.queryForList("SELECT * FROM item WHERE id=?", id.toString());
-    if (rows.isEmpty()) throw new ResponseStatusException(NOT_FOUND, "A tárgy nem található.");
-    var row = rows.getFirst();
-    if (row.get("sold_date") instanceof java.sql.Date date)
-      row.put("sold_date", date.toLocalDate().toString());
-    row.put(
-        "photos",
-        db.queryForList(
-            "SELECT id,filename FROM photo WHERE item_id=? ORDER BY position_no", id.toString()));
-    return row;
+  @Transactional(readOnly = true)
+  public InventoryViews.ItemView item(UUID id) {
+    var item =
+        items
+            .findById(id.toString())
+            .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "A tárgy nem található."));
+    var pictures =
+        photoRecords.findByItemIdOrderByPositionAscIdAsc(id.toString()).stream()
+            .map(photo -> new InventoryViews.PhotoView(photo.id, photo.filename))
+            .toList();
+    return InventoryViews.item(item, null, pictures);
   }
 
   private static void validatePrice(BigDecimal price) {
@@ -93,21 +113,13 @@ public class Ledger {
 
   record Sale(long version, BigDecimal actual, LocalDate soldDate) {}
 
+  @Transactional
   public void completeSale(UUID id, Sale sale) {
     require(
         sale.actual() != null && sale.soldDate() != null,
         "Add meg a tényleges eladási árat és az eladás dátumát.");
     validatePrice(sale.actual());
-    changed(
-        db.update(
-            """
-        UPDATE item SET status='SOLD', actual=?, sold_date=?, version=version+1
-        WHERE id=? AND version=? AND trashed=0 AND status IN ('WAIT','LISTED')
-        """,
-            sale.actual(),
-            sale.soldDate(),
-            id.toString(),
-            sale.version()));
+    changed(items.completeSale(id.toString(), sale.version(), sale.actual(), sale.soldDate()));
   }
 
   static void validate(Draft d) {
@@ -147,23 +159,14 @@ public class Ledger {
     if (action.isBlank()) action = null;
     String kind = "";
     if (action != null) {
-      var choices =
-          db.queryForList(
-              "SELECT kind,CAST(active AS UNSIGNED) AS active FROM item_action WHERE id=? FOR SHARE",
-              action);
-      require(!choices.isEmpty(), "Ismeretlen művelet.");
-      var choice = choices.getFirst();
-      boolean active = ((Number) choice.get("active")).intValue() != 0;
-      if (!active)
-        require(
-            db.queryForObject(
-                    "SELECT COUNT(*) FROM item WHERE id=? AND action_id=?",
-                    Integer.class,
-                    id,
-                    action)
-                > 0,
-            "Ez a művelet már ki van kapcsolva.");
-      kind = choice.get("kind").toString();
+      var choice =
+          actions
+              .lockForAssignment(action)
+              .orElseThrow(
+                  () -> new ResponseStatusException(UNPROCESSABLE_ENTITY, "Ismeretlen művelet."));
+      if (!choice.active)
+        require(items.existsByIdAndActionId(id, action), "Ez a művelet már ki van kapcsolva.");
+      kind = choice.kind;
     }
     require(
         kind.equals("SALE") == !d.status().equals("KEEP"),
@@ -173,40 +176,35 @@ public class Ledger {
           d.destination() != null && !d.destination().equals(d.location()),
           "Válassz az aktuálistól eltérő célhelyszínt.");
     else require(d.destination() == null, "Csak költöztetéshez adható meg célhelyszín.");
-    var args =
-        new Object[] {
-          d.name().strip(),
-          d.description(),
-          d.location().toString(),
-          d.status(),
-          d.asking(),
-          d.link(),
-          d.actual(),
-          d.soldDate(),
-          action,
-          Objects.toString(d.destination(), null),
-          id
-        };
     if (d.version() == 0) {
-      db.update(
-          "INSERT INTO item(name,description,location_id,status,asking,link,actual,sold_date,action_id,destination_id,id,version) VALUES(?,?,?,?,?,?,?,?,?,?,?,1)",
-          args);
+      entities.persist(new ItemEntity(d, action));
+      items.flush();
     } else {
-      var params = new ArrayList<>(Arrays.asList(args));
-      params.add(d.version());
       changed(
-          db.update(
-              "UPDATE item SET name=?,description=?,location_id=?,status=?,asking=?,link=?,actual=?,sold_date=?,action_id=?,destination_id=?,version=version+1 WHERE id=? AND version=? AND trashed=0",
-              params.toArray()));
+          items.updateDraft(
+              id,
+              d.version(),
+              d.name().strip(),
+              d.description(),
+              d.location().toString(),
+              d.status(),
+              d.asking(),
+              d.link(),
+              d.actual(),
+              d.soldDate(),
+              action,
+              Objects.toString(d.destination(), null)));
     }
     var ids =
-        db.queryForList(
-            "SELECT id FROM photo WHERE item_id=? ORDER BY position_no", String.class, id);
+        new ArrayList<>(
+            photoRecords.findByItemIdOrderByPositionAscIdAsc(id).stream()
+                .map(photo -> photo.id)
+                .toList());
     int previous = ids.size();
     for (var upload : uploads) {
       String photo = photos.store(upload);
-      db.update(
-          "INSERT INTO photo VALUES(?,?,?,?)", photo, id, upload.getOriginalFilename(), ids.size());
+      entities.persist(new PhotoEntity(photo, id, upload.getOriginalFilename(), ids.size()));
+      photoRecords.flush();
       ids.add(photo);
     }
     String cover = d.cover();
@@ -217,44 +215,24 @@ public class Ledger {
     }
     if (cover == null || cover.isBlank()) cover = ids.isEmpty() ? null : ids.getFirst();
     require(cover == null || ids.contains(cover), "A borítókép nem ehhez a tárgyhoz tartozik.");
-    db.update("UPDATE item SET cover=? WHERE id=?", cover, id);
+    items.updateCover(id, cover);
   }
 
   @Transactional
   public void transition(UUID id, long version, String action) {
     String key = id.toString();
     if (action.equals("move")) {
-      changed(
-          db.update(
-              """
-          UPDATE item SET location_id=destination_id, destination_id=NULL, action_id=NULL,
-                          version=version+1
-          WHERE id=? AND version=? AND trashed=0 AND destination_id IS NOT NULL
-            AND action_id IN (SELECT id FROM item_action WHERE kind='MOVE')
-          """,
-              key,
-              version));
+      changed(items.completeMove(key, version));
       return;
     }
     if (action.equals("purge")) {
-      var locked =
-          db.queryForList(
-              "SELECT id FROM item WHERE id=? AND version=? AND trashed=1 FOR UPDATE",
-              key,
-              version);
-      changed(locked.size());
-      db.update("INSERT INTO file_cleanup SELECT id FROM photo WHERE item_id=?", key);
-      db.update("DELETE FROM item WHERE id=?", key);
+      changed(items.lockForPurge(key, version).isPresent() ? 1 : 0);
+      cleanup.enqueueForItem(key);
+      items.purge(key);
     } else {
       require(Set.of("trash", "restore").contains(action), "Ismeretlen művelet.");
       boolean trash = action.equals("trash");
-      changed(
-          db.update(
-              "UPDATE item SET trashed=?,version=version+1 WHERE id=? AND version=? AND trashed=?",
-              trash,
-              key,
-              version,
-              !trash));
+      changed(items.setTrashed(key, version, trash));
     }
   }
 }

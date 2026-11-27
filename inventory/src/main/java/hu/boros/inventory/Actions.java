@@ -1,7 +1,7 @@
 package hu.boros.inventory;
 
+import jakarta.persistence.EntityManager;
 import java.util.*;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,21 +9,19 @@ import org.springframework.transaction.annotation.Transactional;
 class Actions {
   record Choice(String id, String name, String kind, boolean active) {}
 
-  private final JdbcTemplate db;
+  private final EntityManager entities;
+  private final ActionRepository actions;
 
-  Actions(JdbcTemplate db) {
-    this.db = db;
+  Actions(EntityManager entities, ActionRepository actions) {
+    this.entities = entities;
+    this.actions = actions;
   }
 
-  List<Choice> all() {
-    return db.query(
-        "SELECT * FROM item_action ORDER BY FIELD(kind,'KEEP','SALE','MOVE','CUSTOM'), name",
-        (r, i) ->
-            new Choice(
-                r.getString("id"),
-                r.getString("name"),
-                r.getString("kind"),
-                r.getBoolean("active")));
+  @Transactional(readOnly = true)
+  public List<Choice> all() {
+    return actions.ordered().stream()
+        .map(action -> new Choice(action.id, action.name, action.kind, action.active))
+        .toList();
   }
 
   @Transactional
@@ -35,18 +33,10 @@ class Actions {
     if (choice.id() == null) {
       Ledger.require(
           "MOVE".equals(choice.kind()) || "CUSTOM".equals(choice.kind()), "Válassz típust.");
-      db.update(
-          "INSERT INTO item_action(id,name,kind) VALUES(?,?,?)",
-          UUID.randomUUID().toString(),
-          name,
-          choice.kind());
+      entities.persist(new ActionEntity(UUID.randomUUID().toString(), name, choice.kind()));
+      actions.flush();
     } else {
-      Ledger.changed(
-          db.update(
-              "UPDATE item_action SET name=?, active=? WHERE id=?",
-              name,
-              choice.active(),
-              choice.id()));
+      Ledger.changed(actions.updateSettings(choice.id(), name, choice.active()));
     }
   }
 }
