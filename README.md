@@ -2,15 +2,27 @@
 
 > **Fejlesztési tervek és promptok (2026-11-24-től):** a hiteles, naprakész feladatleírások és roadmapek a **privát** [borosCode-knowledge / Otthontár](https://github.com/borosdavid/borosCode-knowledge/blob/main/projects/otthontar/README.md) repóban vannak. A helyi `prompts/` és `roadmap/` fájlok csak átirányítók; a helyi Codexnek külön hozzáférést kell adni a privát repóhoz. A kód és a kódhoz kötött teszt- és átadási dokumentáció továbbra is ebben a repóban marad.
 
-
 Magyar nyelvű, helyi alkalmazás. Első modulja a költözési leltár. A háztartás közös adatokat használ egy Windows-gépen.
+
+## Átmeneti Windows-tesztszerver (01B)
+
+A Debian beállítása későbbre marad. A bekapcsolt Windows-gépen elkülönített natív tesztszerver és privát telefonos HTTPS készíthető elő. [Indítás, Tailscale és a korlátozott távoli vezérlő](docs/windows-tesztszerver-01b.md). A kód és a mock ellenőrzések elkészültek; a valódi Windows/iPhone és innen indított privát GitHub-próba még hátravan. Ez nem már aktivált szerverkapcsolat.
+
+Az Ubuntu-példány frissítése a [telefonos frissítési útmutató](docs/KNOWHOW-ubuntu-frissites.md) szerint indítható.
+
+A leltárfelület kipróbálásához kövesd a [01C ellenőrzőlistáját](docs/web-felulet-01c.md). Az Ubuntu napi mentésének telepítését és próbáját a [01D útmutató](docs/KNOWHOW-ubuntu-napi-mentes.md) írja le.
 
 ## Első indítás
 
-1. A projektmappában kattints duplán az **Inditas.cmd** fájlra. A megnyíló böngészőben a **Beállítások** fülön add meg az első helyszín nevét, és kattints a **Mentés** gombra. Ismételd meg a többi helyszínnel.
-2. A **Tárgyak → Új tárgy** oldalon add meg a tárgy nevét, válassz helyszínt, és válaszd ki a JPG-ket. A képek alatti gombokkal választhatsz borítót vagy kivehetsz egy új képet. A **Mentés** együtt rögzíti az adatlapot és a fotókat.
-3. Az **Eladás** oldalon láthatod a Marketplace-re szánt tárgyakat. A hirdetést kézzel add fel. Az alkalmazásban forintban vezetheted az árakat.
-4. Leállításhoz kattints duplán a **Leallitas.cmd** fájlra. A szolgáltatások a böngésző bezárása után is futnak. Az adatbázis és a képek megmaradnak.
+1. Ellenőrizd alább a futtatási előfeltételeket. Natív Windowson előbb futtasd a `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Build.ps1` parancsot. Ezután indítsd el az alkalmazást az **Inditas.cmd** fájllal.
+2. Az első indításkor a felület bejelentkezést kér. A futó alkalmazás mellett, a projektmappában nyitott PowerShellben hozd létre az első fiókot. Válassz saját felhasználónevet és a kérdésre helyben add meg a jelszavadat.
+
+   - Natív Windows: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Account.ps1 -Action create -UserName david`
+   - Docker az **Inditas.cmd** indítójával: `docker exec -it otthontar-personal-inventory-1 java -jar /app.jar account create david`. Ha a konténer neve eltér, a `docker ps` kimenetében keresd a személyes profil inventory konténerét. Kézi Compose indításhoz lásd a [fiókkezelési útmutatót](docs/fiokok-01a.md#első-fiók-és-karbantartás).
+
+3. Jelentkezz be, majd a **Beállítások** fülön add meg az első helyszínt. A **Tárgyak → Új tárgy** oldalon adj nevet a tárgynak, válassz helyszínt és csatolj képeket. A **Mentés** együtt rögzíti az adatlapot és a fotókat.
+4. Az **Eladás** oldalon láthatod a Marketplace-re szánt tárgyakat. A hirdetést kézzel add fel. Az alkalmazásban forintban vezetheted az árakat.
+5. Leállításhoz kattints duplán a **Leallitas.cmd** fájlra. A szolgáltatások a böngésző bezárása után is futnak. Az adatbázis és a képek megmaradnak.
 
 A helyi cím [Otthontár](http://127.0.0.1:8740/leltar). A második indítás megnyitja a már futó példányt. Az első beállításkor működő Docker Compose esetén az indító a konténereket választja. Ezen a gépen előkészítettük a közvetlen windowsos indítást. A kiválasztott módot a gép megjegyzi, így a következő alkalommal is ugyanazt a leltárt látod.
 
@@ -23,6 +35,13 @@ Nyisd meg a projektmappát a **File → Open Folder** paranccsal. Az SQLTools ol
 Nyisd le az inventory adatbázist, majd a Tables csomópontot. Az item táblán válaszd a rekordok megjelenítését (Show Table Records). A saját lekérdezéshez nyisd meg a [leltar.sql](docs/leltar.sql) fájlt, és futtasd az SQLTools **Run Query** parancsát. Az alsó eredménytáblában keresd meg a felvett tárgyat. Helyezd át a webes felületen, mentsd, majd futtasd újra a lekérdezést. A tárgy azonosítója azonos marad, a helyszín neve változik, a verziószám nő. A mindennapi módosításokat a webes felület végzi.
 
 ## Felépítés
+
+Az Inventory perzisztenciarétege **Hibernate ORM + Spring Data JPA**, a meglévő
+MySQL-sémán. A séma egyetlen módosítója a Flyway; a Hibernate induláskor kizárólag
+ellenőriz (`ddl-auto=validate`). A REST-válaszok külön DTO-kból készülnek, a
+verziófeltételes mentés és a 409-es ütközésjelzés megmaradt. Az entitások,
+repositoryk, fotótranzakciók és a kompatibilitási döntések leírása:
+[JPA-átállás](docs/jpa-atallas.md).
 
 A Thymeleaf közös oldalkeretet és a leltár sablonját szolgálja ki. A böngésző helyben őrzi a még szerkesztett mezőket és képeket. A Mentés a leltárszolgáltatásnak küldi el az űrlapot. A szolgáltatás egy MySQL-tranzakcióban ellenőrzi az adatlap verzióját és rögzíti az összetartozó adatokat. A külön imaging szolgáltatás HTTP-n fogadja a JPEG-et, ellenőrzi, és visszaad egy legfeljebb 420 pixeles előnézetet. Ennek a szolgáltatásnak nincs saját tartós adata. A leltárszolgáltatás tárolja mindkét fájlt és a hozzájuk tartozó azonosítót. Egy JPG legfeljebb 20 MiB, a teljes mentés legfeljebb 200 MiB lehet. Végleges törléskor az adatbázisban tartós törlési sor készül a képfájlokhoz. Átmeneti fájlhiba esetén a takarítás újraindítás után is folytatódik.
 
@@ -57,18 +76,54 @@ Az Actuator /actuator/health végpont mindkét szolgáltatásnál elérhető. A 
 | GET /api/photos/{id}/{original,small} | JPEG |
 | POST /thumbnail (imaging) | image/jpeg bemenet és JPEG válasz |
 
+Az adatlap mentéséhez opcionális az `X-Otthontar-Save-Id` UUID fejléc. A webes szerkesztő elküldi, és válaszvesztés után ugyanazzal az azonosítóval, ugyanazokkal a mezőkkel és fotókkal próbálkozik újra. A szerver fiókonként tartósan rögzíti a sikeres műveletet, és az ismétléskor az adatlap aktuális állapotát adja vissza az adatok újbóli módosítása nélkül. Eltérő tartalomhoz új UUID kell. A korábbi, fejléc nélküli kliensek a meglévő verzióellenőrzést használják.
+
 A hibás kérés 400, hiányzó tétel 404, ütközés 409, túl nagy feltöltés 413, hibás üzleti adat vagy JPEG 422, elérhetetlen képszolgáltatás 503 választ adhat. A kliens a hibánál megtartja a piszkozatot.
 
 Új modulhoz az inventory/src/main/resources/templates/layout.html fájl főnavigációjához adj menüpontot, és hozz létre saját Thymeleaf-mappát az inventory sablonmappája mellett. Új útvonalat és vezérlőt külön Java-csomagban adj hozzá. Egy önálló üzleti szolgáltatás az imaging példájához hasonló Maven-modult, saját belépési pontot és compose.yaml szolgáltatásbejegyzést kaphat. Saját adattulajdon esetén külön séma és hozzáférés kell. A meglévő adatmodellt az inventory/src/main/resources/db/migration alatt következő sorszámú Flyway-migrációval bővítsd. A már lefutott V1 fájlt hagyd érintetlenül.
 
 ## Verziók és ellenőrzések
 
+A 00A átálláskor feloldott JPA-verziók: Spring Boot 4.1.2, Spring Data JPA 4.1.2,
+Hibernate ORM 7.4.13.Final, a Spring Boot függőségkezeléséből. A Java 21 célszint,
+az imaging HTTP-szolgáltatás és a Windows/Docker indítás konfigurációja megmaradt.
+
+Az új adatbázisos regressziós ellenőrzés:
+`powershell -ExecutionPolicy Bypass -File scripts/Test-Persistence.ps1`.
+Ez saját ideiglenes MySQL-példányt, véletlen loopback portot, külön
+`inventory_jpa_test` sémát és ideiglenes fotómappát használ; a személyes leltárhoz
+nem kapcsolódik. Mavenben a `mysql-it` profil futtatja a Failsafe integrációs
+teszteket. A sima `mvn verify` továbbra is az egységteszteket, a csomagolást és a
+formázásellenőrzést futtatja. Részletek és tényleges eredmények:
+[tesztjegyzőkönyv](docs/jpa-teszteredmenyek.md).
+
+A böngészős PWA-tesztek helyi futtatása a repó gyökeréből:
+
+```bash
+npm ci --ignore-scripts --prefix tests
+npm exec --prefix tests -- playwright-core install --only-shell chromium
+npm test --prefix tests
+```
+
+Linuxon a Chromiumhoz szükséges rendszerfüggőségeket az install parancs `--with-deps` kapcsolóval is feltelepíti. Windowson a teszt alapból Edge-et használ. A `BROWSER_EXE` változóval saját böngészőbináris választható.
+
+Az első fiók és a két Java-szolgáltatás közös próbája a `tests/first-account-smoke.py`. `mvn verify` után, Linuxon futtatható egy frissen létrehozott, üres `inventory_jpa_test_cli` sémával, kizárólag loopback MySQL-címen. Add meg az `OTTHONTAR_SMOKE_DB_URL` (például `jdbc:mysql://127.0.0.1:43316/inventory_jpa_test_cli`), `OTTHONTAR_SMOKE_DB_USER` és `OTTHONTAR_SMOKE_DB_PASSWORD` változókat, majd futtasd a `python3 tests/first-account-smoke.py` parancsot. A próba tesztjelszót állít elő, a valódi JAR parancssorán hozza létre a fiókot, HTTP-n belép, képet ment, majd újraindítás után ellenőrzi a mentett adatokat és a fotót.
+
+A 2026-11-17-i dev összeillesztés újrafuttatott ellenőrzéseit és a nyitott PWA
+offline próbát a [JPA dev integrációs riport](docs/jpa-dev-integracio.md) rögzíti.
+
 2026. november 13-án a Maven-build Spring Boot 4.1.2-t, Thymeleaf 3.1.5.RELEASE-t, Flyway 12.4.0-t és MySQL Connector/J 9.7.0-t oldott fel. A kapcsolt függőségeket a Spring Boot szülőprojekt rögzíti. A MySQL 9.7.4 LTS-vonalat a hosszabb támogatás miatt választottuk. A natív indító ezen a gépen a projekt saját JDK 25.0.5 LTS példányát használja. A Java 21 célszint a gépen telepített JDK-val és az újabb JDK-kkal is használható. A Docker-build a támogatott Maven 3.9.16 image-et használja. Források: [Spring Boot kiadás](https://spring.io/blog/2026/10/23/spring-boot-4-1-2-available-now/), [kompatibilitás](https://docs.spring.io/spring-boot/system-requirements.html), [MySQL kiadások](https://dev.mysql.com/doc/relnotes/mysql/9.7/en/), [Maven kiadások](https://maven.apache.org/docs/history.html), [Java kiadások](https://www.oracle.com/en/java/technologies/java-se-glance.html).
 
 A böngészős átadási próba Windows alatt a tests/acceptance.cjs fájlban van. Node, Playwright Core és Edge szükséges hozzá. A PLAYWRIGHT_CORE és BROWSER_EXE változóval megadható saját telepítés is. Indítsd a tesztprofilt a `powershell -ExecutionPolicy Bypass -File scripts/Start.ps1 -Native -TestRun -NoBrowser` paranccsal, majd futtasd a `node tests/acceptance.cjs` parancsot. A próba saját teszttárgyakat és JPG-ket készít, és csak a tesztprofilt indítja újra. Az átadási követelményeket a projektprompt.txt tartalmazza.
 
-## Projekttervek és aktuális állapot
+## Mobilos PWA – 01-es fejlesztési fázis
 
-A központi [projektállapot](https://github.com/borosdavid/borosCode/blob/main/projekt/ALLAPOT.md), a [promptok](https://github.com/borosdavid/borosCode/tree/main/prompts) és a [roadmap](https://github.com/borosdavid/borosCode/tree/main/roadmap) hiteles forrása a `main`. A tervekben jelzett készültség eltérhet ennek az ágnak az alkalmazáskódjától; a fenti futtatási és műszaki leírás az adott ág kódját követi.
+Elkészült a telepíthető PWA helyi alapja, az offline tájékoztató, a mobilos fotóválasztás és az előnézetek EXIF-tájolása. A védett Ubuntu-példány nyilvános belépési címe [boroscode.com/otthontar](https://boroscode.com/otthontar/). A helyi példányok távoli eléréséhez külön HTTPS-beállítás kell. A [PWA átadási útmutató](docs/pwa-01.md) tartalmazza az állapotot, teszteket, kézi HTTPS/telepítési tervet és a valódi iPhone ellenőrzőlistáját. A teljes offline leltár a 02-es, az offline írás/szinkron a 03-as fázis része.
 
-Központi [projektirányítási oldalak és sablonok](https://github.com/borosdavid/borosCode/tree/main/projekt).
+Az API-t közvetlenül író helyi eszközöknek mostantól `X-Otthontar-Request: 1` fejlécet kell küldeniük; a webfelület ezt automatikusan hozzáadja.
+
+## Alkalmazásfiókok
+
+A leltár használatához felhasználónév/jelszó szükséges, minden aktív fiók azonos közös hozzáféréssel. Nincs alapjelszó: az első fiókot helyben kell létrehozni a friss JAR `account create` módjával vagy Windowson a `scripts/Account.ps1` helperrel. A [fiókok leírása és ellenőrzési riportja](docs/fiokok-01a.md) tartalmazza a profilválasztást, a belépést, a közvetlen API-kliensek új CSRF-/fiókfejléceit, az explicit HTTPS-proxyfeltételeket és a még hátralévő valódi MySQL/Windows/Docker/iPhone-próbákat.
+
+Az alkalmazás [projektállapota](https://github.com/borosdavid/borosCode/blob/main/projekt/ALLAPOT.md) a main ágon érhető el.

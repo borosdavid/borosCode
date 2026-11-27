@@ -74,6 +74,12 @@ const server = http.createServer(async (req,res) => {
                 const icon = await fs.readFile(path.join(root,'static/icons/icon-192.png'));
                 res.writeHead(200, {'Content-Type':'image/png'});res.end(icon);return;
             }
+            if (route === '/api/items/fixture-1') {
+                const item = fixtureItems.find(row => row.id === 'fixture-1');
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({...item, photos:[{id:'photo-1',filename:'Mentett kép.jpg'}]}));
+                return;
+            }
             if (route === '/api/items' && blockItems) await blockItems;
             if (route === '/api/items' && itemsUnavailable) {
                 res.writeHead(503, {'Content-Type':'application/json'});
@@ -100,11 +106,72 @@ const server = http.createServer(async (req,res) => {
         res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(data);
     }catch{res.writeHead(404);res.end();}
 });
+async function checkPhotoFrame(page, preview, viewport, width, height) {
+    await page.setViewportSize(viewport);
+    const cover = await page.locator(preview + ' img').evaluate(async (img, size) => {
+        const picture = `<svg xmlns="http://www.w3.org/2000/svg" width="${size.width}" height="${size.height}"><rect width="100%" height="100%" fill="green"/></svg>`;
+        img.src = 'data:image/svg+xml,' + encodeURIComponent(picture);
+        await img.decode();
+        const style = getComputedStyle(img);
+        const frame = img.parentElement.getBoundingClientRect();
+        const image = img.getBoundingClientRect();
+        return {
+            fit: style.objectFit,
+            position: style.objectPosition,
+            frameWidth: frame.width,
+            frameHeight: frame.height,
+            inset: [image.left - frame.left, image.top - frame.top,
+                frame.right - image.right, frame.bottom - image.bottom],
+        };
+    }, {width, height});
+    assert.equal(cover.fit, 'contain');
+    assert.equal(cover.position, '50% 50%');
+    assert.ok(cover.frameWidth > 0 && cover.frameHeight > 0, 'Photo frame must have an area');
+    assert.ok(cover.inset.every(edge => Math.abs(edge) < 1), 'Photo must fit its frame');
+}
+
+async function checkInstallHelp(browser, origin) {
+    const iphoneWebkit = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko)';
+    const iphoneSafari = `${iphoneWebkit} Version/26.0 Mobile/15E148 Safari/604.1`;
+    const desktopSafari = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15';
+    const scenarios = [
+        {name: 'iPhone Safari', userAgent: iphoneSafari, visible: true},
+        {name: 'desktop Safari', userAgent: desktopSafari, visible: false},
+        {name: 'iPhone Chrome', userAgent: `${iphoneWebkit} CriOS/140.0.7339.122 Mobile/15E148 Safari/604.1`, visible: false},
+        {name: 'iPhone Home Screen', userAgent: iphoneSafari, standalone: true, visible: false},
+        {name: 'standalone display mode', userAgent: iphoneSafari, standaloneDisplay: true, visible: false},
+    ];
+    for (const {name, userAgent, visible, standalone, standaloneDisplay} of scenarios) {
+        const page = await browser.newPage({userAgent});
+        try {
+            await page.addInitScript(({standalone, standaloneDisplay}) => {
+                if (standalone) Object.defineProperty(navigator, 'standalone', {value: true});
+                if (standaloneDisplay) {
+                    const matchMedia = window.matchMedia.bind(window);
+                    window.matchMedia = query => query === '(display-mode: standalone)' ? {matches: true} : matchMedia(query);
+                }
+            }, {standalone, standaloneDisplay});
+            await page.goto(origin + '/leltar');
+            const help = page.getByText('Telepítés iPhone-ra', {exact: true});
+            assert.equal(await help.isVisible(), visible, name);
+            if (visible) {
+                await help.click();
+                const instructions = page.getByText(/Megosztás → Hozzáadás a Főképernyőhöz/);
+                assert.equal(await instructions.isVisible(), true, name);
+            }
+        } finally {
+            await page.close();
+        }
+    }
+    console.log(`OK: ${new URL(origin).pathname} install help only in iPhone Safari browser mode.`);
+}
+
 async function browserChecks(browser, base, prefix) {
     const origin = base + prefix;
     expiredSession = false; fixtureUser = 'account-1'; failSave = true; savedBody = ''; savedHeader = '';
     nextWorker = false; failAsset = false; dropSaveResponse = false; serverUnavailable = false; itemsUnavailable = false;
     fixtureItems = structuredClone(sampleItems);
+    await checkInstallHelp(browser, origin);
     const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:3, serviceWorkers:'allow'});
     const page=await context.newPage();
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -142,8 +209,16 @@ async function browserChecks(browser, base, prefix) {
         const view = page.getByRole('group',{name:'Tárgylista nézete'});
         assert.equal(await view.getByRole('button',{name:'Fotónézet'}).getAttribute('aria-pressed'),'true');
         assert.deepEqual(await page.locator('.inventory-summary dd').allTextContents(),['2','2','1']);
+        const mobile = {width:390,height:844};
+        const desktop = {width:1440,height:900};
+        await checkPhotoFrame(page, '.card-thumb', mobile, 900, 300);
+        await checkPhotoFrame(page, '.card-thumb', desktop, 300, 900);
+        await page.setViewportSize(mobile);
         await view.getByRole('button',{name:'Lista',exact:true}).click();
         assert.equal(await page.locator('.cards').getAttribute('data-view'),'list');
+        await checkPhotoFrame(page, '.card-thumb', mobile, 300, 900);
+        await checkPhotoFrame(page, '.card-thumb', desktop, 900, 300);
+        await page.setViewportSize(mobile);
         await page.reload();
         await view.getByRole('button',{name:'Lista',exact:true,pressed:true}).waitFor();
         await view.getByRole('button',{name:'Fotónézet'}).click();
@@ -188,6 +263,14 @@ async function browserChecks(browser, base, prefix) {
         await page.getByRole('button',{name:'Visszaállítás'}).click();
         await page.getByText('Tárgy visszaállítva.',{exact:true}).waitFor();
         console.log(`OK: ${prefix || '/'} search, loading, errors, sale, move, trash and restore.`);
+        await page.goto(origin+'/leltar/fixture-1');
+        const savedPhoto = '#gallery a.photo-preview';
+        await page.locator('#gallery img').waitFor();
+        assert.equal(await page.locator('#gallery figure a').getAttribute('href'),prefix+'/api/photos/photo-1/original');
+        assert.equal(await page.locator(savedPhoto).count(), 1);
+        await checkPhotoFrame(page, savedPhoto, mobile, 300, 900);
+        await checkPhotoFrame(page, savedPhoto, desktop, 900, 300);
+        await page.setViewportSize(mobile);
         await page.goto(origin+'/leltar/uj');
         await page.locator('[name=name]').fill('Mobilos teszt');
         await page.locator('[name=location]').selectOption('place-1');
@@ -195,6 +278,9 @@ async function browserChecks(browser, base, prefix) {
         const png=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=32;c.height=24;return c.toDataURL('image/png').split(',')[1];});
         await page.locator('#picker').setInputFiles({name:'test.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});
         await page.locator('#gallery figure').waitFor();
+        await checkPhotoFrame(page, '#gallery .photo-preview', mobile, 900, 300);
+        await checkPhotoFrame(page, '#gallery .photo-preview', desktop, 300, 900);
+        await page.setViewportSize(mobile);
         await page.getByRole('button',{name:'Mentés',exact:true}).first().click();
         await page.getByText('Túl nagy kérés. A piszkozat megmarad.',{exact:true}).waitFor();
         assert.equal(await page.locator('[name=name]').inputValue(),'Mobilos teszt');

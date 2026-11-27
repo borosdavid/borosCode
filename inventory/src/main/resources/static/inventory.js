@@ -284,7 +284,9 @@ function editor(item) {
             const figure=document.createElement('figure');
             const selected = r.key === cover;
             const image = `<img alt="${esc(r.label)}" src="${esc(r.src)}">`;
-            figure.innerHTML = (r.original ? image : `<a target="_blank" rel="noopener" href="${appUrl('api/photos/')}${esc(r.key)}/original">${image}</a>`) +
+            const preview = r.original ? `<div class="photo-preview">${image}</div>`
+                : `<a class="photo-preview" target="_blank" rel="noopener" href="${appUrl('api/photos/')}${esc(r.key)}/original">${image}</a>`;
+            figure.innerHTML = preview +
                 `<figcaption>${esc(r.label)}</figcaption><div class="actions"><button type="button" class="cover" aria-pressed="${selected}">${selected ? 'Borítókép' : 'Legyen borítókép'}</button>` +
                 (r.original ? '<button class="remove quiet danger" type="button">Kivétel</button>' : '') + '</div>';
             if(r.error){const error=document.createElement('p');error.setAttribute('role','alert');error.textContent=r.error;figure.append(error);figure.querySelector('.cover').disabled=true;}

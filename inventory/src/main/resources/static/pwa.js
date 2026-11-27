@@ -2,7 +2,7 @@
 'use strict';
 (() => {
     const status = document.querySelector('#connection-status');
-    const install = document.querySelector('#pwa-help');
+    const install = document.querySelector('#pwa-install');
     const note = document.querySelector('#pwa-update');
     const connectivity = () => {
         status.hidden = navigator.onLine;
@@ -11,11 +11,18 @@
     connectivity();
     window.addEventListener('online', connectivity);
     window.addEventListener('offline', connectivity);
-    if (!window.isSecureContext || !('serviceWorker' in navigator)) {
-        install.textContent = 'A telepíthető PWA-hoz és a Service Workerhez megbízható HTTPS szükséges. A számítógép localhost címe csak helyi fejlesztési kivétel.';
-        return;
+    const supportsPwa = window.isSecureContext && 'serviceWorker' in navigator;
+    const userAgent = navigator.userAgent;
+    const iphoneSafari = /\biPhone\b/.test(userAgent)
+        && /\) Version\/[\d.]+ Mobile\/\w+ Safari\/[\d.]+$/.test(userAgent);
+    const standalone = navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+    if (iphoneSafari && !standalone) {
+        install.querySelector('#pwa-help').textContent = supportsPwa
+            ? 'iPhone Safari: Megosztás → Hozzáadás a Főképernyőhöz. Telefonon előbb beállított, megbízható HTTPS-elérés szükséges.'
+            : 'A telepítéshez nyisd meg az Otthontárat megbízható HTTPS-címen.';
+        install.hidden = false;
     }
-    install.textContent = 'iPhone Safari: Megosztás → Hozzáadás a Főképernyőhöz. Telefonon előbb beállított, megbízható HTTPS-elérés szükséges.';
+    if (!supportsPwa) return;
     window.addEventListener('load', async () => {
         try {
             const registration = await navigator.serviceWorker.register(AccountAuth.url('sw.js'), {scope: AccountAuth.url('leltar'), updateViaCache: 'none'});

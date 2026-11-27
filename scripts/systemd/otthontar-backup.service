@@ -1,0 +1,14 @@
+[Unit]
+Description=Otthontár encrypted local backup
+# Native Ubuntu user service; install under ~/.config/systemd/user/
+After=otthontar-inventory.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash %h/.local/lib/otthontar/Backup-Ubuntu.sh --run
+# Installed independent of the live Otthontár application checkout.
+TimeoutStartSec=2h
+UMask=0077
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

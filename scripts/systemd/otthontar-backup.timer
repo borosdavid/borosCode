@@ -1,0 +1,11 @@
+[Unit]
+Description=Otthontár daily local backup (UTC/local system timezone)
+
+[Timer]
+OnCalendar=*-*-* 03:15:00
+Persistent=true
+RandomizedDelaySec=15m
+Unit=otthontar-backup.service
+
+[Install]
+WantedBy=timers.target
