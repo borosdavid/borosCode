@@ -183,18 +183,20 @@ input::file-selector-button {
     align-items: center;
     padding: .7rem;
 }
-.card-thumb {
+.card-thumb, .photo-preview {
     position: relative;
-    width: clamp(3.75rem, 8vw, 6.5rem);
     aspect-ratio: 4 / 3;
-    display: grid;
-    place-items: center;
     overflow: hidden;
     border-radius: 8px;
     background: var(--soft);
+}
+.card-thumb {
+    width: clamp(3.75rem, 8vw, 6.5rem);
+    display: grid;
+    place-items: center;
     color: #63776c;
 }
-.card-thumb img {
+.card-thumb img, .photo-preview img {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -236,7 +238,7 @@ fieldset [data-complete] { align-self: end; justify-self: start; }
 .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.5rem), 1fr)); gap: .85rem; }
 .gallery:empty { display: none; }
 .gallery figure { min-width: 0; max-width: 19rem; border: 1px solid var(--border); border-radius: 9px; padding: .6rem; }
-.gallery img { display: block; width: 100%; aspect-ratio: 4 / 3; border-radius: 5px; background: var(--soft); object-fit: contain; }
+.photo-preview { display: block; width: 100%; }
 .gallery figcaption { margin: .4rem 0; color: var(--muted); }
 .gallery .actions { justify-content: flex-start; gap: .35rem; }
 .gallery [aria-pressed="true"] { background: var(--green-soft); }

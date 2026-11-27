@@ -74,6 +74,12 @@ const server = http.createServer(async (req,res) => {
                 const icon = await fs.readFile(path.join(root,'static/icons/icon-192.png'));
                 res.writeHead(200, {'Content-Type':'image/png'});res.end(icon);return;
             }
+            if (route === '/api/items/fixture-1') {
+                const item = fixtureItems.find(row => row.id === 'fixture-1');
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({...item, photos:[{id:'photo-1',filename:'Mentett kép.jpg'}]}));
+                return;
+            }
             if (route === '/api/items' && blockItems) await blockItems;
             if (route === '/api/items' && itemsUnavailable) {
                 res.writeHead(503, {'Content-Type':'application/json'});
@@ -100,9 +106,9 @@ const server = http.createServer(async (req,res) => {
         res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(data);
     }catch{res.writeHead(404);res.end();}
 });
-async function checkCoverPhoto(page, viewport, width, height) {
+async function checkPhotoFrame(page, preview, viewport, width, height) {
     await page.setViewportSize(viewport);
-    const cover = await page.locator('.card-thumb img').evaluate(async (img, size) => {
+    const cover = await page.locator(preview + ' img').evaluate(async (img, size) => {
         const picture = `<svg xmlns="http://www.w3.org/2000/svg" width="${size.width}" height="${size.height}"><rect width="100%" height="100%" fill="green"/></svg>`;
         img.src = 'data:image/svg+xml,' + encodeURIComponent(picture);
         await img.decode();
@@ -112,13 +118,16 @@ async function checkCoverPhoto(page, viewport, width, height) {
         return {
             fit: style.objectFit,
             position: style.objectPosition,
+            frameWidth: frame.width,
+            frameHeight: frame.height,
             inset: [image.left - frame.left, image.top - frame.top,
                 frame.right - image.right, frame.bottom - image.bottom],
         };
     }, {width, height});
     assert.equal(cover.fit, 'contain');
     assert.equal(cover.position, '50% 50%');
-    assert.ok(cover.inset.every(edge => Math.abs(edge) < 1), 'Cover image must fit its frame');
+    assert.ok(cover.frameWidth > 0 && cover.frameHeight > 0, 'Photo frame must have an area');
+    assert.ok(cover.inset.every(edge => Math.abs(edge) < 1), 'Photo must fit its frame');
 }
 
 async function checkInstallHelp(browser, origin) {
@@ -202,13 +211,13 @@ async function browserChecks(browser, base, prefix) {
         assert.deepEqual(await page.locator('.inventory-summary dd').allTextContents(),['2','2','1']);
         const mobile = {width:390,height:844};
         const desktop = {width:1440,height:900};
-        await checkCoverPhoto(page, mobile, 900, 300);
-        await checkCoverPhoto(page, desktop, 300, 900);
+        await checkPhotoFrame(page, '.card-thumb', mobile, 900, 300);
+        await checkPhotoFrame(page, '.card-thumb', desktop, 300, 900);
         await page.setViewportSize(mobile);
         await view.getByRole('button',{name:'Lista',exact:true}).click();
         assert.equal(await page.locator('.cards').getAttribute('data-view'),'list');
-        await checkCoverPhoto(page, mobile, 300, 900);
-        await checkCoverPhoto(page, desktop, 900, 300);
+        await checkPhotoFrame(page, '.card-thumb', mobile, 300, 900);
+        await checkPhotoFrame(page, '.card-thumb', desktop, 900, 300);
         await page.setViewportSize(mobile);
         await page.reload();
         await view.getByRole('button',{name:'Lista',exact:true,pressed:true}).waitFor();
@@ -254,6 +263,14 @@ async function browserChecks(browser, base, prefix) {
         await page.getByRole('button',{name:'Visszaállítás'}).click();
         await page.getByText('Tárgy visszaállítva.',{exact:true}).waitFor();
         console.log(`OK: ${prefix || '/'} search, loading, errors, sale, move, trash and restore.`);
+        await page.goto(origin+'/leltar/fixture-1');
+        const savedPhoto = '#gallery a.photo-preview';
+        await page.locator('#gallery img').waitFor();
+        assert.equal(await page.locator('#gallery figure a').getAttribute('href'),prefix+'/api/photos/photo-1/original');
+        assert.equal(await page.locator(savedPhoto).count(), 1);
+        await checkPhotoFrame(page, savedPhoto, mobile, 300, 900);
+        await checkPhotoFrame(page, savedPhoto, desktop, 900, 300);
+        await page.setViewportSize(mobile);
         await page.goto(origin+'/leltar/uj');
         await page.locator('[name=name]').fill('Mobilos teszt');
         await page.locator('[name=location]').selectOption('place-1');
@@ -261,6 +278,9 @@ async function browserChecks(browser, base, prefix) {
         const png=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=32;c.height=24;return c.toDataURL('image/png').split(',')[1];});
         await page.locator('#picker').setInputFiles({name:'test.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});
         await page.locator('#gallery figure').waitFor();
+        await checkPhotoFrame(page, '#gallery .photo-preview', mobile, 900, 300);
+        await checkPhotoFrame(page, '#gallery .photo-preview', desktop, 300, 900);
+        await page.setViewportSize(mobile);
         await page.getByRole('button',{name:'Mentés',exact:true}).first().click();
         await page.getByText('Túl nagy kérés. A piszkozat megmarad.',{exact:true}).waitFor();
         assert.equal(await page.locator('[name=name]').inputValue(),'Mobilos teszt');
