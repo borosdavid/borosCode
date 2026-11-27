@@ -100,6 +100,27 @@ const server = http.createServer(async (req,res) => {
         res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(data);
     }catch{res.writeHead(404);res.end();}
 });
+async function checkCoverPhoto(page, viewport, width, height) {
+    await page.setViewportSize(viewport);
+    const cover = await page.locator('.card-thumb img').evaluate(async (img, size) => {
+        const picture = `<svg xmlns="http://www.w3.org/2000/svg" width="${size.width}" height="${size.height}"><rect width="100%" height="100%" fill="green"/></svg>`;
+        img.src = 'data:image/svg+xml,' + encodeURIComponent(picture);
+        await img.decode();
+        const style = getComputedStyle(img);
+        const frame = img.parentElement.getBoundingClientRect();
+        const image = img.getBoundingClientRect();
+        return {
+            fit: style.objectFit,
+            position: style.objectPosition,
+            inset: [image.left - frame.left, image.top - frame.top,
+                frame.right - image.right, frame.bottom - image.bottom],
+        };
+    }, {width, height});
+    assert.equal(cover.fit, 'contain');
+    assert.equal(cover.position, '50% 50%');
+    assert.ok(cover.inset.every(edge => Math.abs(edge) < 1), 'Cover image must fit its frame');
+}
+
 async function browserChecks(browser, base, prefix) {
     const origin = base + prefix;
     expiredSession = false; fixtureUser = 'account-1'; failSave = true; savedBody = ''; savedHeader = '';
@@ -142,8 +163,16 @@ async function browserChecks(browser, base, prefix) {
         const view = page.getByRole('group',{name:'Tárgylista nézete'});
         assert.equal(await view.getByRole('button',{name:'Fotónézet'}).getAttribute('aria-pressed'),'true');
         assert.deepEqual(await page.locator('.inventory-summary dd').allTextContents(),['2','2','1']);
+        const mobile = {width:390,height:844};
+        const desktop = {width:1440,height:900};
+        await checkCoverPhoto(page, mobile, 900, 300);
+        await checkCoverPhoto(page, desktop, 300, 900);
+        await page.setViewportSize(mobile);
         await view.getByRole('button',{name:'Lista',exact:true}).click();
         assert.equal(await page.locator('.cards').getAttribute('data-view'),'list');
+        await checkCoverPhoto(page, mobile, 300, 900);
+        await checkCoverPhoto(page, desktop, 900, 300);
+        await page.setViewportSize(mobile);
         await page.reload();
         await view.getByRole('button',{name:'Lista',exact:true,pressed:true}).waitFor();
         await view.getByRole('button',{name:'Fotónézet'}).click();
