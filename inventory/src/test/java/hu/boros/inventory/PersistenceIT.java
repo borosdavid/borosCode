@@ -112,6 +112,11 @@ class PersistenceIT {
       sql.executeUpdate(
           "update item set cover='" + firstPhoto + "' where id='" + legacyIds.getFirst() + "'");
     }
+    Flyway.configure()
+        .dataSource(databaseUrl, databaseUser, databasePassword)
+        .target("4")
+        .load()
+        .migrate();
     originalSchema = schema();
     legacyList =
         rows(
@@ -703,6 +708,258 @@ class PersistenceIT {
     }
   }
 
+  @Test
+  void calendarUsesInclusiveEventDaysAndExclusiveQueryEnd() throws Exception {
+    String item = saved(draft()).get("id").asText();
+    var event = calendarDraft("MOVE", "2026-12-31", item);
+    event.put("plannedEnd", "2027-01-02");
+    var created = createCalendar(event);
+    String id = created.get("id").asText();
+    assertEquals("2027-01-02", created.get("plannedEnd").asText());
+    assertTrue(containsId(calendarPeriod("2026-12-31", "2027-01-01", item), id));
+    assertTrue(containsId(calendarPeriod("2027-01-01", "2027-01-02", item), id));
+    assertTrue(containsId(calendarPeriod("2027-01-02", "2027-01-03", item), id));
+    assertFalse(containsId(calendarPeriod("2027-01-03", "2027-01-04", item), id));
+    assertFalse(containsId(calendarPeriod("2026-12-30", "2026-12-31", item), id));
+
+    event.put("version", created.get("version").asLong());
+    event.put("status", "DONE");
+    event.put("actualStart", "2027-01-03");
+    assertStatus(422, request("PUT", "/api/calendar/" + id, event));
+    event.put("actualEnd", "2027-01-02");
+    assertStatus(422, request("PUT", "/api/calendar/" + id, event));
+    event.put("actualEnd", "2027-01-04");
+    assertStatus(200, request("PUT", "/api/calendar/" + id, event));
+    var completed = get("/api/calendar/" + id);
+    assertEquals("2026-12-31", completed.get("plannedStart").asText());
+    assertFalse(containsId(calendarPeriod("2027-01-01", "2027-01-03", item), id));
+    assertTrue(containsId(calendarPeriod("2027-01-04", "2027-01-05", item), id));
+    assertStatus(422, request("GET", "/api/calendar?from=2026-01-01&until=2027-01-03", null));
+  }
+
+  @Test
+  void calendarWarnsOnOverlappingPlansAndKeepsOverdueEventsOpen() throws Exception {
+    String item = saved(draft()).get("id").asText();
+    String second = saved(draft()).get("id").asText();
+    String originLocation = createPlace();
+    var move = calendarDraft("MOVE", "2001-02-01", item);
+    move.put("plannedEnd", "2001-02-03");
+    move.put(
+        "items",
+        List.of(
+            Map.of("itemId", item, "originLocationId", originLocation), Map.of("itemId", second)));
+    var savedMove = createCalendar(move);
+    String moveId = savedMove.get("id").asText();
+    assertTrue(savedMove.get("overdue").asBoolean());
+    assertEquals("PLANNED", savedMove.get("status").asText());
+    var sale = createCalendar(calendarDraft("SALE", "2001-02-03", item));
+    var warning = sale.get("warnings").get(0);
+    assertEquals("SALE_MOVE_OVERLAP", warning.get("code").asText());
+    assertEquals(moveId, warning.get("eventIds").get(0).asText());
+    assertEquals(1, get("/api/calendar/" + moveId).get("warnings").size());
+    assertEquals(
+        0, createCalendar(calendarDraft("SALE", "2001-02-04", second)).get("warnings").size());
+    var filtered =
+        get(
+            "/api/calendar?from=2001-02-01&until=2001-02-05&type=MOVE"
+                + "&status=PLANNED&locationId="
+                + originLocation
+                + "&itemId="
+                + item);
+    assertEquals(1, filtered.size());
+    assertEquals(moveId, filtered.get(0).get("id").asText());
+    assertEquals(2, filtered.get(0).get("items").size());
+  }
+
+  @Test
+  void calendarSaleReservationSurvivesParallelWritesAndIsReleasedOnCancellation() throws Exception {
+    String item = saved(draft()).get("id").asText();
+    var first = calendarDraft("SALE", "2027-03-01", item);
+    var second = calendarDraft("SALE", "2027-03-03", item);
+    var start = new CountDownLatch(1);
+    try (var workers = Executors.newFixedThreadPool(2)) {
+      var left =
+          workers.submit(
+              () -> {
+                await(start);
+                return postUnchecked("/api/calendar", first);
+              });
+      var right =
+          workers.submit(
+              () -> {
+                await(start);
+                return postUnchecked("/api/calendar", second);
+              });
+      start.countDown();
+      assertEquals(
+          List.of(201, 409),
+          java.util.stream.Stream.of(
+                  left.get(15, TimeUnit.SECONDS), right.get(15, TimeUnit.SECONDS))
+              .sorted()
+              .toList());
+    }
+    var listed = calendarPeriod("2027-03-01", "2027-03-05", item);
+    assertEquals(1, listed.size());
+    var winning = listed.get(0);
+    var winningDraft = winning.get("id").asText().equals(first.get("id")) ? first : second;
+    var losingDraft = winningDraft == first ? second : first;
+    assertStatus(404, request("GET", "/api/calendar/" + losingDraft.get("id"), null));
+    assertStatus(409, post("/api/calendar", winningDraft));
+    winningDraft.put("version", winning.get("version").asLong());
+    winningDraft.put("status", "CANCELLED");
+    assertStatus(200, request("PUT", "/api/calendar/" + winningDraft.get("id"), winningDraft));
+    assertStatus(201, post("/api/calendar", losingDraft));
+    var cancelled = get("/api/calendar/" + winningDraft.get("id"));
+    assertEquals("CANCELLED", cancelled.get("status").asText());
+    assertEquals(winningDraft.get("plannedStart"), cancelled.get("plannedStart").asText());
+  }
+
+  @Test
+  void calendarLocationOnlyChangeRevisionsAndMissingLinksAreHandled() throws Exception {
+    String item = saved(draft()).get("id").asText();
+    String other = saved(draft()).get("id").asText();
+    String firstLocation = createPlace();
+    String secondLocation = createPlace();
+    var event = calendarDraft("MOVE", "2027-05-01", item);
+    event.put("locationId", firstLocation);
+    event.put(
+        "items",
+        List.of(
+            Map.of("itemId", item, "originLocationId", firstLocation),
+            Map.of("itemId", other, "originLocationId", firstLocation)));
+    var baseline = createCalendar(event);
+    String id = baseline.get("id").asText();
+    event.put("version", baseline.get("version").asLong());
+    event.put(
+        "items",
+        List.of(
+            Map.of("itemId", item, "originLocationId", secondLocation),
+            Map.of("itemId", other, "originLocationId", firstLocation)));
+    assertStatus(200, request("PUT", "/api/calendar/" + id, event));
+    var updated = get("/api/calendar/" + id);
+    assertTrue(updated.get("version").asLong() > baseline.get("version").asLong());
+    assertEquals(firstLocation, updated.get("locationId").asText());
+    for (var link : updated.get("items")) {
+      String expected = item.equals(link.get("itemId").asText()) ? secondLocation : firstLocation;
+      assertEquals(expected, link.get("originLocationId").asText());
+    }
+    event.put("title", "Felülírási kísérlet");
+    assertStatus(409, request("PUT", "/api/calendar/" + id, event));
+    assertEquals(updated, get("/api/calendar/" + id));
+
+    event.put("version", updated.get("version").asLong());
+    event.put("items", List.of(Map.of("itemId", item), Map.of("itemId", item)));
+    assertStatus(422, request("PUT", "/api/calendar/" + id, event));
+    event.put("items", List.of(Map.of("itemId", UUID.randomUUID().toString())));
+    assertStatus(422, request("PUT", "/api/calendar/" + id, event));
+    event.put(
+        "items", List.of(Map.of("itemId", item, "originLocationId", UUID.randomUUID().toString())));
+    assertStatus(422, request("PUT", "/api/calendar/" + id, event));
+    assertEquals(updated, get("/api/calendar/" + id));
+  }
+
+  @Test
+  void calendarAllowsOnlyOneUpdateAtTheSameRevision() throws Exception {
+    var first = calendarDraft("OTHER", "2027-06-01", null);
+    var before = createCalendar(first);
+    first.put("version", before.get("version").asLong());
+    first.put("title", "Első változat");
+    var second = new LinkedHashMap<>(first);
+    second.put("title", "Második változat");
+    String route = "/api/calendar/" + first.get("id");
+    race(() -> putCalendarUnchecked(route, first), () -> putCalendarUnchecked(route, second));
+    var after = get(route);
+    assertEquals(before.get("version").asLong() + 1, after.get("version").asLong());
+    assertTrue(
+        List.of(first.get("title"), second.get("title")).contains(after.get("title").asText()));
+  }
+
+  static int putCalendarUnchecked(String route, Map<String, Object> draft) {
+    try {
+      return request("PUT", route, draft).statusCode();
+    } catch (Exception exception) {
+      throw new IllegalStateException(exception);
+    }
+  }
+
+  @Test
+  void calendarHistorySurvivesTrashAndPermanentDeletion() throws Exception {
+    String item = saved(draft()).get("id").asText();
+    String location = createPlace();
+    var event = calendarDraft("OTHER", null, item);
+    event.put("locationId", location);
+    event.put("items", List.of(Map.of("itemId", item, "originLocationId", location)));
+    event.put("status", "DONE");
+    event.put("actualStart", "2024-02-29");
+    String id = createCalendar(event).get("id").asText();
+    assertStatus(200, post("/api/items/" + item + "/trash?version=1", null));
+    assertEquals(1, get("/api/calendar/" + id).get("items").size());
+    try (var db = connection();
+        var sql = db.prepareStatement("delete from location where id=?")) {
+      sql.setString(1, location);
+      assertEquals(1, sql.executeUpdate());
+    }
+    var withoutLocation = get("/api/calendar/" + id);
+    assertTrue(withoutLocation.get("locationId").isNull());
+    assertTrue(withoutLocation.get("items").get(0).get("originLocationId").isNull());
+    assertStatus(200, post("/api/items/" + item + "/purge?version=2", null));
+    var history = get("/api/calendar/" + id);
+    assertEquals(0, history.get("items").size());
+    assertEquals("2024-02-29", history.get("actualStart").asText());
+  }
+
+  @Test
+  void calendarUsesTheExistingSessionAndCsrfProtection() throws Exception {
+    try (var anonymous = HttpClient.newHttpClient()) {
+      var list =
+          HttpRequest.newBuilder(
+                  URI.create(origin + "/api/calendar?from=2027-01-01&until=2027-02-01"))
+              .GET()
+              .build();
+      assertStatus(401, anonymous.send(list, HttpResponse.BodyHandlers.ofByteArray()));
+      var write =
+          HttpRequest.newBuilder(URI.create(origin + "/api/calendar"))
+              .header("Content-Type", "application/json")
+              .header("X-Otthontar-Request", "1")
+              .POST(HttpRequest.BodyPublishers.ofString("{}"))
+              .build();
+      assertStatus(401, anonymous.send(write, HttpResponse.BodyHandlers.ofByteArray()));
+    }
+    var draft = calendarDraft("OTHER", "2027-01-01", null);
+    var invalidToken =
+        HttpRequest.newBuilder(URI.create(origin + "/api/calendar"))
+            .header("Content-Type", "application/json")
+            .header("X-Otthontar-Request", "1")
+            .header("X-Otthontar-User", accountId)
+            .header(csrfHeader, "invalid-csrf")
+            .POST(HttpRequest.BodyPublishers.ofByteArray(json.writeValueAsBytes(draft)))
+            .build();
+    assertStatus(403, http.send(invalidToken, HttpResponse.BodyHandlers.ofByteArray()));
+    assertStatus(404, request("GET", "/api/calendar/" + draft.get("id"), null));
+    assertStatus(201, post("/api/calendar", draft));
+  }
+
+  static Map<String, Object> calendarDraft(String type, String date, String itemId) {
+    var draft = new LinkedHashMap<String, Object>();
+    draft.put("id", UUID.randomUUID().toString());
+    draft.put("title", "Esemény");
+    draft.put("type", type);
+    draft.put("status", "PLANNED");
+    draft.put("plannedStart", date);
+    if (itemId != null) draft.put("items", List.of(Map.of("itemId", itemId)));
+    return draft;
+  }
+
+  static JsonNode createCalendar(Map<String, Object> draft) throws Exception {
+    var saved = post("/api/calendar", draft);
+    assertStatus(201, saved);
+    return json.readTree(saved.body());
+  }
+
+  static JsonNode calendarPeriod(String from, String until, String item) throws Exception {
+    return get("/api/calendar?from=" + from + "&until=" + until + "&itemId=" + item);
+  }
+
   static int postUnchecked(String route, Object body) {
     try {
       return post(route, body).statusCode();
@@ -804,7 +1061,7 @@ class PersistenceIT {
     var builder =
         HttpRequest.newBuilder(URI.create(origin + route)).timeout(Duration.ofSeconds(15));
     if (body != null) builder.header("Content-Type", "application/json");
-    if (method.equals("POST"))
+    if (!method.equals("GET"))
       builder
           .header("X-Otthontar-Request", "1")
           .header(csrfHeader, csrfToken)
