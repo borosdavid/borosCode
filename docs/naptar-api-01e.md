@@ -75,6 +75,10 @@ sikertelen jogosultsági ellenőrzést jelöl. Ismeretlen eseményazonosító
 az utolsó sikeres mentés marad. A `422` üzleti validációs hiba, például
 fordított dátumtartomány vagy ismeretlen tárgy.
 
+Második nyitott eladási terv mentésekor a `409` válasz `conflictingEvents`
+mezője tartalmazza a meglévő tervek `id` és `title` mezőit. A felület ebből
+nyitja meg az eredeti tervet.
+
 ## Átadás a következő fázishoz
 
 A `V5__calendar.sql` migráció két új táblát ad hozzá. A naptári menü és űrlap

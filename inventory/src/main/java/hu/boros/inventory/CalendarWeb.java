@@ -9,6 +9,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ProblemDetail;
+import org.springframework.web.ErrorResponseException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -39,12 +40,25 @@ class CalendarWeb {
   @PostMapping
   @ResponseStatus(CREATED)
   Calendars.View create(@RequestBody Calendars.Draft draft) {
-    return calendars.create(draft);
+    return save(null, draft);
   }
 
   @PutMapping("/{id}")
   Calendars.View update(@PathVariable UUID id, @RequestBody Calendars.Draft draft) {
-    return calendars.update(id, draft);
+    return save(id, draft);
+  }
+
+  private Calendars.View save(UUID id, Calendars.Draft draft) {
+    try {
+      return id == null ? calendars.create(draft) : calendars.update(id, draft);
+    } catch (DataIntegrityViolationException failure) {
+      var related = calendars.conflictingSalePlans(id == null ? draft.id() : id, draft);
+      if (related.isEmpty()) throw failure;
+      var problem =
+          ProblemDetail.forStatusAndDetail(CONFLICT, "A tárgynak már van nyitott eladási terve.");
+      problem.setProperty("conflictingEvents", related);
+      throw new ErrorResponseException(CONFLICT, problem, null);
+    }
   }
 
   @ExceptionHandler(OptimisticLockingFailureException.class)

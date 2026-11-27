@@ -221,6 +221,18 @@ def main():
                 inventory_page = request(client, origin, "/leltar/beallitasok").decode()
                 check(f'data-app-root="{context_path}/"' in inventory_page, "Wrong client URL base.")
                 check('data-upload-limit-mib="90"' in inventory_page, "Wrong upload limit.")
+                check(f'href="{context_path}/leltar/naptar"' in inventory_page,
+                      "The inventory calendar link left the app path.")
+                calendar_page = request(client, origin, "/leltar/naptar").decode()
+                check('id="calendar-form"' in calendar_page, "The calendar route did not render the calendar.")
+                for extension, marker in (("js", b"AccountAuth"), ("css", b".calendar-table")):
+                    asset = re.search(r'"' + re.escape(context_path) +
+                                      r'(/leltar/assets/calendar-[0-9a-f]{32}\.' + extension + r')"',
+                                      calendar_page)
+                    check(asset is not None, f"Missing content-versioned calendar {extension} path.")
+                    check(marker in request(client, origin, asset.group(1)),
+                          f"The calendar {extension} resource could not be read.")
+                print("OK: calendar page and content-versioned assets under the application path")
                 check(f'href="{context_path}/leltar"' in request(client, origin, "/offline.html").decode(),
                       "The offline page left the app path.")
                 manifest = json.loads(request(client, origin, "/manifest.webmanifest"))

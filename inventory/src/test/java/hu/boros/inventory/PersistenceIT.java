@@ -804,6 +804,11 @@ class PersistenceIT {
     var winningDraft = winning.get("id").asText().equals(first.get("id")) ? first : second;
     var losingDraft = winningDraft == first ? second : first;
     assertStatus(404, request("GET", "/api/calendar/" + losingDraft.get("id"), null));
+    var duplicate = post("/api/calendar", losingDraft);
+    assertStatus(409, duplicate);
+    var conflicting = json.readTree(duplicate.body()).get("conflictingEvents").get(0);
+    assertEquals(winning.get("id"), conflicting.get("id"));
+    assertEquals(winning.get("title"), conflicting.get("title"));
     assertStatus(409, post("/api/calendar", winningDraft));
     winningDraft.put("version", winning.get("version").asLong());
     winningDraft.put("status", "CANCELLED");

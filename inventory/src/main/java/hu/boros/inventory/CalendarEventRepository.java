@@ -43,4 +43,17 @@ interface CalendarEventRepository extends JpaRepository<CalendarEvent, String> {
       LocalDate start,
       LocalDate end,
       Collection<String> itemIds);
+
+  @Query(
+      """
+      select distinct e from CalendarEvent e join e.items link
+      where e.type = :type and e.status = :status and e.id <> :excludedId
+        and key(link) in :itemIds
+      order by e.plannedStart, e.id
+      """)
+  List<CalendarEvent> openPlansForItems(
+      CalendarEvent.Type type,
+      CalendarEvent.Status status,
+      String excludedId,
+      Collection<String> itemIds);
 }

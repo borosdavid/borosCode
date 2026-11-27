@@ -37,6 +37,8 @@ class Calendars {
 
   record Warning(String code, List<UUID> eventIds) {}
 
+  record EventReference(UUID id, String title) {}
+
   record View(
       UUID id,
       long version,
@@ -90,6 +92,17 @@ class Calendars {
   @Transactional(readOnly = true)
   public View get(UUID id) {
     return detail(find(id));
+  }
+
+  @Transactional(readOnly = true)
+  public List<EventReference> conflictingSalePlans(UUID id, Draft draft) {
+    if (draft.status() != PLANNED || draft.type() != SALE || draft.items() == null)
+      return List.of();
+    var itemIds = draft.items().stream().map(item -> key(item.itemId())).toList();
+    if (itemIds.isEmpty()) return List.of();
+    return events.openPlansForItems(SALE, PLANNED, id.toString(), itemIds).stream()
+        .map(event -> new EventReference(uuid(event.id), event.title))
+        .toList();
   }
 
   @Transactional

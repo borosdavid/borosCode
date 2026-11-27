@@ -4,6 +4,8 @@ const assert = require('node:assert/strict');
 const http = require('node:http');
 const fs = require('node:fs/promises');
 const path = require('node:path');
+const {calendarFixture, checkCalendar} = require('./calendar.cjs');
+const calendar = calendarFixture();
 const root = path.resolve(__dirname,'../inventory/src/main/resources');
 const types = {'.js':'text/javascript','.css':'text/css','.html':'text/html','.webmanifest':'application/manifest+json','.png':'image/png'};
 let expiredSession = false, fixtureUser = 'account-1';
@@ -31,10 +33,10 @@ function changeFixtureItem(item, operation) {
 async function fixturePage(filename, prefix) {
     const read = name => fs.readFile(path.join(root, 'templates', name + '.html'), 'utf8');
     let html = await read(filename);
-    if (filename === 'inventory/index') {
+    if (filename === 'inventory/index' || filename === 'calendar/index') {
         const header = (await read('layout')).match(/<header[\s\S]+?<\/header>/)[0];
         html = html.replace(/<header th:replace="[^"]*"><\/header>/, header)
-            .replace(/th:attr="data-app-root=@\{\/\},data-upload-limit-mib=[^"]+"/, `data-app-root="${prefix}/" data-upload-limit-mib="200"`);
+            .replace(/th:attr="data-app-root=@\{\/\}(?:,data-upload-limit-mib=[^"]+)?"/, `data-app-root="${prefix}/" data-upload-limit-mib="200"`);
     }
     if (filename === 'login') html = html.replace(/<p[^>]*th:if="[^"]*"[^>]*>[^<]*<\/p>/g, '');
     return html.replace(/th:(src|href|action)="@\{([^}]+)\}"/g, (_, attribute, value) => `${attribute}="${prefix}${value}"`);
@@ -49,9 +51,17 @@ const server = http.createServer(async (req,res) => {
         res.setHeader('Cache-Control','no-store');
         if(route==='/auth/csrf') {res.setHeader('Content-Type','application/json');res.end(JSON.stringify({headerName:'X-CSRF-TOKEN',token:'fixture-token'}));return;}
         if(route==='/login'&&req.method==='POST') {expiredSession=false;res.writeHead(204);res.end();return;}
+        if (route === '/logout' && req.method === 'POST') {
+            expiredSession = true;
+            res.writeHead(302, {Location: prefix + '/login'});res.end();return;
+        }
         if(route.startsWith('/api/')) {
             if(expiredSession){res.writeHead(401,{'Content-Type':'application/json'});res.end(JSON.stringify({detail:'Jelentkezz be újra.'}));return;}
             if(route==='/api/session'){res.setHeader('Content-Type','application/json');res.end(JSON.stringify({id:fixtureUser,username:'alice',headerName:'X-CSRF-TOKEN',token:'fixture-token'}));return;}
+            if (route === '/api/calendar' || route.startsWith('/api/calendar/')) {
+                await calendar.handle(req, res, route, url.searchParams);
+                return;
+            }
 
             const transition = route.match(/^\/api\/items\/(fixture-\d+)\/(sold|move|trash|restore)$/);
             if (req.method === 'POST' && transition) {
@@ -94,8 +104,8 @@ const server = http.createServer(async (req,res) => {
             const data = lists[route] ?? [];
             res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(data));return;
         }
-        if(route==='/leltar'||route.startsWith('/leltar/')||route==='/offline.html'||route==='/login') {
-            const template = {'/offline.html':'offline', '/login':'login'}[route] ?? 'inventory/index';
+        if(/^\/leltar(?:\/[^/]+)?$/.test(route)||route==='/offline.html'||route==='/login') {
+            const template = {'/offline.html':'offline', '/login':'login', '/leltar/naptar':'calendar/index'}[route] ?? 'inventory/index';
             const html = await fixturePage(template, prefix);
             res.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});res.end(html);return;
         }
@@ -171,6 +181,7 @@ async function browserChecks(browser, base, prefix) {
     expiredSession = false; fixtureUser = 'account-1'; failSave = true; savedBody = ''; savedHeader = '';
     nextWorker = false; failAsset = false; dropSaveResponse = false; serverUnavailable = false; itemsUnavailable = false;
     fixtureItems = structuredClone(sampleItems);
+    await checkCalendar(browser, origin, calendar, value => { expiredSession = value; });
     await checkInstallHelp(browser, origin);
     const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:3, serviceWorkers:'allow'});
     const page=await context.newPage();

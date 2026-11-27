@@ -63,5 +63,31 @@ window.AccountAuth = (() => {
         } catch (failure) { error.textContent = failure.message; }
         finally { form.elements.password.value = ''; button.disabled = false; }
     };
-    return {init, writeHeaders, expired, url};
+    async function api(path, options) {
+        const writing = options?.method && !['GET','HEAD','OPTIONS'].includes(options.method.toUpperCase());
+        const authHeaders = writing ? await writeHeaders() : {};
+        let res, raw;
+        try {
+            res=await fetch(url('api/'+path), {...options, cache:'no-store', headers:{...options?.headers, ...authHeaders, 'X-Otthontar-Request':'1'}});
+            raw=await res.text();
+        } catch (cause) {
+            const error = new Error('Megszakadt a kapcsolat. Próbáld újra.', {cause});
+            error.outcomeUnknown = writing;
+            throw error;
+        }
+        if(!res.ok) {
+            if(res.status===401)expired();
+            let problem;
+            try { problem=JSON.parse(raw); } catch {}
+            const error=new Error(problem?.detail || 'A művelet sikertelen ('+res.status+'). Próbáld újra.');
+            error.status=res.status;
+            error.problem=problem;
+            error.outcomeUnknown=writing && (res.status===408 || res.status>=500);
+            error.applicationProblem=res.headers.get('Content-Type')?.startsWith('application/problem+json');
+            throw error;
+        }
+        try { return raw ? JSON.parse(raw) : null; }
+        catch (error) { error.outcomeUnknown=writing; throw error; }
+    }
+    return {init, writeHeaders, expired, url, api};
 })();

@@ -20,31 +20,7 @@ function confirmChange(text) {
     confirmation.hidden = false;
 }
 function esc(v) {return String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-async function api(path, options) {
-    const writing = options?.method && !['GET','HEAD','OPTIONS'].includes(options.method.toUpperCase());
-    const authHeaders = writing ? await AccountAuth.writeHeaders() : {};
-    let res, raw;
-    try {
-        res=await fetch(appUrl('api/'+path), {...options, cache:'no-store', headers:{...options?.headers, ...authHeaders, 'X-Otthontar-Request':'1'}});
-        raw=await res.text();
-    } catch (cause) {
-        const error = new Error('Megszakadt a kapcsolat. Próbáld újra.', {cause});
-        error.outcomeUnknown = writing;
-        throw error;
-    }
-    if(!res.ok) {
-        if(res.status===401)AccountAuth.expired();
-        let detail;
-        try { detail=JSON.parse(raw).detail; } catch {}
-        const error=new Error(detail || 'A művelet sikertelen ('+res.status+'). Próbáld újra.');
-        error.status=res.status;
-        error.outcomeUnknown=writing && (res.status===408 || res.status>=500);
-        error.applicationProblem=res.headers.get('Content-Type')?.startsWith('application/problem+json');
-        throw error;
-    }
-    try { return raw ? JSON.parse(raw) : null; }
-    catch (error) { error.outcomeUnknown=writing; throw error; }
-}
+const api = AccountAuth.api;
 function options(){return places.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');}
 window.addEventListener('beforeunload',e=>{if(dirty()){e.preventDefault();e.returnValue=true;}});
 function actionLabel(row) {
@@ -255,6 +231,11 @@ function editor(item) {
     const returnPath=['koltoztetes','eladas'].includes(source)?appUrl('leltar/'+source):appUrl('leltar');
     form.querySelector('.back-link').href = returnPath;
     form.querySelector('h1').textContent = item.id ? item.name : 'Új tárgy';
+    const calendarLink = form.querySelector('[data-calendar-event]');
+    if (item.id && !item.trashed) {
+        calendarLink.href = appUrl('leltar/naptar?item=' + encodeURIComponent(item.id));
+        calendarLink.hidden = false;
+    }
     const id=item.id || crypto.randomUUID();
     let version=item.version||0, photos=item.photos||[], pending=[], cover=item.cover||'', baseline;
     const keys=['actionId','destination','name','description','location','status','asking','link','actual','soldDate'];

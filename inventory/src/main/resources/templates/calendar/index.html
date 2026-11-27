@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#183d33">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Otthontár">
+    <title>Naptár · Otthontár</title>
+    <link rel="manifest" th:href="@{/manifest.webmanifest}">
+    <link rel="apple-touch-icon" th:href="@{/icons/icon-180.png}">
+    <link rel="stylesheet" th:href="@{/inventory.css}">
+    <link rel="stylesheet" th:href="@{/leltar/assets/calendar.css}">
+    <script defer th:src="@{/auth.js}"></script>
+    <script defer th:src="@{/pwa.js}"></script>
+    <script defer th:src="@{/leltar/assets/calendar.js}"></script>
+</head>
+<body class="workspace" th:attr="data-app-root=@{/}">
+<a class="skip-link" href="#content">Ugrás a tartalomra</a>
+<header th:replace="~{layout :: header}"></header>
+<main id="content" class="workspace-main calendar" tabindex="-1">
+    <p id="connection-status" class="notice" role="status" hidden></p>
+    <p id="pwa-update" class="notice" role="status" hidden></p>
+    <div class="heading inventory-heading">
+        <h1>Naptár</h1>
+        <button id="calendar-new" class="button" type="button" disabled>Új esemény</button>
+    </div>
+    <p id="calendar-feedback" class="notice" role="status" hidden></p>
+    <section id="calendar-editor" class="panel" aria-labelledby="calendar-editor-title" hidden>
+        <div class="heading">
+            <h2 id="calendar-editor-title" tabindex="-1">Esemény</h2>
+            <span id="calendar-editor-state" class="tag"></span>
+        </div>
+        <div id="calendar-warnings" class="notice" role="status" hidden></div>
+        <div id="calendar-error" class="notice" role="alert" hidden></div>
+        <form id="calendar-form">
+            <fieldset>
+                <legend>Esemény adatai</legend>
+                <label>Cím<input name="title" maxlength="200" required></label>
+                <label>Típus<select name="type" required></select></label>
+                <label>Helyszín<select name="locationId"></select></label>
+                <label class="wide">Megjegyzés<textarea name="notes" maxlength="2000" rows="2"></textarea></label>
+            </fieldset>
+            <fieldset>
+                <legend>Tervezett időpont</legend>
+                <label>Tervezett kezdőnap<input name="plannedStart" type="date"></label>
+                <label>Tervezett zárónap<input name="plannedEnd" type="date"></label>
+            </fieldset>
+            <fieldset id="calendar-actual" hidden>
+                <legend>Tényleges időpont</legend>
+                <label>Tényleges kezdőnap<input name="actualStart" type="date"></label>
+                <label>Tényleges zárónap<input name="actualEnd" type="date"></label>
+            </fieldset>
+            <fieldset>
+                <legend>Kapcsolt tárgyak</legend>
+                <ul id="calendar-item-links" class="wide calendar-links"></ul>
+                <label>Tárgy hozzáadása<select id="calendar-add-item"></select></label>
+                <button id="calendar-attach" type="button">Hozzáadás</button>
+            </fieldset>
+            <div class="actions calendar-editor-actions">
+                <button type="button" id="calendar-complete">Megtörtént</button>
+                <button type="button" id="calendar-cancel-event">Esemény lemondása</button>
+                <button type="button" id="calendar-revert" hidden>Vissza a tervezetthez</button>
+                <button type="button" id="calendar-close">Bezárás</button>
+                <button class="primary" type="submit">Mentés</button>
+            </div>
+        </form>
+    </section>
+    <section aria-labelledby="calendar-month">
+        <div class="calendar-toolbar">
+            <h2 id="calendar-month" aria-live="polite"></h2>
+            <div class="actions" role="group" aria-label="Hónap kiválasztása">
+                <button type="button" id="calendar-previous" aria-label="Előző hónap">‹</button>
+                <button type="button" id="calendar-today">Ma</button>
+                <button type="button" id="calendar-next" aria-label="Következő hónap">›</button>
+            </div>
+            <div class="view-picker" role="group" aria-label="Naptár nézete">
+                <button type="button" id="calendar-grid">Hónapnézet</button>
+                <button type="button" id="calendar-list">Lista</button>
+            </div>
+        </div>
+        <div class="bar calendar-filters" role="group" aria-label="Események szűrése">
+            <label>Típus<select id="calendar-filter-type"></select></label>
+            <label>Helyszín<select id="calendar-filter-place"></select></label>
+            <label>Tárgy<select id="calendar-filter-item"></select></label>
+            <label>Állapot<select id="calendar-filter-status">
+                <option value="">Tervezett és megtörtént</option>
+                <option value="PLANNED">Tervezett</option>
+                <option value="DONE">Megtörtént</option>
+                <option value="CANCELLED">Lemondott</option>
+            </select></label>
+        </div>
+        <p id="calendar-loading" class="empty" role="status">A naptár betöltése…</p>
+        <div id="calendar-load-error" class="notice" hidden>
+            <p id="calendar-load-message" role="alert"></p>
+            <button id="calendar-retry" type="button">Újrapróbálás</button>
+        </div>
+        <div id="calendar-events" aria-busy="true"></div>
+    </section>
+    <aside id="pwa-install" class="pwa-info" aria-label="Telepítés" hidden>
+        <details><summary>Telepítés iPhone-ra</summary><p id="pwa-help"></p></details>
+    </aside>
+</main>
+</body>
+</html>

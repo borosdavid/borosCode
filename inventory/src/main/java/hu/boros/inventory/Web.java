@@ -32,6 +32,11 @@ class Pages {
     return "offline";
   }
 
+  @GetMapping("/leltar/naptar")
+  String calendar() {
+    return "calendar/index";
+  }
+
   @GetMapping({"/leltar", "/leltar/{page}"})
   String inventory(Model model) {
     model.addAttribute("uploadLimitMiB", uploadLimitMiB);
