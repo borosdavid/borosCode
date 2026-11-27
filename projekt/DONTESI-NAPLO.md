@@ -21,6 +21,7 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 | D-013 | Otthontár a BorosCode főoldal alatt | Elfogadott | 2026-11-23 |
 | D-014 | Jelenlegi elérés és webes felülettervezés az iPhone-fázisok előtt | Elfogadott fejlesztési irány | 2026-11-24 |
 | D-015 | Ubuntu-mentés helyi kulcskezelése | Elfogadott | 2026-11-24 |
+| D-016 | Költözési és eladási naptár az offline fázisok előtt | Elfogadott fejlesztési sorrend | 2026-11-27 |
 
 ## D-001 – Fejlesztési és tesztágak
 
@@ -218,6 +219,8 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 
 **Forrás:** a felhasználó 2026-11-24-i visszajelzése és kérése, valamint a [Cloudflare útvonal ellenőrzései](../roadmap/CLOUDFLARE-BOROSCODE-DOMAIN.md).
 
+A D-014 sorrendjét a [D-016](#d-016--költözési-és-eladási-naptár-az-offline-fázisok-előtt) pontosítja. A webes felület után az online naptár kerül be a 02–04 offline fázisok elé.
+
 ## D-015 – Az Ubuntu-mentés helyi kulcskezelése
 
 **Döntési állapot:** Elfogadott, 2026-11-24, az Ubuntu-példányra.
@@ -225,6 +228,14 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 A felhasználó a szerver védett elhelyezése miatt egyszerűbb kulcskezelést kért. Az archívum `age` titkosítású maradt, a privát kulcs ugyanazon a szerveren, a felhasználó privát konfigurációs könyvtárában van. Külön eszközön is tárolható lenne, de a választott megoldás egyszerűbb helyi üzemeltetést tesz lehetővé. Gép- vagy lemezvesztéskor a mentés és a kulcs együtt elveszhet.
 
 [Üzembe helyezési bizonyíték](https://github.com/borosdavid/borosCode/blob/694a1701787b11188b38a4e298b2d6eccc8d19ed/docs/KNOWHOW-ubuntu-napi-mentes.md).
+
+## D-016 – Költözési és eladási naptár az offline fázisok előtt
+
+**Döntési állapot** — Elfogadott fejlesztési sorrend, 2026-11-27.
+
+A 01C webes felülete után az online naptár következik, három lépésben. A 01E adatmodellt és API-t, a 01F webes naptárfelületet, a 01G a tényleges eladások és költöztetések megjelenítését, valamint az átadást tartalmazza. A korábbi ütemezés a 02-es offline leltárral folytatódott volna. Az új sorrendben a naptár a meglévő online leltárban már használható lesz, amikor az offline szinkron szerződése készül.
+
+A sorrend forrása Dávid 2026-11-27-i kérése. A becslés és az első verzió műszaki határai a privát tudástárban szerepelnek. [Részletes ütemezés](https://github.com/borosdavid/borosCode-knowledge/blob/main/projects/otthontar/roadmap/KOLTOZESI-NAPTAR.md#ütemezés)
 
 ## Új döntés vagy módosítás
 
