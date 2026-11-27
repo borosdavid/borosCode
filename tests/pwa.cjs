@@ -121,11 +121,48 @@ async function checkCoverPhoto(page, viewport, width, height) {
     assert.ok(cover.inset.every(edge => Math.abs(edge) < 1), 'Cover image must fit its frame');
 }
 
+async function checkInstallHelp(browser, origin) {
+    const iphoneWebkit = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko)';
+    const iphoneSafari = `${iphoneWebkit} Version/26.0 Mobile/15E148 Safari/604.1`;
+    const desktopSafari = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15';
+    const scenarios = [
+        {name: 'iPhone Safari', userAgent: iphoneSafari, visible: true},
+        {name: 'desktop Safari', userAgent: desktopSafari, visible: false},
+        {name: 'iPhone Chrome', userAgent: `${iphoneWebkit} CriOS/140.0.7339.122 Mobile/15E148 Safari/604.1`, visible: false},
+        {name: 'iPhone Home Screen', userAgent: iphoneSafari, standalone: true, visible: false},
+        {name: 'standalone display mode', userAgent: iphoneSafari, standaloneDisplay: true, visible: false},
+    ];
+    for (const {name, userAgent, visible, standalone, standaloneDisplay} of scenarios) {
+        const page = await browser.newPage({userAgent});
+        try {
+            await page.addInitScript(({standalone, standaloneDisplay}) => {
+                if (standalone) Object.defineProperty(navigator, 'standalone', {value: true});
+                if (standaloneDisplay) {
+                    const matchMedia = window.matchMedia.bind(window);
+                    window.matchMedia = query => query === '(display-mode: standalone)' ? {matches: true} : matchMedia(query);
+                }
+            }, {standalone, standaloneDisplay});
+            await page.goto(origin + '/leltar');
+            const help = page.getByText('Telepítés iPhone-ra', {exact: true});
+            assert.equal(await help.isVisible(), visible, name);
+            if (visible) {
+                await help.click();
+                const instructions = page.getByText(/Megosztás → Hozzáadás a Főképernyőhöz/);
+                assert.equal(await instructions.isVisible(), true, name);
+            }
+        } finally {
+            await page.close();
+        }
+    }
+    console.log(`OK: ${new URL(origin).pathname} install help only in iPhone Safari browser mode.`);
+}
+
 async function browserChecks(browser, base, prefix) {
     const origin = base + prefix;
     expiredSession = false; fixtureUser = 'account-1'; failSave = true; savedBody = ''; savedHeader = '';
     nextWorker = false; failAsset = false; dropSaveResponse = false; serverUnavailable = false; itemsUnavailable = false;
     fixtureItems = structuredClone(sampleItems);
+    await checkInstallHelp(browser, origin);
     const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:3, serviceWorkers:'allow'});
     const page=await context.newPage();
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
