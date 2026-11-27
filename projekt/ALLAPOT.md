@@ -2,6 +2,10 @@
 
 **Frissítve:** 2026-11-27. Ez a `main` ágon karbantartott állapotfelvétel, nem élő szervermonitor és nem a `main` kódjának funkciólistája.
 
+## 01F naptárfelület fejlesztése – 2026-11-27
+
+A 01F fejlesztése megkezdődött az ellenőrzött `5a03348` dev alapon.
+
 ## 01E naptár adatmodell és API – 2026-11-27
 
 Elkészült a V5 Flyway-migráció, a hitelesített `/api/calendar`, a napokra szűrhető tervezett és tényleges időszak, valamint a tárgyankénti kiindulási hely. A mentés verziófeltételes. Az átfedő tervek figyelmeztetést adnak, tárgyanként egyszerre egy eladási terv lehet nyitva. Forrás a `dev` ágon [`5a03348`](https://github.com/borosdavid/borosCode/commit/5a0334872ebad9b36a4e2bf3c3c48efdab1c1ab6). 23 Java-egységteszt és 23 valódi MySQL 8.4.8 integrációs teszt sikeres, közülük 7 naptári teszt. A V5 migrációt meglévő V4-es sémán adatokkal, valamint üres sémán is ellenőriztük. Az első fiók, a HTTP-fotófeltöltés és az újraindítási próba az `/otthontar` előtaggal sikeres. A Chromium PWA-regresszió sikeres a gyökéren és az `/otthontar` alatt. Következő a 01F naptárnézet és eseményszerkesztő. A leltárműveletek kapcsolása és a teljes felhasználói átadás a 01G része. [API-szerződés](https://github.com/borosdavid/borosCode/blob/5a0334872ebad9b36a4e2bf3c3c48efdab1c1ab6/docs/naptar-api-01e.md)
