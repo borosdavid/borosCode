@@ -22,6 +22,7 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 | D-014 | Jelenlegi elérés és webes felülettervezés az iPhone-fázisok előtt | Elfogadott fejlesztési irány | 2026-11-24 |
 | D-015 | Ubuntu-mentés helyi kulcskezelése | Elfogadott | 2026-11-24 |
 | D-016 | Költözési és eladási naptár az offline fázisok előtt | Elfogadott fejlesztési sorrend | 2026-11-27 |
+| D-017 | A naptár dátuma, tárgykapcsolata és kézi lezárása | Elfogadott követelmények | 2026-11-27 |
 
 ## D-001 – Fejlesztési és tesztágak
 
@@ -236,6 +237,10 @@ A felhasználó a szerver védett elhelyezése miatt egyszerűbb kulcskezelést 
 A 01C webes felülete után az online naptár következik, három lépésben. A 01E adatmodellt és API-t, a 01F webes naptárfelületet, a 01G a tényleges eladások és költöztetések megjelenítését, valamint az átadást tartalmazza. A korábbi ütemezés a 02-es offline leltárral folytatódott volna. Az új sorrendben a naptár a meglévő online leltárban már használható lesz, amikor az offline szinkron szerződése készül.
 
 A sorrend forrása Dávid 2026-11-27-i kérése. A becslés és az első verzió műszaki határai a privát tudástárban szerepelnek. [Részletes ütemezés](https://github.com/borosdavid/borosCode-knowledge/blob/main/projects/otthontar/roadmap/KOLTOZESI-NAPTAR.md#ütemezés)
+
+## D-017 – A naptár dátuma, tárgykapcsolata és kézi lezárása
+
+A naptár nap pontosságú. Új esemény a tárgy adatlapjáról is indítható, a tárgy előre ki van választva. Egy tárgy nem lehet egyidejűleg eladás és költöztetés alatt. A csoportos esemény lezárása a külön **Megtörtént** gombbal történik. A követelményeket Dávid a 2026-11-27-i egyeztetésen erősítette meg. A párhuzamos tervek ellenőrzése, az egyértelmű leltártétel párosítása, a többnapos események és a lejárt tervek kezelése nyitott. [Részletes naptárterv](https://github.com/borosdavid/borosCode-knowledge/blob/main/projects/otthontar/roadmap/KOLTOZESI-NAPTAR.md#nyitott-döntések-az-első-kiadáshoz)
 
 ## Új döntés vagy módosítás
 
