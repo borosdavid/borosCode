@@ -2,6 +2,10 @@
 
 **Frissítve:** 2026-11-27. Ez a `main` ágon karbantartott állapotfelvétel, nem élő szervermonitor és nem a `main` kódjának funkciólistája.
 
+## PWA telepítési útmutató – 2026-11-27
+
+A „Telepítés iPhone-ra” blokk csak az iPhone Safari böngészőlapján jelenik meg. A főképernyőről önálló módban indított appban, asztali böngészőben és más iPhone-böngészőben rejtve marad. Megvalósítás a `dev` ágon ([`1db81eb`](https://github.com/borosdavid/borosCode/commit/1db81ebb57e8f9d3076586e630dbb3c713aa50a3)). A Chromium PWA-teszt sikeres a gyökér és az `/otthontar` útvonalon, iPhone Safari, önálló mód, iPhone Chrome és asztali Safari szimulált profiljaival. A PWA gyorsítótár v9-re lépett. Az éles telepítés és a valódi iPhone-próba hátravan.
+
 ## 01C borítóképek – 2026-11-27
 
 A javítás a `dev` ágon van ([`ddba180`](https://github.com/borosdavid/borosCode/commit/ddba180dde71bcabb2ad5badbec111597aaad814)). A tárgykártyák borítóképe a Fotónézetben és a Listában középre igazítva, az eredeti képarányt megtartva, teljes egészében kitölti a rendelkezésre álló helyet az egyik tengely mentén. A keret szabadon maradó része szimmetrikus. A PWA gyorsítótár v8-ra lépett. A Chromium PWA-teszt 390 és 1440 px szélességen, álló és fekvő képekkel, a gyökér és az `/otthontar` útvonalon sikeres. Az Ubuntu-telepítés és a valódi iPhone Safari-próba hátravan.
