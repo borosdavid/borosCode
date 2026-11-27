@@ -2,6 +2,14 @@
 
 **Frissítve:** 2026-11-27. Ez a `main` ágon karbantartott állapotfelvétel, nem élő szervermonitor és nem a `main` kódjának funkciólistája.
 
+## 01D-ig ellenőrzött ágfrissítés – 2026-11-27
+
+A 00A és 01–01D fejlesztései, a 01C két korábbi javítása és a tárgyadatlap új képigazítása a `teszt` ([`051fc7f`](https://github.com/borosdavid/borosCode/commit/051fc7fd1146e6cbddc5a6fe5bb257ee8301b9e5)) és a `main` ([`6964fb8`](https://github.com/borosdavid/borosCode/commit/6964fb82a4eeead95fba38e0b29e55be5cf89b40)) ágon van. Új képjavítás a `dev` ágon ([`760bd81`](https://github.com/borosdavid/borosCode/commit/760bd81b95568867ade5862662910e7f2bd93991)): a mentett és feltöltésre kiválasztott képek középre igazítva, teljes egészében a keretbe férnek. A PWA gyorsítótára v10.
+
+A Chromium PWA-teszt sikeres a gyökéren és az `/otthontar` útvonalon. Sikeres a Maven build, 23 Java-egységteszt, 16 MySQL 8.4.8 integrációs teszt, az első fiók és fotófeltöltés csomagolt JAR-próbája, 77 PowerShell-ellenőrzés Linuxon és az Ubuntu mentési fixture. [Tesztpróba](https://github.com/borosdavid/borosCode/blob/051fc7fd1146e6cbddc5a6fe5bb257ee8301b9e5/docs/tesztkiadasok/teszt-2026.11.27.1.md)
+
+Éles szervertelepítés, valódi iPhone Safari-próba, élő Windows/Tailscale próba, illetve az Ubuntu automatikus mentése és fotó-visszaállítása továbbra is igazolásra vár. A `teszt-2026.11.27.1` annotált címke helyben létrejött, távoli közzétételéhez a GitHub-csatlakozó nem kínál tagműveletet és a Git kliensnek nincs hitelesítése.
+
 ## PWA telepítési útmutató – 2026-11-27
 
 A „Telepítés iPhone-ra” blokk csak az iPhone Safari böngészőlapján jelenik meg. A főképernyőről önálló módban indított appban, asztali böngészőben és más iPhone-böngészőben rejtve marad. Megvalósítás a `dev` ágon ([`1db81eb`](https://github.com/borosdavid/borosCode/commit/1db81ebb57e8f9d3076586e630dbb3c713aa50a3)). A Chromium PWA-teszt sikeres a gyökér és az `/otthontar` útvonalon, iPhone Safari, önálló mód, iPhone Chrome és asztali Safari szimulált profiljaival. A PWA gyorsítótár v9-re lépett. Az éles telepítés és a valódi iPhone-próba hátravan.
@@ -25,7 +33,7 @@ A napi mentés egy archívumfájlt készít futásonként, a fotók és DB konzi
 - A PWA-alap a `dev` ágon van. A november 24-i [CI-futás](https://github.com/borosdavid/borosCode/actions/runs/45331467488) Java/MySQL és PowerShell feladata sikeres volt. Az Edge és a Chromium böngészőteszt a tárgylista betöltésénél leállt.
 - A teljes offline leltár, a tartós offline szerkesztés és a kétirányú szinkron még további fejlesztés.
 - A JPA-átállás a `dev` ágon igazolt és feltöltött: [`dae1224627a983217296ffe2dd47a339caacdb59`](https://github.com/borosdavid/borosCode/commit/dae1224627a983217296ffe2dd47a339caacdb59). Az újrafuttatott Maven/24 Java-teszt és a 7 Windowsos acceptance csoport sikeres; a külön PWA offline deep-link próba Edge alatt sikertelen, kivizsgálása nyitott.
-- A `teszt` ág jelenlegi alkalmazáskódja induló alapállapot, nem átadott PWA-tesztkiadás.
+- A `teszt` ágra emelt alkalmazáskód a 01D-ig ellenőrzött GitHub-commitban érhető el ([`051fc7f`](https://github.com/borosdavid/borosCode/commit/051fc7fd1146e6cbddc5a6fe5bb257ee8301b9e5)). A címkézett átadás és az eszközös próbák még nyitottak.
 - A JPA-megvalósítás és az újrafuttatott alkalmazástesztek a dev-hez tartoznak. A main ezen frissítése csak dokumentáció és státusz; nem emeli át az alkalmazáskódot vagy a dev-et a teszt ágra.
 
 ## Következő teendő és akadályok
