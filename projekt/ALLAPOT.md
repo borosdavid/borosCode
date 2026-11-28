@@ -3,6 +3,12 @@
 **Frissítve:** 2026-11-28. Ez a `main` ágon karbantartott állapotfelvétel, nem élő szervermonitor és nem a `main` kódjának funkciólistája.
 
 
+## Otthontár nagy fotófeltöltés – 2026-11-28
+
+Az új korlát képenként 40 MiB, tárgymentésenként alapból 400 MiB új JPEG. A 100 MB-os határ az adott mentésben továbbítandó fájlok összegére vonatkozik. Ismert mobilkapcsolaton a kliens blokkol. Ismeretlen kapcsolattípusnál a felhasználó a mobiladat kikapcsolása után kézzel erősíti meg a Wi-Fi használatát. A nagy csomag képenkénti, újrapróbálható előfeltöltéssel működik. Az adatlap, a képsorrend és a borító együtt rögzül. A V7 Flyway-migráció fiókhoz köti az előfeltöltött fotókat. [Kód a `dev` ágon](https://github.com/borosdavid/borosCode/commit/17099c03fdccc844f4f721bb61163f711fabfc6b) · [API és üzembe helyezés](https://github.com/borosdavid/borosCode/blob/17099c03fdccc844f4f721bb61163f711fabfc6b/README.md#fényképfeltöltés)
+
+Sikeres 23 Java-egységteszt és 29 MySQL 8.4.8 integrációs teszt. A MySQL-próba 105 000 000 bájtnyi új képet mentett, és ellenőrizte az egyszeri hozzárendelést, a visszagörgetést és a lejárati törlést. A csomagolt alkalmazás belépési és fotópróbája sikeres. Chromiumban a gyökéren és az `/otthontar` alatt ellenőriztük a mobilhálózatos tiltást, a kapcsolatváltást és a kézi jóváhagyást. A valódi iPhone-os és a Cloudflare-en át végzett próba a tesztpéldány telepítése után következik.
+
 ## Otthontár 01G fejlesztése – 2026-11-28
 
 A dátumozott leltári eladások, a végrehajtott költöztetések, az automatikus és kézi tervkapcsolás, valamint a jóváhagyott helyváltoztatás elérhető a [`dev` ágon](https://github.com/borosdavid/borosCode/commit/5822b97b761b110ceb1bbb471ce5e26e04c8066c). A csoport a **Megtörtént** művelettel zárható le. 23 Java-egységteszt, 27 MySQL 8.4.8 integrációs teszt, a Chromium-regresszió asztali és mobil nézetben a gyökérúton és az `/otthontar` alatt, valamint a csomagolt alkalmazás HTTP-próbája sikeres. A V6 új adatait külön MySQL-sémába visszaállítottuk, és összehasonlítottuk az eredeti leltári és naptári adatokkal. [Kézi próba és a 02-es fázis adatszerződése](https://github.com/borosdavid/borosCode/blob/5822b97b761b110ceb1bbb471ce5e26e04c8066c/docs/naptar-01g.md).

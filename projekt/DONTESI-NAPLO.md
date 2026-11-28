@@ -23,6 +23,7 @@ Hiteles forrás: a `main` ág. A napló az elfogadott irányokat és a még eld�
 | D-015 | Ubuntu-mentés helyi kulcskezelése | Elfogadott | 2026-11-24 |
 | D-016 | Költözési és eladási naptár az offline fázisok előtt | Elfogadott fejlesztési sorrend | 2026-11-27 |
 | D-017 | A naptár dátuma, tárgykapcsolata és kézi lezárása | Elfogadott követelmények | 2026-11-27 |
+| D-018 | Nagy fotófeltöltés Wi-Fi-n | Elfogadott követelmény, ellenőrizve a dev ágon | 2026-11-28 |
 
 ## D-001 – Fejlesztési és tesztágak
 
@@ -249,3 +250,12 @@ A naptár nap pontosságú. Új esemény a tárgy adatlapjáról is indítható,
 Elfogadott döntést ne írj át csendben: új bejegyzésben hivatkozd és váltsd fel a régit, a régiben jelöld a felváltást. A javaslatból csak tényleges felhasználói döntés vagy már megadott végrehajtási felhatalmazás alapján legyen Elfogadott. Nyitott, a végrehajtást befolyásoló kérdésnél kérdezz; a jóváhagyott rutinmunkát ne állítsd meg újabb megerősítéssel.
 
 Az itt használt döntési állapotok (Javasolt, Elfogadott, Felváltva, Elvetett, Nyitott) különböznek a funkciók megvalósítási státuszától.
+
+
+## D-018 – Nagy fotófeltöltés Wi-Fi-n
+
+100 MB feletti kész képcsomag csak Wi-Fi-n tölthető fel. Ha az iPhone PWA nem látja a kapcsolat típusát, a felhasználó a teljes feltöltés idejére kikapcsolja a mobiladatot, majd ezt a webappban megerősíti. Ismert mobilkapcsolaton a feltöltés és a folytatás blokkolva van.
+
+Dávid kérte a korlát növelését, és megerősítette az iPhone-os kézi eljárást. A Cloudflare ingyenes csomagjának 100 MB-os kéréskorlátja miatt a nagy csomag képenként kerül a szerverre. A 03-as fázis offline szinkronizációja is megtartja ezt a szabályt. [Megvalósítás](https://github.com/borosdavid/borosCode/commit/17099c03fdccc844f4f721bb61163f711fabfc6b) · [Cloudflare kérésméretkorlát](https://developers.cloudflare.com/workers/platform/limits/#request-and-response-limits)
+
+A felhasználó a kézi megerősítést választotta a minden ismeretlen kapcsolatra kiterjedő tiltás helyett.
