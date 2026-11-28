@@ -1,15 +1,17 @@
 # Projektállapot – Otthontár
 
-**Frissítve:** 2026-11-27. Ez a `main` ágon karbantartott állapotfelvétel, nem élő szervermonitor és nem a `main` kódjának funkciólistája.
+**Frissítve:** 2026-11-28. Ez a `main` ágon karbantartott állapotfelvétel, nem élő szervermonitor és nem a `main` kódjának funkciólistája.
 
 
 ## Otthontár 01G fejlesztése – 2026-11-28
 
-A leltári eladás és költöztetés naptári megjelenítésének fejlesztése megkezdődött az ellenőrzött [`a6de08e`](https://github.com/borosdavid/borosCode/commit/a6de08e97ca75c13880deb5aee081404021b44a0) `dev` alapon. Hátravan az implementáció, a regresszió és a védett HTTPS-környezetben végzett próba.
+A dátumozott leltári eladások, a végrehajtott költöztetések, az automatikus és kézi tervkapcsolás, valamint a jóváhagyott helyváltoztatás elérhető a [`dev` ágon](https://github.com/borosdavid/borosCode/commit/5822b97b761b110ceb1bbb471ce5e26e04c8066c). A csoport a **Megtörtént** művelettel zárható le. 23 Java-egységteszt, 27 MySQL 8.4.8 integrációs teszt, a Chromium-regresszió asztali és mobil nézetben a gyökérúton és az `/otthontar` alatt, valamint a csomagolt alkalmazás HTTP-próbája sikeres. A V6 új adatait külön MySQL-sémába visszaállítottuk, és összehasonlítottuk az eredeti leltári és naptári adatokkal. [Kézi próba és a 02-es fázis adatszerződése](https://github.com/borosdavid/borosCode/blob/5822b97b761b110ceb1bbb471ce5e26e04c8066c/docs/naptar-01g.md).
+
+A címkézett `teszt`-kiadáshoz hátravan a védett HTTPS-tesztpéldány, majd a felhasználói próba asztalon és valódi iPhone-on. Az Ubuntu időzített mentését és fotó-visszaállítását éles sémaváltás előtt igazolni kell.
 
 ## 01F naptárfelület fejlesztése – 2026-11-27
 
-Elkészült a havi naptár, az időrendi lista és a többtárgyas eseményszerkesztő. Az esemény tárgyadatlapról is indítható. A mentési hibák és az ütközések megőrzik a kitöltött űrlapot. Második nyitott eladási tervnél a meglévő terv linkje látszik. Kód a `dev` ágon ([`a6de08e`](https://github.com/borosdavid/borosCode/commit/a6de08e97ca75c13880deb5aee081404021b44a0)). Chromiumban sikeres a mobil- és asztali naptárteszt a gyökérútvonalon és `/otthontar` alatt, valamint a leltár/PWA regressziós csomag. 23 Java-egységteszt és 23 MySQL 8.4.8 integrációs teszt sikeres. A csomagolt alkalmazás `/otthontar` előtaggal is kiszolgálja a verziózott naptárfájlokat. A 01G-ben következik a leltárműveletek párosítása és a teljes átadás. Az éles frissítés és a valódi iPhone Safari-próba hátravan. [Kézi próba asztalon és iPhone-on](https://github.com/borosdavid/borosCode/blob/a6de08e97ca75c13880deb5aee081404021b44a0/docs/naptar-01f.md)
+Elkészült a havi naptár, az időrendi lista és a többtárgyas eseményszerkesztő. Az esemény tárgyadatlapról is indítható. A mentési hibák és az ütközések megőrzik a kitöltött űrlapot. Második nyitott eladási tervnél a meglévő terv linkje látszik. Kód a `dev` ágon ([`a6de08e`](https://github.com/borosdavid/borosCode/commit/a6de08e97ca75c13880deb5aee081404021b44a0)). Chromiumban sikeres a mobil- és asztali naptárteszt a gyökérútvonalon és `/otthontar` alatt, valamint a leltár/PWA regressziós csomag. 23 Java-egységteszt és 23 MySQL 8.4.8 integrációs teszt sikeres. A csomagolt alkalmazás `/otthontar` előtaggal is kiszolgálja a verziózott naptárfájlokat. A leltárműveletek párosítását a fenti 01G állapot követi. Az éles frissítés és a valódi iPhone Safari-próba hátravan. [Kézi próba asztalon és iPhone-on](https://github.com/borosdavid/borosCode/blob/a6de08e97ca75c13880deb5aee081404021b44a0/docs/naptar-01f.md)
 
 ## 01E naptár adatmodell és API – 2026-11-27
 
