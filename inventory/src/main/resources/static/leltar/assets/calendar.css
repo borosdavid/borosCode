@@ -58,6 +58,9 @@
 .calendar-links a { align-self: center; }
 .calendar .calendar-editor-actions { justify-content: flex-start; gap: .5rem; }
 .calendar .notice ul { margin: .3rem 0 0; padding-inline-start: 1.4rem; }
+.calendar #calendar-linked-facts { margin-block: 1rem; }
+.calendar #calendar-fact-link { display: flex; flex-wrap: wrap; align-items: end; gap: .65rem; margin: .75rem 0; }
+.calendar #calendar-fact-link[hidden] { display: none; }
 .calendar #calendar-attach { justify-self: start; align-self: end; }
 @media (max-width: 41rem) {
     .calendar .calendar-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }

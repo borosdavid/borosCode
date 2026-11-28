@@ -11,7 +11,10 @@ import java.net.http.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.sql.*;
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -21,7 +24,10 @@ import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.ScheduledAnnotationBeanPostProcessor;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -56,6 +62,15 @@ class PersistenceIT {
   static Map<String, String> originalSchema;
   static List<Map<String, Object>> legacyList;
   static Map<String, Map<String, Object>> legacyDetails;
+
+  @TestConfiguration(proxyBeanMethods = false)
+  static class FixedCalendarClock {
+    @Bean
+    @Primary
+    Clock fixtureClock() {
+      return Clock.fixed(Instant.parse("2026-11-28T23:30:00Z"), ZoneOffset.UTC);
+    }
+  }
 
   @BeforeAll
   static void start() throws Exception {
@@ -114,7 +129,7 @@ class PersistenceIT {
     }
     Flyway.configure()
         .dataSource(databaseUrl, databaseUser, databasePassword)
-        .target("4")
+        .target("5")
         .load()
         .migrate();
     originalSchema = schema();
@@ -146,7 +161,7 @@ class PersistenceIT {
 
   static void startApplication() {
     context =
-        new SpringApplicationBuilder(Inventory.class)
+        new SpringApplicationBuilder(Inventory.class, FixedCalendarClock.class)
             .run(
                 "--server.port=0",
                 "--server.address=127.0.0.1",
@@ -944,6 +959,246 @@ class PersistenceIT {
     assertStatus(201, post("/api/calendar", draft));
   }
 
+  @Test
+  void calendarReadsLegacySalesAndTracksCorrectionsAndWithdrawal() throws Exception {
+    var oldSale = calendarPeriod("2026-11-13", "2026-11-14", legacyIds.getFirst());
+    assertEquals(1, oldSale.size());
+    assertEquals("INVENTORY", oldSale.get(0).get("source").asText());
+    assertEquals(
+        CalendarFacts.saleId(legacyIds.getFirst()).toString(), oldSale.get(0).get("id").asText());
+    assertEquals(0, calendarPeriod("2026-11-13", "2026-11-14", legacyIds.get(1)).size());
+
+    var draft = draft();
+    draft.put("status", "LISTED");
+    draft.put("actionId", "SALE");
+    String item = saved(draft).get("id").asText();
+    var plan = createCalendar(calendarDraft("SALE", "2026-11-27", item));
+    var path = "/api/calendar/" + plan.get("id").asText();
+    assertStatus(
+        200,
+        post(
+            "/api/items/" + item + "/sold",
+            Map.of("version", 1, "actual", 1200, "soldDate", "2026-11-27")));
+    assertStatus(
+        409,
+        post(
+            "/api/items/" + item + "/sold",
+            Map.of("version", 1, "actual", 1200, "soldDate", "2026-11-27")));
+    assertEquals(1, calendarPeriod("2026-11-27", "2026-11-28", item).size());
+    var attached = get(path);
+    assertEquals("PLANNED", attached.get("status").asText());
+    assertEquals("2026-11-27", attached.get("facts").get(0).get("date").asText());
+
+    draft.put("version", 2);
+    draft.put("status", "SOLD");
+    draft.put("soldDate", "2026-11-28");
+    saved(draft);
+    var corrected = calendarPeriod("2026-11-28", "2026-11-29", item);
+    assertEquals(1, corrected.size());
+    assertEquals(CalendarFacts.saleId(item).toString(), corrected.get(0).get("id").asText());
+    assertEquals(plan.get("id"), corrected.get(0).get("facts").get(0).get("eventId"));
+
+    draft.put("version", 3);
+    draft.put("status", "LISTED");
+    draft.remove("soldDate");
+    saved(draft);
+    assertEquals(0, calendarPeriod("2026-11-28", "2026-11-29", item).size());
+    assertTrue(get(path).get("facts").get(0).get("withdrawn").asBoolean());
+
+    var direct = draft();
+    String directId = saved(direct).get("id").asText();
+    var directPlan = createCalendar(calendarDraft("SALE", "2026-11-27", directId));
+    direct.put("version", 1);
+    direct.put("actionId", "SALE");
+    direct.put("status", "SOLD");
+    saved(direct);
+    assertEquals(0, get("/api/calendar/" + directPlan.get("id").asText()).get("facts").size());
+    direct.put("version", 2);
+    direct.put("soldDate", "2026-11-27");
+    saved(direct);
+    assertEquals(
+        directPlan.get("id"),
+        get("/api/calendar/facts/" + CalendarFacts.saleId(directId)).get("eventId"));
+  }
+
+  @Test
+  void calendarMoveIsAtomicUsesBudapestDayAndKeepsTheRecordedPlaces() throws Exception {
+    assertEquals(0, calendarPeriod("2026-11-29", "2026-11-30", legacyIds.get(2)).size());
+    var moving = draft();
+    String destination = createPlace();
+    moving.put("actionId", "MOVE");
+    moving.put("destination", destination);
+    String item = saved(moving).get("id").asText();
+    var plan = createCalendar(calendarDraft("MOVE", "2026-11-29", item));
+    String move = "/api/items/" + item + "/move?version=1";
+    race(() -> postUnchecked(move, null), () -> postUnchecked(move, null));
+    assertEquals(destination, get("/api/items/" + item).get("location_id").asText());
+    var listed = calendarPeriod("2026-11-29", "2026-11-30", item);
+    assertEquals(1, listed.size());
+    assertEquals(plan.get("id"), listed.get(0).get("id"));
+    var actual = listed.get(0).get("facts").get(0);
+    assertEquals("PLANNED", listed.get(0).get("status").asText());
+    assertEquals("2026-11-29", actual.get("date").asText());
+    assertEquals(legacyPlace, actual.get("originLocationId").asText());
+    assertEquals(destination, actual.get("destinationLocationId").asText());
+
+    var standalone = draft();
+    standalone.put("actionId", "MOVE");
+    standalone.put("destination", destination);
+    String another = saved(standalone).get("id").asText();
+    standalone.put("version", 1);
+    standalone.put("executeMove", true);
+    standalone.put("cover", UUID.randomUUID().toString());
+    assertStatus(422, save(standalone));
+    assertEquals(0, calendarPeriod("2026-11-29", "2026-11-30", another).size());
+    assertEquals(legacyPlace, get("/api/items/" + another).get("location_id").asText());
+    standalone.remove("cover");
+    String operation = UUID.randomUUID().toString();
+    assertStatus(200, saveWithOperation(standalone, operation));
+    assertStatus(200, saveWithOperation(standalone, operation));
+    var events = calendarPeriod("2026-11-29", "2026-11-30", another);
+    assertEquals(1, events.size());
+    assertEquals("INVENTORY", events.get(0).get("source").asText());
+    var fact = events.get(0).get("facts").get(0);
+    assertTrue(fact.get("eventId").isNull());
+    assertEquals(destination, fact.get("destinationLocationId").asText());
+    standalone.remove("executeMove");
+    standalone.remove("destination");
+    standalone.put("actionId", "KEEP");
+    standalone.put("version", 3);
+    saved(standalone);
+    assertEquals(fact, get("/api/calendar/facts/" + fact.get("id").asText()));
+  }
+
+  @Test
+  void calendarCanLinkAnAmbiguousMoveOnlyToAValidEvent() throws Exception {
+    var moving = draft();
+    moving.put("actionId", "MOVE");
+    moving.put("destination", createPlace());
+    String item = saved(moving).get("id").asText();
+    var first = createCalendar(calendarDraft("MOVE", "2026-11-29", item));
+    var second = createCalendar(calendarDraft("MOVE", "2026-11-30", item));
+    var wrongType = createCalendar(calendarDraft("SALE", "2026-11-29", item));
+    var wrongItem = createCalendar(calendarDraft("MOVE", "2026-11-29", null));
+    assertStatus(200, post("/api/items/" + item + "/move?version=1", null));
+
+    var listed = calendarPeriod("2026-11-29", "2026-11-30", item);
+    assertEquals(3, listed.size()); // Two plans of different types and the standalone move.
+    String factId = null;
+    for (var view : listed)
+      if (view.get("source").asText().equals("INVENTORY")) factId = view.get("id").asText();
+    assertNotNull(factId);
+    String path = "/api/calendar/facts/" + factId;
+    assertEquals(2, get(path + "/candidates").size());
+    assertStatus(422, request("PUT", path + "/assignment", assignment(wrongType)));
+    assertStatus(422, request("PUT", path + "/assignment", assignment(wrongItem)));
+    assertStatus(200, request("PUT", path + "/assignment", assignment(second)));
+    assertStatus(200, request("PUT", path + "/assignment", assignment(second)));
+    assertStatus(409, request("PUT", path + "/assignment", assignment(first)));
+    assertEquals(second.get("id"), get(path).get("eventId"));
+    assertTrue(containsId(calendarPeriod("2026-11-29", "2026-11-30", item), factId));
+    var planPath = "/api/calendar/" + second.get("id").asText();
+    var plan = get(planPath);
+    assertEquals("PLANNED", plan.get("status").asText());
+    assertEquals(1, plan.get("facts").size());
+
+    var complete =
+        json.convertValue(
+            plan, new tools.jackson.core.type.TypeReference<Map<String, Object>>() {});
+    complete
+        .keySet()
+        .retainAll(
+            Set.of(
+                "id",
+                "version",
+                "title",
+                "type",
+                "notes",
+                "locationId",
+                "plannedStart",
+                "plannedEnd",
+                "items"));
+    complete.put("status", "DONE");
+    complete.put("actualStart", "2026-11-29");
+    assertStatus(200, request("PUT", planPath, complete));
+    assertFalse(containsId(calendarPeriod("2026-11-29", "2026-11-30", item), factId));
+  }
+
+  private static Map<String, Object> assignment(JsonNode event) {
+    return Map.of(
+        "eventId",
+        event.get("id").asText(),
+        "eventVersion",
+        event.get("version").asLong(),
+        "factVersion",
+        0);
+  }
+
+  @Test
+  void itemLocationApprovalIsVersionedAtomicAndOnlyUpdatesTheAffectedLink() throws Exception {
+    var item = draft();
+    String id = saved(item).get("id").asText();
+    String other = saved(draft()).get("id").asText();
+    String newPlace = createPlace();
+    var open = calendarDraft("MOVE", "2026-12-02", id);
+    open.put(
+        "items",
+        List.of(
+            Map.of("itemId", id, "originLocationId", legacyPlace),
+            Map.of("itemId", other, "originLocationId", legacyPlace)));
+    open.put("locationId", legacyPlace);
+    var plan = createCalendar(open);
+    var otherPlan = createCalendar(calendarDraft("TRANSPORT", "2026-12-04", id));
+    var done = calendarDraft("OTHER", null, id);
+    done.put("status", "DONE");
+    done.put("actualStart", "2026-11-01");
+    done.put("items", List.of(Map.of("itemId", id, "originLocationId", legacyPlace)));
+    var historical = createCalendar(done);
+
+    item.put("version", 1);
+    item.put("location", newPlace);
+    String operation = UUID.randomUUID().toString();
+    var pending = saveWithOperation(item, operation);
+    assertStatus(409, pending);
+    var challenge = json.readTree(pending.body());
+    assertEquals("CALENDAR_LOCATION_APPROVAL", challenge.get("code").asText());
+    assertEquals(2, challenge.get("events").size());
+    assertEquals(legacyPlace, get("/api/items/" + id).get("location_id").asText());
+    String path = "/api/calendar/" + plan.get("id").asText();
+    assertEquals(plan, get(path));
+
+    open.put("version", plan.get("version").asLong());
+    open.put("title", "Átütemezett költözés");
+    assertStatus(200, request("PUT", path, open));
+    var stale = saveApproved(item, operation, challenge.get("approval"));
+    assertStatus(409, stale);
+    var updatedApproval = json.readTree(stale.body()).get("approval");
+    assertNotEquals(challenge.get("approval"), updatedApproval);
+    assertEquals(legacyPlace, get("/api/items/" + id).get("location_id").asText());
+
+    item.put("cover", UUID.randomUUID().toString());
+    assertStatus(422, saveApproved(item, operation, updatedApproval));
+    assertEquals(legacyPlace, get("/api/items/" + id).get("location_id").asText());
+    item.remove("cover");
+    assertStatus(200, saveApproved(item, operation, updatedApproval));
+    assertStatus(200, saveApproved(item, operation, updatedApproval));
+    assertEquals(2, get("/api/items/" + id).get("version").asLong());
+    var updated = get(path);
+    assertEquals(legacyPlace, updated.get("locationId").asText());
+    for (var link : updated.get("items"))
+      assertEquals(
+          link.get("itemId").asText().equals(id) ? newPlace : legacyPlace,
+          link.get("originLocationId").asText());
+    assertEquals(
+        newPlace,
+        get("/api/calendar/" + otherPlan.get("id").asText())
+            .get("items")
+            .get(0)
+            .get("originLocationId")
+            .asText());
+    assertEquals(historical, get("/api/calendar/" + historical.get("id").asText()));
+  }
+
   static Map<String, Object> calendarDraft(String type, String date, String itemId) {
     var draft = new LinkedHashMap<String, Object>();
     draft.put("id", UUID.randomUUID().toString());
@@ -1020,6 +1275,12 @@ class PersistenceIT {
 
   static HttpResponse<byte[]> saveWithOperation(
       Map<String, Object> draft, String operation, Upload... files) throws Exception {
+    return saveApproved(draft, operation, null, files);
+  }
+
+  static HttpResponse<byte[]> saveApproved(
+      Map<String, Object> draft, String operation, JsonNode approval, Upload... files)
+      throws Exception {
     String boundary = UUID.randomUUID().toString();
     var body = new ByteArrayOutputStream();
     body.write(
@@ -1028,6 +1289,14 @@ class PersistenceIT {
                 + "\r\nContent-Disposition: form-data; name=\"draft\"\r\nContent-Type: application/json\r\n\r\n")
             .getBytes(StandardCharsets.UTF_8));
     body.write(json.writeValueAsBytes(draft));
+    if (approval != null) {
+      body.write(
+          ("\r\n--"
+                  + boundary
+                  + "\r\nContent-Disposition: form-data; name=\"calendarApproval\"\r\nContent-Type: application/json\r\n\r\n")
+              .getBytes(StandardCharsets.UTF_8));
+      body.write(json.writeValueAsBytes(approval));
+    }
     for (var file : files) {
       body.write(
           ("\r\n--"
@@ -1127,7 +1396,11 @@ class PersistenceIT {
       for (String table : List.of("location", "item", "photo", "item_action", "file_cleanup")) {
         try (var result = statement.executeQuery("show create table " + table)) {
           assertTrue(result.next());
-          schema.put(table, result.getString(2));
+          schema.put(
+              table,
+              result
+                  .getString(2)
+                  .replace(",\n  KEY `ix_item_sale_calendar` (`status`,`sold_date`)", ""));
         }
       }
     }

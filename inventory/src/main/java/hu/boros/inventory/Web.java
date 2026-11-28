@@ -93,15 +93,16 @@ public class Web {
   @PostMapping(value = "/items", consumes = "multipart/form-data")
   Object save(
       @RequestPart Ledger.Draft draft,
+      @RequestPart(required = false) CalendarLocationChanges.Approval calendarApproval,
       @RequestPart(required = false) List<MultipartFile> files,
       @RequestHeader(name = "X-Otthontar-Save-Id", required = false) UUID operation,
       @AuthenticationPrincipal AccountSecurity.LoginUser user) {
     var uploads = files == null ? List.<MultipartFile>of() : files;
     if (operation != null) {
       if (user == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-      return itemSaves.save(user.id, operation, draft, uploads);
+      return itemSaves.save(user.id, operation, draft, uploads, calendarApproval);
     }
-    ledger.save(draft, uploads);
+    ledger.save(draft, uploads, calendarApproval);
     return ledger.item(draft.id());
   }
 
@@ -123,6 +124,13 @@ public class Web {
         || !Files.exists(path)
         || !photos.exists(id.toString())) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     return new FileSystemResource(path);
+  }
+
+  @ExceptionHandler(OptimisticLockingFailureException.class)
+  ProblemDetail staleCalendar() {
+    return ProblemDetail.forStatusAndDetail(
+        HttpStatus.CONFLICT,
+        "Az érintett naptáresemény időközben megváltozott. Ments újra a friss adatokkal.");
   }
 
   @ExceptionHandler(DataIntegrityViolationException.class)

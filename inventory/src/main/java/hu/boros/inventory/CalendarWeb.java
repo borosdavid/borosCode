@@ -17,8 +17,11 @@ import org.springframework.web.bind.annotation.*;
 class CalendarWeb {
   private final Calendars calendars;
 
-  CalendarWeb(Calendars calendars) {
+  private final CalendarFacts facts;
+
+  CalendarWeb(Calendars calendars, CalendarFacts facts) {
     this.calendars = calendars;
+    this.facts = facts;
   }
 
   @GetMapping
@@ -35,6 +38,21 @@ class CalendarWeb {
   @GetMapping("/{id}")
   Calendars.View detail(@PathVariable UUID id) {
     return calendars.get(id);
+  }
+
+  @GetMapping("/facts/{id}")
+  CalendarFacts.Fact fact(@PathVariable UUID id) {
+    return facts.get(id);
+  }
+
+  @GetMapping("/facts/{id}/candidates")
+  List<Calendars.EventReference> candidates(@PathVariable UUID id) {
+    return facts.candidates(id);
+  }
+
+  @PutMapping("/facts/{id}/assignment")
+  CalendarFacts.Fact assign(@PathVariable UUID id, @RequestBody CalendarFacts.Assignment link) {
+    return facts.assign(id, link);
   }
 
   @PostMapping

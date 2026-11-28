@@ -33,6 +33,10 @@
         </div>
         <div id="calendar-warnings" class="notice" role="status" hidden></div>
         <div id="calendar-error" class="notice" role="alert" hidden></div>
+        <section id="calendar-linked-facts" aria-labelledby="calendar-linked-facts-title" hidden>
+            <h3 id="calendar-linked-facts-title">Leltárban rögzített tételek</h3>
+            <ul id="calendar-facts-list"></ul>
+        </section>
         <form id="calendar-form">
             <fieldset>
                 <legend>Esemény adatai</legend>
@@ -65,6 +69,20 @@
                 <button class="primary" type="submit">Mentés</button>
             </div>
         </form>
+    </section>
+    <section id="calendar-fact-panel" class="panel" aria-labelledby="calendar-fact-title" hidden>
+        <div class="heading">
+            <h2 id="calendar-fact-title" tabindex="-1"></h2>
+            <span class="tag">Leltárból</span>
+        </div>
+        <p id="calendar-fact-info"></p>
+        <p id="calendar-fact-plan"></p>
+        <form id="calendar-fact-link" hidden>
+            <label>Naptáresemény<select id="calendar-fact-candidates" required></select></label>
+            <button class="primary" type="submit">Összekapcsolás</button>
+        </form>
+        <p id="calendar-fact-feedback" role="status" hidden></p>
+        <button id="calendar-fact-close" type="button">Bezárás</button>
     </section>
     <section aria-labelledby="calendar-month">
         <div class="calendar-toolbar">

@@ -14,6 +14,7 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -31,10 +32,14 @@ public class ItemSaves {
     this.json = json;
   }
 
-  @Transactional
+  @Transactional(isolation = Isolation.READ_COMMITTED)
   public InventoryViews.ItemView save(
-      String accountId, UUID operation, Ledger.Draft draft, List<MultipartFile> uploads) {
-    String fingerprint = fingerprint(draft, uploads);
+      String accountId,
+      UUID operation,
+      Ledger.Draft draft,
+      List<MultipartFile> uploads,
+      CalendarLocationChanges.Approval approval) {
+    String fingerprint = fingerprint(draft, uploads, approval);
     String operationId = operation.toString();
     // The unique key serializes concurrent retries. A rollback removes the claim as well.
     entities
@@ -64,7 +69,7 @@ public class ItemSaves {
           CONFLICT, "A mentési azonosítóhoz másik tartalom tartozik.");
     if (receipt[1] != null) return ledger.item(UUID.fromString((String) receipt[1]));
 
-    ledger.save(draft, uploads);
+    ledger.save(draft, uploads, approval);
     var saved = ledger.item(draft.id());
     entities
         .createNativeQuery(
@@ -79,7 +84,8 @@ public class ItemSaves {
     return saved;
   }
 
-  private String fingerprint(Ledger.Draft draft, List<MultipartFile> uploads) {
+  private String fingerprint(
+      Ledger.Draft draft, List<MultipartFile> uploads, CalendarLocationChanges.Approval approval) {
     try (var output =
         new DigestOutputStream(
             OutputStream.nullOutputStream(), MessageDigest.getInstance("SHA-256"))) {
@@ -91,6 +97,17 @@ public class ItemSaves {
         try (var input = upload.getInputStream()) {
           input.transferTo(output);
         }
+      }
+      if (approval != null) {
+        writePart(
+            output,
+            json.writeValueAsBytes(
+                new CalendarLocationChanges.Approval(
+                    approval.from(),
+                    approval.to(),
+                    approval.events() == null
+                        ? null
+                        : new java.util.TreeMap<>(approval.events()))));
       }
       return HexFormat.of().formatHex(output.getMessageDigest().digest());
     } catch (IOException e) {

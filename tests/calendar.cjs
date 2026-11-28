@@ -3,6 +3,13 @@ const assert = require('node:assert/strict');
 
 function calendarFixture() {
     const events = new Map();
+    const factId = 'executed-move';
+    let fact;
+    const factEntry = () => normalize({
+        id: fact.id, title: 'Költöztetve: ' + fact.itemName, source: 'INVENTORY', type: fact.type,
+        status: 'DONE', actualStart: fact.date, locationId: fact.destinationLocationId,
+        items: [{itemId: fact.itemId}], facts: [fact]
+    });
     let failSave = false;
     let unavailable = false;
     let endLoad;
@@ -16,6 +23,9 @@ function calendarFixture() {
     return {
         reset() {
             events.clear();
+            fact = {id: factId, itemId: 'fixture-1', itemName: 'Állólámpa', version: 0, type: 'MOVE',
+                date: '2026-11-29', originLocationId: 'place-1', destinationLocationId: 'place-2',
+                eventId: null, withdrawn: false};
             failSave = unavailable = false;
             endLoad = null;
             for (const event of [
@@ -42,6 +52,20 @@ function calendarFixture() {
                 res.end(JSON.stringify(data));
             };
             const id = route.slice('/api/calendar/'.length);
+            if (id === 'facts/' + factId) return reply(200, fact);
+            if (id === 'facts/' + factId + '/candidates') {
+                const plan = events.get('cross-month-move');
+                return reply(200, fact.eventId ? [] : [{id: plan.id, title: plan.title,
+                    version: plan.version, date: plan.plannedStart}]);
+            }
+            if (id === 'facts/' + factId + '/assignment') {
+                let raw = '';
+                for await (const chunk of req) raw += chunk;
+                assert.deepEqual(JSON.parse(raw), {eventId: 'cross-month-move', eventVersion: 0, factVersion: 0});
+                fact = {...fact, eventId: 'cross-month-move'};
+                events.get(fact.eventId).facts = [fact];
+                return reply(200, fact);
+            }
             const current = events.get(id);
             const warnings = event => {
                 if (event.status !== 'PLANNED' || !['SALE', 'MOVE'].includes(event.type)) return [];
@@ -56,7 +80,9 @@ function calendarFixture() {
                 if (id) return current ? reply(200, {...current, warnings: warnings(current)}) : reply(404, {detail: 'Az esemény nem található.'});
                 if (endLoad) await endLoad;
                 if (unavailable) return reply(503, {detail: 'A tesztnaptár átmenetileg nem érhető el.'});
-                const filtered = [...events.values()].filter(event => {
+                const visible = [...events.values()];
+                if (!fact.eventId) visible.push(factEntry());
+                const filtered = visible.filter(event => {
                     const start = event.actualStart || event.plannedStart;
                     const end = event.actualEnd || event.plannedEnd;
                     return start < query.get('until') && end >= query.get('from')
@@ -140,6 +166,19 @@ async function checkCalendar(browser, origin, fixture, expireSession) {
     const save = () => sheet.getByRole('button', {name: 'Mentés', exact: true}).click();
     const waitSaved = () => page.getByText('Esemény mentve.', {exact: true}).waitFor();
     try {
+        await page.goto(origin + '/leltar/naptar');
+        const factEntry = page.locator('#calendar-events').getByRole('button', {name: /Költöztetve: Állólámpa.*Leltárból/});
+        await factEntry.click();
+        const actual = page.getByRole('region', {name: 'Költöztetve – Állólámpa'});
+        await actual.getByText(/Lakás → Raktár/).waitFor();
+        await actual.getByLabel('Naptáresemény').selectOption('cross-month-move');
+        await actual.getByRole('button', {name: 'Összekapcsolás'}).click();
+        await actual.getByText('A leltári tétel kapcsolása mentve.').waitFor();
+        await factEntry.waitFor({state:'hidden'});
+        await actual.getByRole('button', {name: 'Kapcsolt esemény megnyitása'}).click();
+        const associated = page.getByRole('region', {name: 'Hónapváltás költözés'});
+        await associated.getByText(/Állólámpa · 2026. november 29./).waitFor();
+        await associated.getByRole('button', {name: 'Megtörtént', exact: true}).waitFor();
         await page.goto(origin + '/leltar/fixture-1');
         await page.getByRole('link', {name: 'Új naptáresemény ehhez a tárgyhoz'}).click();
         await sheet.getByRole('heading', {name: 'Új esemény'}).waitFor();

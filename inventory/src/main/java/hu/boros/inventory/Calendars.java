@@ -6,16 +6,15 @@ import static org.springframework.http.HttpStatus.*;
 
 import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
 class Calendars {
-  private static final ZoneId CALENDAR_ZONE = ZoneId.of("Europe/Budapest");
   private static final int MAX_SEARCH_DAYS = 366;
   private static final int MAX_ITEMS = 100;
 
@@ -37,7 +36,16 @@ class Calendars {
 
   record Warning(String code, List<UUID> eventIds) {}
 
-  record EventReference(UUID id, String title) {}
+  record EventReference(UUID id, String title, long version, LocalDate date) {}
+
+  static EventReference reference(CalendarEvent event) {
+    return new EventReference(uuid(event.id), event.title, event.version, start(event));
+  }
+
+  enum Source {
+    CALENDAR,
+    INVENTORY
+  }
 
   record View(
       UUID id,
@@ -53,22 +61,27 @@ class Calendars {
       LocalDate actualEnd,
       boolean overdue,
       List<ItemLink> items,
-      List<Warning> warnings) {}
+      List<Warning> warnings,
+      Source source,
+      List<CalendarFacts.Fact> facts) {}
 
   private final CalendarEventRepository events;
   private final ItemRepository inventory;
   private final LocationRepository locations;
   private final EntityManager entities;
+  private final CalendarFacts facts;
 
   Calendars(
       CalendarEventRepository events,
       ItemRepository inventory,
       LocationRepository locations,
-      EntityManager entities) {
+      EntityManager entities,
+      CalendarFacts facts) {
     this.events = events;
     this.inventory = inventory;
     this.locations = locations;
     this.entities = entities;
+    this.facts = facts;
   }
 
   @Transactional(readOnly = true)
@@ -83,15 +96,45 @@ class Calendars {
     validateDate(until);
     long days = ChronoUnit.DAYS.between(from, until);
     require(days > 0 && days <= MAX_SEARCH_DAYS, "A lekérdezés 1–366 napra adható meg.");
-    LocalDate today = LocalDate.now(CALENDAR_ZONE);
-    return events.inPeriod(from, until, type, status, key(locationId), key(itemId)).stream()
-        .map(event -> view(event, today, List.of()))
-        .toList();
+    var inPeriod = events.inPeriod(from, until, type, status, key(locationId), key(itemId));
+    var attached = facts.attached(inPeriod.stream().map(event -> event.id).toList());
+    var result = new ArrayList<View>();
+    var represented = new HashSet<UUID>();
+    LocalDate today = facts.today();
+    for (var event : inPeriod) {
+      var linked = attached.getOrDefault(event.id, List.of());
+      result.add(view(event, today, List.of(), linked));
+      if (event.status == CANCELLED) continue;
+      for (var fact : linked) {
+        if (!fact.withdrawn()
+            && !fact.date().isBefore(start(event))
+            && !fact.date().isAfter(end(event))) represented.add(fact.id());
+      }
+    }
+    if (status == null || status == DONE) {
+      for (var fact : facts.inPeriod(from, until, type, locationId, itemId)) {
+        if (!represented.contains(fact.id())) result.add(actualView(fact));
+      }
+    }
+    result.sort(
+        Comparator.comparing(
+                (View event) ->
+                    event.actualStart() == null ? event.plannedStart() : event.actualStart())
+            .thenComparing(View::id));
+    return result;
   }
 
   @Transactional(readOnly = true)
   public View get(UUID id) {
     return detail(find(id));
+  }
+
+  private static LocalDate start(CalendarEvent event) {
+    return event.actualStart == null ? event.plannedStart : event.actualStart;
+  }
+
+  private static LocalDate end(CalendarEvent event) {
+    return event.actualEnd == null ? event.plannedEnd : event.actualEnd;
   }
 
   @Transactional(readOnly = true)
@@ -101,28 +144,34 @@ class Calendars {
     var itemIds = draft.items().stream().map(item -> key(item.itemId())).toList();
     if (itemIds.isEmpty()) return List.of();
     return events.openPlansForItems(SALE, PLANNED, id.toString(), itemIds).stream()
-        .map(event -> new EventReference(uuid(event.id), event.title))
+        .map(Calendars::reference)
         .toList();
   }
 
-  @Transactional
+  @Transactional(isolation = Isolation.READ_COMMITTED)
   public View create(Draft draft) {
     require(draft.id() != null && draft.version() == null, "Adj meg új eseményazonosítót.");
     var event = new CalendarEvent(draft.id().toString());
-    apply(event, draft);
+    var links = itemLinks(draft);
+    lockItems(event, links.keySet());
+    apply(event, draft, links);
     entities.persist(event);
     events.flush();
     return detail(event);
   }
 
-  @Transactional
+  @Transactional(isolation = Isolation.READ_COMMITTED)
   public View update(UUID id, Draft draft) {
     require(draft.id() == null || id.equals(draft.id()), "Az eseményazonosító nem egyezik.");
     require(draft.version() != null && draft.version() >= 0, "Az esemény verziója kötelező.");
     CalendarEvent event = find(id);
+    var links = itemLinks(draft);
+    lockItems(event, links.keySet());
+    entities.refresh(event);
     if (event.version != draft.version())
       throw new ResponseStatusException(CONFLICT, "A naptáresemény időközben megváltozott.");
-    apply(event, draft);
+    apply(event, draft, links);
+    facts.removeInvalidLinks(event);
     events.flush();
     return detail(event);
   }
@@ -134,7 +183,16 @@ class Calendars {
             () -> new ResponseStatusException(NOT_FOUND, "A naptáresemény nem található."));
   }
 
-  private void apply(CalendarEvent event, Draft draft) {
+  private void lockItems(CalendarEvent event, Set<String> newIds) {
+    var ids = new TreeSet<>(event.items.keySet());
+    ids.addAll(newIds);
+    if (!ids.isEmpty()) {
+      var existing = inventory.lockForCalendar(ids).stream().map(item -> item.id).toList();
+      require(existing.containsAll(newIds), "Ismeretlen tárgy.");
+    }
+  }
+
+  private void apply(CalendarEvent event, Draft draft, Map<String, CalendarEvent.EventItem> links) {
     String title = Objects.toString(draft.title(), "").strip();
     require(!title.isEmpty() && title.length() <= 200, "A cím 1–200 karakter lehet.");
     require(draft.type() != null && draft.status() != null, "A típus és az állapot kötelező.");
@@ -153,7 +211,6 @@ class Calendars {
       require(actualStart == null, "Tényleges dátum csak megtörtént eseményhez adható meg.");
     }
 
-    var links = itemLinks(draft);
     event.title = title;
     event.type = draft.type();
     event.status = draft.status();
@@ -184,7 +241,6 @@ class Calendars {
         require(previous == null, "Egy tárgy csak egyszer kapcsolható ugyanahhoz az eseményhez.");
       }
     }
-    require(inventory.findAllById(links.keySet()).size() == links.size(), "Ismeretlen tárgy.");
     require(
         locations.findAllById(locationIds).size() == locationIds.size(), "Ismeretlen helyszín.");
     return links;
@@ -208,10 +264,38 @@ class Calendars {
                 new Warning(
                     "SALE_MOVE_OVERLAP", conflicts.stream().map(UUID::fromString).toList()));
     }
-    return view(event, LocalDate.now(CALENDAR_ZONE), warnings);
+    var linked = facts.attached(List.of(event.id)).getOrDefault(event.id, List.of());
+    return view(event, facts.today(), warnings, linked);
   }
 
-  private static View view(CalendarEvent event, LocalDate today, List<Warning> warnings) {
+  private static View actualView(CalendarFacts.Fact fact) {
+    String title = (fact.type() == SALE ? "Eladva: " : "Költöztetve: ") + fact.itemName();
+    return new View(
+        fact.id(),
+        fact.version(),
+        title,
+        fact.type(),
+        DONE,
+        null,
+        fact.destinationLocationId() == null
+            ? fact.originLocationId()
+            : fact.destinationLocationId(),
+        null,
+        null,
+        fact.date(),
+        fact.date(),
+        false,
+        List.of(new ItemLink(fact.itemId(), fact.originLocationId())),
+        List.of(),
+        Source.INVENTORY,
+        List.of(fact));
+  }
+
+  private static View view(
+      CalendarEvent event,
+      LocalDate today,
+      List<Warning> warnings,
+      List<CalendarFacts.Fact> facts) {
     var links =
         event.items.entrySet().stream()
             .sorted(Map.Entry.comparingByKey())
@@ -232,7 +316,9 @@ class Calendars {
         event.actualEnd,
         event.status == PLANNED && event.plannedEnd.isBefore(today),
         links,
-        warnings);
+        warnings,
+        Source.CALENDAR,
+        facts);
   }
 
   private static LocalDate endOfRange(LocalDate start, LocalDate end) {

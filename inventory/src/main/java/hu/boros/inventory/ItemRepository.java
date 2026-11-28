@@ -3,6 +3,7 @@ package hu.boros.inventory;
 import jakarta.persistence.LockModeType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.*;
@@ -16,6 +17,14 @@ public interface ItemRepository extends JpaRepository<ItemEntity, String> {
       order by case when item.status = 'SOLD' then 1 else 0 end, item.name, item.id
       """)
   List<ItemEntity> listed(@Param("trash") boolean trash);
+
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("select item from ItemEntity item where item.id = :id")
+  Optional<ItemEntity> lockCurrent(String id);
+
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("select item from ItemEntity item where item.id in :ids order by item.id")
+  List<ItemEntity> lockForCalendar(Collection<String> ids);
 
   boolean existsByIdAndActionId(String id, String actionId);
 

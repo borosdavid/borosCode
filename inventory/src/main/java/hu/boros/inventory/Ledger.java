@@ -2,12 +2,14 @@ package hu.boros.inventory;
 
 import static org.springframework.http.HttpStatus.*;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -27,7 +29,8 @@ public class Ledger {
       LocalDate soldDate,
       String cover,
       String actionId,
-      UUID destination) {}
+      UUID destination,
+      @JsonInclude(JsonInclude.Include.NON_NULL) Boolean executeMove) {}
 
   record Place(UUID id, String name) {}
 
@@ -38,6 +41,8 @@ public class Ledger {
   final PhotoRepository photoRecords;
   final FileCleanupRepository cleanup;
   final Photos photos;
+  private final CalendarFacts facts;
+  private final CalendarLocationChanges locationChanges;
 
   Ledger(
       EntityManager entities,
@@ -46,7 +51,9 @@ public class Ledger {
       ActionRepository actions,
       PhotoRepository photoRecords,
       FileCleanupRepository cleanup,
-      Photos photos) {
+      Photos photos,
+      CalendarFacts facts,
+      CalendarLocationChanges locationChanges) {
     this.entities = entities;
     this.locations = locations;
     this.items = items;
@@ -54,6 +61,8 @@ public class Ledger {
     this.photoRecords = photoRecords;
     this.cleanup = cleanup;
     this.photos = photos;
+    this.facts = facts;
+    this.locationChanges = locationChanges;
   }
 
   static void require(boolean ok, String message) {
@@ -113,13 +122,16 @@ public class Ledger {
 
   record Sale(long version, BigDecimal actual, LocalDate soldDate) {}
 
-  @Transactional
+  @Transactional(isolation = Isolation.READ_COMMITTED)
   public void completeSale(UUID id, Sale sale) {
     require(
         sale.actual() != null && sale.soldDate() != null,
         "Add meg a tényleges eladási árat és az eladás dátumát.");
     validatePrice(sale.actual());
-    changed(items.completeSale(id.toString(), sale.version(), sale.actual(), sale.soldDate()));
+    String key = id.toString();
+    var current = lockItem(key, sale.version());
+    changed(items.completeSale(key, sale.version(), sale.actual(), sale.soldDate()));
+    facts.recordSale(key, !current.status.equals("SOLD") || current.soldDate == null);
   }
 
   static void validate(Draft d) {
@@ -150,8 +162,9 @@ public class Ledger {
     }
   }
 
-  @Transactional
-  public void save(Draft d, List<MultipartFile> uploads) {
+  @Transactional(isolation = Isolation.READ_COMMITTED)
+  public void save(
+      Draft d, List<MultipartFile> uploads, CalendarLocationChanges.Approval approval) {
     validate(d);
     var id = d.id().toString();
     String action = d.actionId();
@@ -171,15 +184,22 @@ public class Ledger {
     require(
         kind.equals("SALE") == !d.status().equals("KEEP"),
         "Az eladási állapot és a művelet eltér.");
+    boolean executeMove = Boolean.TRUE.equals(d.executeMove());
+    require(!executeMove || kind.equals("MOVE"), "Áthelyezéshez válaszd a költöztetési műveletet.");
     if (kind.equals("MOVE"))
       require(
           d.destination() != null && !d.destination().equals(d.location()),
           "Válassz az aktuálistól eltérő célhelyszínt.");
     else require(d.destination() == null, "Csak költöztetéshez adható meg célhelyszín.");
+    boolean newSale = true;
     if (d.version() == 0) {
+      require(approval == null, "Új tárgyhoz nem szükséges a helyváltoztatás jóváhagyása.");
       entities.persist(new ItemEntity(d, action));
       items.flush();
     } else {
+      var current = lockItem(id, d.version());
+      locationChanges.apply(id, current.locationId, d.location(), approval);
+      newSale = !current.status.equals("SOLD") || current.soldDate == null;
       changed(
           items.updateDraft(
               id,
@@ -215,14 +235,27 @@ public class Ledger {
     }
     if (cover == null || cover.isBlank()) cover = ids.isEmpty() ? null : ids.getFirst();
     require(cover == null || ids.contains(cover), "A borítókép nem ehhez a tárgyhoz tartozik.");
+    if (d.status().equals("SOLD") && d.soldDate() != null) facts.recordSale(id, newSale);
+    if (executeMove) {
+      changed(items.completeMove(id, d.version() + 1));
+      facts.recordMove(id, d.location().toString(), d.destination().toString());
+    }
     items.updateCover(id, cover);
   }
 
-  @Transactional
+  private ItemEntity lockItem(String id, long version) {
+    var current = items.lockCurrent(id).orElse(null);
+    changed(current != null && current.version == version && !current.trashed ? 1 : 0);
+    return current;
+  }
+
+  @Transactional(isolation = Isolation.READ_COMMITTED)
   public void transition(UUID id, long version, String action) {
     String key = id.toString();
     if (action.equals("move")) {
+      var current = lockItem(key, version);
       changed(items.completeMove(key, version));
+      facts.recordMove(key, current.locationId, current.destinationId);
       return;
     }
     if (action.equals("purge")) {

@@ -11,7 +11,7 @@ const types = {'.js':'text/javascript','.css':'text/css','.html':'text/html','.w
 let expiredSession = false, fixtureUser = 'account-1';
 let failSave = true, savedBody = '', savedHeader = '', nextWorker = false, failAsset = false;
 let dropSaveResponse = false, serverUnavailable = false, saveId;
-let blockItems, itemsUnavailable;
+let blockItems, itemsUnavailable, testLocationApproval;
 const sampleItems = [
     {id:'fixture-1', name:'Állólámpa', place:'Lakás', location_id:'place-1', cover:'photo-1', status:'KEEP', action_id:'MOVE', destination_id:'place-2', version:1},
     {id:'fixture-2', name:'Szék a hosszú nevű tárgyak elrendezésének ellenőrzéséhez', place:'Raktár', location_id:'place-2', status:'LISTED', action_id:'SALE', version:1}
@@ -75,7 +75,23 @@ const server = http.createServer(async (req,res) => {
                 saveId=req.headers['x-otthontar-save-id'];
                 assert.match(saveId,/^[a-f0-9-]{36}$/);
                 assert.equal(req.headers['x-csrf-token'],'fixture-token');assert.equal(req.headers['x-otthontar-user'],'account-1');
-                for await(const chunk of req) savedBody+=chunk.toString('latin1');
+                let body='';
+                for await(const chunk of req) body+=chunk.toString('latin1');
+                savedBody+=body;
+                if(testLocationApproval){
+                    if(!body.includes('name="calendarApproval"')){
+                        testLocationApproval.challenges++;
+                        res.writeHead(409,{'Content-Type':'application/problem+json'});
+                        res.end(JSON.stringify({code:'CALENDAR_LOCATION_APPROVAL',
+                            approval:{from:'place-1',to:'place-2',events:{'plan-1':2}},
+                            events:[{id:'plan-1',title:'Nyitott szállítás',date:'2026-11-28'}]}));
+                    }else{
+                        assert.ok(body.includes('"plan-1":2'));
+                        testLocationApproval.approved++;
+                        res.writeHead(200,{'Content-Type':'application/json'});res.end('{}');
+                    }
+                    return;
+                }
                 if(dropSaveResponse){req.socket.destroy();return;}
                 res.writeHead(failSave?413:200,{'Content-Type':'application/json'});
                 res.end(JSON.stringify(failSave?{detail:'Túl nagy kérés. A piszkozat megmarad.'}:{}));return;
@@ -176,6 +192,36 @@ async function checkInstallHelp(browser, origin) {
     console.log(`OK: ${new URL(origin).pathname} install help only in iPhone Safari browser mode.`);
 }
 
+async function checkLocationApproval(browser, origin) {
+    const page = await browser.newPage({viewport:{width:390,height:844}, isMobile:true, hasTouch:true});
+    testLocationApproval = {challenges:0, approved:0};
+    try {
+        await page.goto(origin + '/leltar/fixture-1');
+        await page.locator('[name=location]').selectOption('place-2');
+        await page.locator('[name=actionId]').selectOption('KEEP');
+        await page.locator('[name=description]').fill('A szerkesztőben megmarad');
+        const save = page.getByRole('button',{name:'Mentés',exact:true}).first();
+        await save.click();
+        const dialog = page.getByRole('dialog',{name:'Helyváltoztatás jóváhagyása'});
+        await dialog.getByText('Lakás → Raktár').waitFor();
+        await dialog.getByText(/Nyitott szállítás/).waitFor();
+        await dialog.getByRole('button',{name:'Vissza a szerkesztéshez'}).click();
+        await dialog.waitFor({state:'hidden'});
+        assert.equal(await page.locator('[name=description]').inputValue(),'A szerkesztőben megmarad');
+        assert.equal(await page.locator('[name=location]').inputValue(),'place-2');
+        assert.equal(testLocationApproval.approved,0);
+        await save.click();
+        await dialog.getByRole('button',{name:'Jóváhagyás és mentés'}).click();
+        await page.waitForURL(origin + '/leltar');
+        assert.deepEqual(testLocationApproval,{challenges:2,approved:1});
+        console.log('OK: calendar location approval shows affected plans, preserves the draft when rejected and resubmits when accepted.');
+    } finally {
+        await page.close();
+        testLocationApproval = undefined;
+        savedBody = '';
+    }
+}
+
 async function browserChecks(browser, base, prefix) {
     const origin = base + prefix;
     expiredSession = false; fixtureUser = 'account-1'; failSave = true; savedBody = ''; savedHeader = '';
@@ -183,6 +229,7 @@ async function browserChecks(browser, base, prefix) {
     fixtureItems = structuredClone(sampleItems);
     await checkCalendar(browser, origin, calendar, value => { expiredSession = value; });
     await checkInstallHelp(browser, origin);
+    await checkLocationApproval(browser, origin);
     const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:3, serviceWorkers:'allow'});
     const page=await context.newPage();
     const errors=[];page.on('pageerror',e=>errors.push(e.message));

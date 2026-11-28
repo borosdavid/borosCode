@@ -6,6 +6,8 @@
     const fields = form.elements;
     const editor = byId('editor');
     const results = byId('events');
+    const factPanel = byId('fact-panel');
+    const factForm = byId('fact-link');
     const types = {MOVE: 'Költözés', SALE: 'Eladás', TRANSPORT: 'Szállítás',
         HANDOVER: 'Átadás', PICKUP: 'Átvétel', OTHER: 'Egyéb'};
     const statuses = {PLANNED: 'Tervezett', DONE: 'Megtörtént', CANCELLED: 'Lemondott'};
@@ -32,7 +34,7 @@
     let items = new Map(), places = new Map(), events = [];
     let ready = false, initializing = false, listRequest = 0, detailRequest = 0;
     let active = null, links = new Map(), baseline = '', saving = false, opening = false, opener;
-    let uncertain = false;
+    let uncertain = false, factOpener, factSelection = null;
     let initialLink = new URLSearchParams(location.search);
 
     function node(tag, text, className) {
@@ -79,9 +81,11 @@
         button.dataset.status = event.status;
         button.dataset.overdue = String(event.overdue);
         button.append(node('strong', event.title));
-        button.append(node('small', [types[event.type], statuses[event.status], event.overdue && 'Lejárt'].filter(Boolean).join(' · ')));
+        const inventory = event.source === 'INVENTORY';
+        button.append(node('small', [types[event.type], statuses[event.status],
+            inventory && 'Leltárból', event.overdue && 'Lejárt'].filter(Boolean).join(' · ')));
         if (agenda) button.append(node('span', dateLabel(start, end)));
-        button.onclick = () => openEvent(event.id, button);
+        button.onclick = () => inventory ? openFact(event.id, button) : openEvent(event.id, button);
         return button;
     }
     function calendarGrid() {
@@ -245,7 +249,97 @@
         notice(byId('warnings'), conflicts.length ?
             'A tárgy másik eladási vagy költözési tervének időpontja átfedésben van ezzel az eseménnyel.' : '', conflicts);
     }
+    function factDescription(fact) {
+        if (fact.withdrawn) return 'Az eladás visszavonva vagy az eladási dátum törölve.';
+        const origin = places.get(fact.originLocationId);
+        const destination = places.get(fact.destinationLocationId);
+        const route = [origin, destination].filter(Boolean).join(' → ');
+        return [dateLabel(fact.date, fact.date), route].filter(Boolean).join(' · ');
+    }
+    function drawFacts(facts) {
+        byId('linked-facts').hidden = !facts.length;
+        byId('facts-list').replaceChildren(...facts.map(fact =>
+            node('li', fact.itemName + ' · ' + factDescription(fact))));
+    }
+    function closeFact(restoreFocus) {
+        factPanel.hidden = true;
+        factSelection = null;
+        if (restoreFocus) (factOpener?.isConnected ? factOpener : byId('new')).focus();
+    }
+    function showFact(fact, candidates) {
+        editor.hidden = true;
+        active = null;
+        const title = (fact.type === 'SALE' ? 'Eladva' : 'Költöztetve') + ' – ' + fact.itemName;
+        byId('fact-title').textContent = title;
+        byId('fact-info').textContent = factDescription(fact);
+        byId('fact-plan').replaceChildren();
+        if (fact.eventId) {
+            const link = node('button', 'Kapcsolt esemény megnyitása');
+            link.type = 'button';
+            link.onclick = () => openEvent(fact.eventId, factOpener);
+            byId('fact-plan').append(link);
+        }
+        factForm.hidden = !candidates.length;
+        populate(byId('fact-candidates'), candidates.map(event =>
+            [event.id, event.title + ' · ' + dateLabel(event.date, event.date)]), 'Válassz eseményt');
+        factSelection = {fact, candidates};
+        notice(byId('fact-feedback'), '');
+        factPanel.hidden = false;
+        byId('fact-title').focus();
+    }
+    async function openFact(id, trigger) {
+        if (opening || !canLeave()) return;
+        opening = true;
+        form.inert = true;
+        trigger.disabled = true;
+        notice(byId('feedback'), 'A leltári tétel betöltése…');
+        try {
+            const path = 'calendar/facts/' + encodeURIComponent(id);
+            const [fact, candidates] = await Promise.all([api(path), api(path + '/candidates')]);
+            factOpener = trigger;
+            showFact(fact, candidates);
+            notice(byId('feedback'), '');
+        } catch (error) {
+            notice(byId('feedback'), error.message);
+        } finally {
+            opening = form.inert = trigger.disabled = false;
+        }
+    }
+    async function assignFact(event) {
+        event.preventDefault();
+        if (saving || !factSelection) return;
+        const {fact, candidates} = factSelection;
+        const plan = candidates.find(candidate => candidate.id === byId('fact-candidates').value);
+        if (!plan) return;
+        saving = factForm.inert = true;
+        try {
+            const saved = await api('calendar/facts/' + encodeURIComponent(fact.id) + '/assignment', {
+                method: 'PUT', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({eventId: plan.id, eventVersion: plan.version, factVersion: fact.version})
+            });
+            showFact(saved, []);
+            notice(byId('fact-feedback'), 'A leltári tétel kapcsolása mentve.');
+            loadPeriod();
+        } catch (error) {
+            notice(byId('fact-feedback'), error.message);
+            if (error.status === 409) {
+                const path = 'calendar/facts/' + encodeURIComponent(fact.id);
+                try {
+                    const [latest, available] = await Promise.all([api(path), api(path + '/candidates')]);
+                    showFact(latest, available);
+                    notice(byId('fact-feedback'), error.message);
+                    loadPeriod();
+                } catch {
+                    // Keep the error and the original selection when the refresh fails.
+                }
+            }
+        } finally {
+            saving = factForm.inert = false;
+        }
+    }
     function fillEditor(event, trigger) {
+        closeFact(false);
+        drawFacts(event.facts || []);
         active = {id: event.id || crypto.randomUUID(), version: event.version, saved: !!event.id, initialStatus: event.status};
         opener = trigger;
         uncertain = false;
@@ -285,7 +379,7 @@
         }
     }
     function newEvent(trigger, itemId) {
-        if (!canLeave()) return;
+        if (opening || !canLeave()) return;
         detailRequest++;
         opening = false;
         const item = items.get(itemId);
@@ -411,6 +505,8 @@
         editor.hidden = true;
         (opener?.isConnected ? opener : byId('new')).focus();
     };
+    byId('fact-close').onclick = () => { if (!saving && !opening) closeFact(true); };
+    factForm.addEventListener('submit', assignFact);
     form.addEventListener('input', syncDates);
     form.addEventListener('submit', saveEvent);
     window.addEventListener('beforeunload', event => {

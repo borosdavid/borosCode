@@ -224,6 +224,24 @@ async function list(filters={}) {
     search.addEventListener('input', draw);
     draw();
 }
+function confirmCalendarLocation(problem) {
+    const dialog = document.querySelector('#calendar-location-dialog');
+    const name = id => places.find(place => place.id === id)?.name || id;
+    document.querySelector('#calendar-location-places').textContent =
+        name(problem.approval.from) + ' → ' + name(problem.approval.to);
+    const list = document.querySelector('#calendar-location-events');
+    list.replaceChildren(...problem.events.map(event => {
+        const row = document.createElement('li');
+        row.textContent = event.title + ' (' + event.date + ')';
+        return row;
+    }));
+    dialog.returnValue = 'cancel';
+    return new Promise(resolve => {
+        dialog.addEventListener('close', () => resolve(dialog.returnValue === 'approve'), {once: true});
+        dialog.showModal();
+    });
+}
+
 function editor(item) {
     content.replaceChildren(document.querySelector('#editor').content.cloneNode(true));
     const form=content.querySelector('form'), fields=form.elements;
@@ -291,7 +309,8 @@ function editor(item) {
     fields.actionId.onchange=()=>{fields.destination.value='';visibility();};
     fields.location.onchange=()=>{if(fields.destination.value===fields.location.value)fields.destination.value='';visibility();};
     fields.destination.onchange=visibility;
-    form.querySelector('[data-complete]').onclick=()=>{fields.location.value=fields.destination.value;fields.destination.value='';fields.actionId.value='';visibility();};
+    const moveButton = form.querySelector('[data-complete]');
+    moveButton.type = 'submit';
     let preparing = false, saveAttempt = null;
     async function selectPhotos(e) {
         const files = [...e.target.files];
@@ -337,6 +356,7 @@ function editor(item) {
             Object.assign(draft,{id,version,cover:pending.some(p=>p.key===cover)?'new:'+pending.findIndex(p=>p.key===cover):cover});
             for(const k of ['asking','actual','soldDate'])if(!draft[k])draft[k]=null;
             const kind=actions.find(a=>a.id===draft.actionId)?.kind;
+            if(e.submitter===moveButton)draft.executeMove=true;
             if(kind!=='MOVE') draft.destination=null;
             if(kind!=='SALE') draft.status='KEEP';
             if(draft.status==='KEEP')Object.assign(draft,{link:'',asking:null});
@@ -347,6 +367,7 @@ function editor(item) {
             saveAttempt={id:crypto.randomUUID(),data,uncertain:false};
         }
         form.inert=true;
+        let approved=false;
         try{
             await api('items',{method:'POST',body:saveAttempt.data,headers:{'X-Otthontar-Save-Id':saveAttempt.id}});
             dirty=()=>false;location.replace(returnPath);
@@ -355,12 +376,26 @@ function editor(item) {
             // Keep the exact submitted data while its outcome is uncertain. An application-level
             // rejection of that same request can resolve the uncertainty and restore editing.
             const rejected=err.applicationProblem && [404,409,422].includes(err.status);
+            if(rejected && err.problem?.code==='CALENDAR_LOCATION_APPROVAL'){
+                const {data}=saveAttempt;
+                saveAttempt=null;
+                if(await confirmCalendarLocation(err.problem)){
+                    data.set('calendarApproval',new Blob([JSON.stringify(err.problem.approval)],{type:'application/json'}));
+                    saveAttempt={id:crypto.randomUUID(),data,uncertain:false};
+                    approved=true;
+                }else{
+                    form.inert=false;
+                    fields.location.focus();
+                }
+                return;
+            }
             if(!saveAttempt.uncertain || rejected)saveAttempt=null;
             warn(saveAttempt ? new Error(err.message+' A mentés eredménye még bizonytalan. A Mentés gombbal ugyanazt a kérést próbálhatod újra.') : err);
             if(!saveAttempt && err.status===409)try{await conflict();}catch(other){warn(other);}
         }finally{
             form.querySelectorAll('fieldset, #conflict').forEach(part=>{part.inert=!!saveAttempt;});
             form.inert=false;
+            if(approved)form.requestSubmit();
         }
     };
 }

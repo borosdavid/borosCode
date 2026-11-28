@@ -40,6 +40,18 @@
         <div class="actions"><button type="button">Mégse</button><button class="primary">Mentés</button></div>
     </form>
 </dialog>
+<dialog id="calendar-location-dialog" aria-labelledby="calendar-location-title">
+    <form method="dialog">
+        <h2 id="calendar-location-title">Helyváltoztatás jóváhagyása</h2>
+        <p id="calendar-location-places"></p>
+        <p>A tárgy kiindulási helye ezekben a nyitott eseményekben frissül.</p>
+        <ul id="calendar-location-events"></ul>
+        <div class="actions">
+            <button value="cancel" autofocus>Vissza a szerkesztéshez</button>
+            <button class="primary" value="approve">Jóváhagyás és mentés</button>
+        </div>
+    </form>
+</dialog>
 <template id="editor">
     <form id="itemform" class="editor">
         <a class="back-link" th:href="@{/leltar}">← Vissza a leltárhoz</a>
