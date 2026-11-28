@@ -11,7 +11,7 @@ const types = {'.js':'text/javascript','.css':'text/css','.html':'text/html','.w
 let expiredSession = false, fixtureUser = 'account-1';
 let failSave = true, savedBody = '', savedHeader = '', nextWorker = false, failAsset = false;
 let dropSaveResponse = false, serverUnavailable = false, saveId;
-let blockItems, itemsUnavailable, testLocationApproval;
+let blockItems, itemsUnavailable, testLocationApproval, photoTransfer;
 const sampleItems = [
     {id:'fixture-1', name:'Állólámpa', place:'Lakás', location_id:'place-1', cover:'photo-1', status:'KEEP', action_id:'MOVE', destination_id:'place-2', version:1},
     {id:'fixture-2', name:'Szék a hosszú nevű tárgyak elrendezésének ellenőrzéséhez', place:'Raktár', location_id:'place-2', status:'LISTED', action_id:'SALE', version:1}
@@ -64,6 +64,19 @@ const server = http.createServer(async (req,res) => {
             }
 
             const transition = route.match(/^\/api\/items\/(fixture-\d+)\/(sold|move|trash|restore)$/);
+            if (req.method === 'PUT' && photoTransfer && route.startsWith('/api/items/uploads/')) {
+                let body = '';
+                for await (const chunk of req) body += chunk.toString('latin1');
+                assert.match(route, /[0-9a-f-]{36}$/);
+                assert.equal(req.headers['x-otthontar-user'], 'account-1');
+                assert.ok(body.includes('name="file"'));
+                photoTransfer.staged.push(route.split('/').at(-1));
+                if (photoTransfer.firstStaged) {
+                    photoTransfer.firstStaged();
+                    await photoTransfer.releaseFirst;
+                }
+                res.writeHead(204);res.end();return;
+            }
             if (req.method === 'POST' && transition) {
                 const item = fixtureItems.find(row => row.id === transition[1]);
                 req.resume();
@@ -78,6 +91,14 @@ const server = http.createServer(async (req,res) => {
                 let body='';
                 for await(const chunk of req) body+=chunk.toString('latin1');
                 savedBody+=body;
+                if(photoTransfer) {
+                    assert.ok(body.includes('name="uploadedPhotos"'));
+                    assert.ok(!body.includes('name="files"'));
+                    assert.ok(photoTransfer.staged.every(id=>body.includes(id)));
+                    photoTransfer.final++;
+                    res.writeHead(200,{'Content-Type':'application/json'});res.end('{}');
+                    return;
+                }
                 if(testLocationApproval){
                     if(!body.includes('name="calendarApproval"')){
                         testLocationApproval.challenges++;
@@ -222,6 +243,73 @@ async function checkLocationApproval(browser, origin) {
     }
 }
 
+async function checkLargeUpload(browser, origin) {
+    const page = await browser.newPage({viewport:{width:390,height:844}, isMobile:true, hasTouch:true});
+    photoTransfer = {staged:[], final:0};
+    try {
+        await page.goto(origin+'/leltar/uj');
+        await page.locator('[name=name]').fill('Nagy feltöltés');
+        await page.locator('[name=location]').selectOption('place-1');
+        await page.evaluate(()=>{
+            const network = new EventTarget();
+            network.type = 'cellular';
+            Object.defineProperty(navigator, 'connection', {configurable:true, value:network});
+            const original = OtthontarPhotos.prepare;
+            OtthontarPhotos.prepare = async input => {
+                const prepared = await original(input);
+                Object.defineProperty(prepared,'size',{value:35_000_000});
+                return prepared;
+            };
+        });
+        const files = ['a.jpg','b.jpg','c.jpg'].map(name=>({name,mimeType:'image/jpeg',
+            buffer:Buffer.from([255,216,255,217])}));
+        await page.locator('#picker').setInputFiles(files);
+        await page.waitForFunction(()=>document.querySelectorAll('#gallery figure').length===3 && !document.querySelector('#itemform').inert);
+        const save = page.getByRole('button',{name:'Mentés',exact:true}).first();
+        await save.click();
+        await page.locator('#message').filter({hasText:'100 MB feletti fotófeltöltéshez Wi-Fi kell'}).waitFor();
+        assert.deepEqual(photoTransfer,{staged:[],final:0});
+
+        let releaseFirst;
+        const firstStaged = new Promise(resolve=>{photoTransfer.firstStaged=resolve;});
+        photoTransfer.releaseFirst = new Promise(resolve=>{releaseFirst=resolve;});
+        await page.evaluate(()=>{navigator.connection.type='wifi';});
+        try {
+            await save.click();
+            await firstStaged;
+            await page.evaluate(()=>{
+                navigator.connection.type='cellular';
+                navigator.connection.dispatchEvent(new Event('change'));
+            });
+            await page.locator('#message').filter({hasText:'Megváltozott a kapcsolat'}).waitFor();
+            assert.equal(photoTransfer.staged.length,1);
+            assert.equal(photoTransfer.final,0);
+        } finally {
+            releaseFirst();
+            photoTransfer.firstStaged = undefined;
+        }
+
+        await page.evaluate(()=>{navigator.connection.type=undefined;});
+        await save.click();
+        const dialog=page.getByRole('dialog',{name:'Nagy feltöltés Wi-Fin'});
+        await dialog.getByRole('button',{name:'Mégse'}).click();
+        assert.equal(photoTransfer.staged.length,1);
+        assert.equal(photoTransfer.final,0);
+        assert.equal(await page.locator('#gallery figure').count(),3);
+        await save.click();
+        await dialog.getByRole('button',{name:/a mobiladat ki van kapcsolva/}).click();
+        await page.waitForURL(origin+'/leltar');
+        assert.equal(new Set(photoTransfer.staged).size,3);
+        assert.equal(photoTransfer.staged[0],photoTransfer.staged[1]);
+        assert.equal(photoTransfer.final,1);
+        console.log('OK: large photo upload blocks cellular, stops on a network change and resumes after explicit Wi-Fi confirmation.');
+    } finally {
+        await page.close();
+        photoTransfer=undefined;
+        savedBody='';
+    }
+}
+
 async function browserChecks(browser, base, prefix) {
     const origin = base + prefix;
     expiredSession = false; fixtureUser = 'account-1'; failSave = true; savedBody = ''; savedHeader = '';
@@ -230,6 +318,7 @@ async function browserChecks(browser, base, prefix) {
     await checkCalendar(browser, origin, calendar, value => { expiredSession = value; });
     await checkInstallHelp(browser, origin);
     await checkLocationApproval(browser, origin);
+    await checkLargeUpload(browser, origin);
     const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:3, serviceWorkers:'allow'});
     const page=await context.newPage();
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -353,15 +442,16 @@ async function browserChecks(browser, base, prefix) {
         await page.locator('.remove').last().click();
         // Validate exact byte limit and aggregate multipart overhead.
         const limits=await page.evaluate(async()=>{
-            const blob=new Blob([new Uint8Array(20*1024*1024+1)]);
+            const blob=new Blob([new Uint8Array(40*1024*1024+1)]);
             let large=false,total=false;
             try{await OtthontarPhotos.prepare(new File([blob],'large.jpg'));}catch{large=true;}
-            try{OtthontarPhotos.validateTotal(Array.from({length:10},()=>({size:20*1024*1024})));}catch{total=true;}
+            try{OtthontarPhotos.uploadPlan([{size:400*1024*1024+1}]);}catch{total=true;}
+            const threshold=[100_000_000,100_000_001].map(size=>OtthontarPhotos.uploadPlan([{size}]).wifiOnly);
             const jpeg=new File([new Uint8Array([255,216,255,217])],'old.jpeg',{type:'image/jpeg'});
             const prepared=await OtthontarPhotos.prepare(jpeg);
-            return {large,total,jpeg:Array.from(new Uint8Array(await prepared.arrayBuffer()))};
+            return {large,total,threshold,jpeg:Array.from(new Uint8Array(await prepared.arrayBuffer()))};
         });
-        assert.equal(limits.large,true);assert.equal(limits.total,true);assert.deepEqual(limits.jpeg,[255,216,255,217]);
+        assert.equal(limits.large,true);assert.equal(limits.total,true);assert.deepEqual(limits.threshold,[false,true]);assert.deepEqual(limits.jpeg,[255,216,255,217]);
         assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
         console.log('OK: mobile layout, manifest, photo conversion, JPEG preservation, HEIC failure and failed-save draft retention, upload limits.');
         expiredSession=true;

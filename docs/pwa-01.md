@@ -1,5 +1,7 @@
 # 01 – PWA és mobilos alapok
 
+Az alábbi mérethatárok a 01-es fázis átadását rögzítik. Az aktuális értékeket és a Wi-Fi-szabályt a [fényképfeltöltés leírása](../README.md#fényképfeltöltés) tartalmazza.
+
 > Történeti PWA-alapriport. A későbbi 01A fiókfejlesztés bevezette a sessionalapú belépést és az explicit natív HTTPS-proxykonfigurációt; az aktuális hozzáférési/API-szerződés és a még nyitott próbák: [fiókok 01A](fiokok-01a.md). Az alábbi régi „nincs login” állítások a 01A előtti auditot írják le.
 
 ## Állapot és kiindulás

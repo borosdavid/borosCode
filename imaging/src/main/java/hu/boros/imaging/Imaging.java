@@ -20,7 +20,7 @@ public class Imaging {
 
   @PostMapping(value = "/thumbnail", consumes = "image/jpeg", produces = "image/jpeg")
   public byte[] thumbnail(@RequestBody byte[] input) throws IOException {
-    if (input.length > 20 * 1024 * 1024) throw new ResponseStatusException(PAYLOAD_TOO_LARGE);
+    if (input.length > 40 * 1024 * 1024) throw new ResponseStatusException(PAYLOAD_TOO_LARGE);
     try (var stream = ImageIO.createImageInputStream(new ByteArrayInputStream(input))) {
       var readers = ImageIO.getImageReaders(stream);
       if (!readers.hasNext()) throw new IOException();

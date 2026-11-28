@@ -41,15 +41,20 @@ public class Photos {
     return root.resolve(UUID.fromString(id) + (small ? ".small.jpg" : ".jpg"));
   }
 
-  String store(MultipartFile file) {
+  static void validate(MultipartFile file) {
     String name = file.getOriginalFilename();
     Ledger.require(
         name != null
             && name.length() <= 255
             && name.toLowerCase(Locale.ROOT).matches(".+\\.jpe?g")
             && file.getSize() > 0
-            && file.getSize() <= 20L * 1024 * 1024,
+            && file.getSize() <= 40L * 1024 * 1024,
         "Hibás JPG vagy túl nagy fájl: " + name);
+  }
+
+  String store(MultipartFile file) {
+    validate(file);
+    String name = file.getOriginalFilename();
     String id = UUID.randomUUID().toString();
     TransactionSynchronizationManager.registerSynchronization(
         new TransactionSynchronization() {

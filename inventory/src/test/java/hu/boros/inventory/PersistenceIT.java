@@ -540,6 +540,97 @@ class PersistenceIT {
   }
 
   @Test
+  void savesMoreThanOneHundredMegabytesInSeparateRequestsAndCommitsPhotosOnce() throws Exception {
+    var draft = draft();
+    var largeJpeg = Arrays.copyOf(jpeg, 35_000_000);
+    var first = UUID.randomUUID().toString();
+    var second = UUID.randomUUID().toString();
+    var third = UUID.randomUUID().toString();
+    String operation = UUID.randomUUID().toString();
+    int before = imagingCalls.get();
+    assertStatus(204, stage(first, "elso.jpg", largeJpeg));
+    assertStatus(204, stage(first, "elso.jpg", largeJpeg));
+    assertStatus(409, stage(first, "masik.jpg", jpeg));
+    assertStatus(204, stage(second, "masodik.jpg", largeJpeg));
+    assertStatus(204, stage(third, "harmadik.jpg", largeJpeg));
+    assertEquals(before + 3, imagingCalls.get());
+    var uploads = List.of(first, second, third);
+    String firstPhoto =
+        rows("select photo_id from pending_photo_upload where upload_id='" + first + "'")
+            .getFirst()
+            .get("photo_id")
+            .toString();
+    assertStatus(404, request("GET", "/api/photos/" + firstPhoto + "/original", null));
+
+    draft.put("cover", "new:3");
+    assertStatus(422, saveWithUploads(draft, operation, null, uploads));
+    assertFalse(containsId(get("/api/items"), draft.get("id").toString()));
+    assertStatus(404, request("GET", "/api/photos/" + firstPhoto + "/original", null));
+    draft.put("cover", "new:1");
+    var saved = saveWithUploads(draft, operation, null, uploads);
+    assertStatus(200, saved);
+    var item = json.readTree(saved.body());
+    assertEquals(3, item.get("photos").size());
+    assertEquals(firstPhoto, item.get("photos").get(0).get("id").asText());
+    assertEquals(item.get("photos").get(1).get("id"), item.get("cover"));
+    assertEquals("harmadik.jpg", item.get("photos").get(2).get("filename").asText());
+    var repeated = saveWithUploads(draft, operation, null, uploads);
+    assertStatus(200, repeated);
+    assertEquals(item, json.readTree(repeated.body()));
+    assertEquals(before + 3, imagingCalls.get());
+    var missing = saveWithUploads(draft(), UUID.randomUUID().toString(), null, uploads);
+    assertStatus(409, missing);
+    assertEquals("PHOTO_UPLOAD_MISSING", json.readTree(missing.body()).get("code").asText());
+  }
+
+  @Test
+  void removesExpiredPendingImagesAndLeavesCommittedImagesAlone() throws Exception {
+    String id = UUID.randomUUID().toString();
+    assertStatus(204, stage(id, "idozites.jpg", jpeg));
+    var result = rows("select photo_id from pending_photo_upload where upload_id='" + id + "'");
+    String photo = result.getFirst().get("photo_id").toString();
+    var photos = context.getBean(Photos.class);
+    assertTrue(Files.exists(photos.path(photo, false)));
+    try (var connection = connection();
+        var sql = connection.createStatement()) {
+      sql.executeUpdate(
+          "update pending_photo_upload set expires_at=current_timestamp - interval 1 hour where upload_id='"
+              + id
+              + "'");
+    }
+    context.getBean(PhotoUploads.class).expire();
+    photos.cleanup();
+    assertFalse(Files.exists(photos.path(photo, false)));
+    assertFalse(Files.exists(photos.path(photo, true)));
+    assertTrue(
+        rows("select upload_id from pending_photo_upload where upload_id='" + id + "'").isEmpty());
+  }
+
+  static HttpResponse<byte[]> stage(String id, String filename, byte[] bytes) throws Exception {
+    String boundary = UUID.randomUUID().toString();
+    var body =
+        HttpRequest.BodyPublishers.concat(
+            HttpRequest.BodyPublishers.ofString(
+                "--"
+                    + boundary
+                    + "\r\nContent-Disposition: form-data; name=\"file\"; filename=\""
+                    + filename
+                    + "\"\r\nContent-Type: image/jpeg\r\n\r\n"),
+            HttpRequest.BodyPublishers.ofByteArray(bytes),
+            HttpRequest.BodyPublishers.ofString("\r\n--" + boundary + "--\r\n"));
+    return http.send(
+        HttpRequest.newBuilder(URI.create(origin + "/api/items/uploads/" + id))
+            .timeout(Duration.ofSeconds(30))
+            .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+            .header("X-Otthontar-Request", "1")
+            .header(csrfHeader, csrfToken)
+            .header("X-Otthontar-User", accountId)
+            .PUT(body)
+            .build(),
+        HttpResponse.BodyHandlers.ofByteArray());
+  }
+
+  @Test
   void concurrentAndRepeatedPhotoSaveWithSameOperationAppliesOnce() throws Exception {
     var draft = draft();
     saved(draft);
@@ -1281,6 +1372,16 @@ class PersistenceIT {
   static HttpResponse<byte[]> saveApproved(
       Map<String, Object> draft, String operation, JsonNode approval, Upload... files)
       throws Exception {
+    return saveWithUploads(draft, operation, approval, null, files);
+  }
+
+  static HttpResponse<byte[]> saveWithUploads(
+      Map<String, Object> draft,
+      String operation,
+      JsonNode approval,
+      List<String> uploadedPhotos,
+      Upload... files)
+      throws Exception {
     String boundary = UUID.randomUUID().toString();
     var body = new ByteArrayOutputStream();
     body.write(
@@ -1296,6 +1397,14 @@ class PersistenceIT {
                   + "\r\nContent-Disposition: form-data; name=\"calendarApproval\"\r\nContent-Type: application/json\r\n\r\n")
               .getBytes(StandardCharsets.UTF_8));
       body.write(json.writeValueAsBytes(approval));
+    }
+    if (uploadedPhotos != null) {
+      body.write(
+          ("\r\n--"
+                  + boundary
+                  + "\r\nContent-Disposition: form-data; name=\"uploadedPhotos\"\r\nContent-Type: application/json\r\n\r\n")
+              .getBytes(StandardCharsets.UTF_8));
+      body.write(json.writeValueAsBytes(uploadedPhotos));
     }
     for (var file : files) {
       body.write(

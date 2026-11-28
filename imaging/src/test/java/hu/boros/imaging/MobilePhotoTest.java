@@ -37,12 +37,12 @@ class MobilePhotoTest {
   }
 
   @Test
-  void acceptsTwentyMiBAndRejectsLargerOrInvalidImages() throws Exception {
+  void acceptsFortyMiBAndRejectsLargerOrInvalidImages() throws Exception {
     var imaging = new Imaging();
-    assertNotNull(imaging.thumbnail(Arrays.copyOf(jpeg(), 20 * 1024 * 1024)));
+    assertNotNull(imaging.thumbnail(Arrays.copyOf(jpeg(), 40 * 1024 * 1024)));
     var tooLarge =
         assertThrows(
-            ResponseStatusException.class, () -> imaging.thumbnail(new byte[20 * 1024 * 1024 + 1]));
+            ResponseStatusException.class, () -> imaging.thumbnail(new byte[40 * 1024 * 1024 + 1]));
     assertEquals(413, tooLarge.getStatusCode().value());
     var invalid =
         assertThrows(ResponseStatusException.class, () -> imaging.thumbnail(new byte[] {1, 2, 3}));

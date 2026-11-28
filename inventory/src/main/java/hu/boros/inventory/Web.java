@@ -17,9 +17,13 @@ import org.springframework.web.server.ResponseStatusException;
 @Controller
 class Pages {
   private final long uploadLimitMiB;
+  private final long photoBatchLimitMiB;
 
-  Pages(@Value("${spring.servlet.multipart.max-request-size:200MB}") DataSize uploadLimit) {
+  Pages(
+      @Value("${spring.servlet.multipart.max-request-size:200MB}") DataSize uploadLimit,
+      @Value("${app.photos-max-batch-size}") DataSize photoBatchLimit) {
     uploadLimitMiB = uploadLimit.toMegabytes();
+    photoBatchLimitMiB = photoBatchLimit.toMegabytes();
   }
 
   @GetMapping("/")
@@ -40,6 +44,7 @@ class Pages {
   @GetMapping({"/leltar", "/leltar/{page}"})
   String inventory(Model model) {
     model.addAttribute("uploadLimitMiB", uploadLimitMiB);
+    model.addAttribute("photoBatchLimitMiB", photoBatchLimitMiB);
     return "inventory/index";
   }
 }
@@ -52,12 +57,19 @@ public class Web {
 
   private final Actions actions;
   private final ItemSaves itemSaves;
+  private final PhotoUploads pendingUploads;
 
-  Web(Ledger ledger, Photos photos, Actions actions, ItemSaves itemSaves) {
+  Web(
+      Ledger ledger,
+      Photos photos,
+      Actions actions,
+      ItemSaves itemSaves,
+      PhotoUploads pendingUploads) {
     this.ledger = ledger;
     this.photos = photos;
     this.actions = actions;
     this.itemSaves = itemSaves;
+    this.pendingUploads = pendingUploads;
   }
 
   @GetMapping("/actions")
@@ -95,15 +107,33 @@ public class Web {
       @RequestPart Ledger.Draft draft,
       @RequestPart(required = false) CalendarLocationChanges.Approval calendarApproval,
       @RequestPart(required = false) List<MultipartFile> files,
+      @RequestPart(required = false) List<UUID> uploadedPhotos,
       @RequestHeader(name = "X-Otthontar-Save-Id", required = false) UUID operation,
       @AuthenticationPrincipal AccountSecurity.LoginUser user) {
     var uploads = files == null ? List.<MultipartFile>of() : files;
+    if (uploadedPhotos != null) {
+      if (user == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+      Ledger.require(
+          operation != null && uploads.isEmpty(),
+          "A feltöltött képekhez új mentési azonosító szükséges.");
+      return itemSaves.saveStaged(user.id, operation, draft, uploadedPhotos, calendarApproval);
+    }
     if (operation != null) {
       if (user == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
       return itemSaves.save(user.id, operation, draft, uploads, calendarApproval);
     }
     ledger.save(draft, uploads, calendarApproval);
     return ledger.item(draft.id());
+  }
+
+  @PutMapping(value = "/items/uploads/{id}", consumes = "multipart/form-data")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  void stagePhoto(
+      @PathVariable UUID id,
+      @RequestPart MultipartFile file,
+      @AuthenticationPrincipal AccountSecurity.LoginUser user) {
+    if (user == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+    pendingUploads.stage(user.id, id, file);
   }
 
   @PostMapping("/items/{id}/sold")

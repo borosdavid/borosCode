@@ -242,6 +242,15 @@ function confirmCalendarLocation(problem) {
     });
 }
 
+function confirmPhotoWifi() {
+    const dialog = document.querySelector('#photo-wifi-dialog');
+    dialog.returnValue = 'cancel';
+    return new Promise(resolve => {
+        dialog.addEventListener('close', () => resolve(dialog.returnValue === 'confirm'), {once: true});
+        dialog.showModal();
+    });
+}
+
 function editor(item) {
     content.replaceChildren(document.querySelector('#editor').content.cloneNode(true));
     const form=content.querySelector('form'), fields=form.elements;
@@ -361,27 +370,60 @@ function editor(item) {
             if(kind!=='SALE') draft.status='KEEP';
             if(draft.status==='KEEP')Object.assign(draft,{link:'',asking:null});
             if(draft.status!=='SOLD')Object.assign(draft,{actual:null,soldDate:null});
-            try{OtthontarPhotos.validateTotal(pending.map(p=>p.file),new Blob([JSON.stringify(draft)]).size);}catch(err){warn(err);return;}
-            const data=new FormData();data.append('draft',new Blob([JSON.stringify(draft)],{type:'application/json'}));
-            pending.forEach(p=>data.append('files',p.file));
-            saveAttempt={id:crypto.randomUUID(),data,uncertain:false};
+            const json = new Blob([JSON.stringify(draft)], {type:'application/json'});
+            let plan;
+            try { plan = OtthontarPhotos.uploadPlan(pending.map(photo=>photo.file), json.size); }
+            catch(err) { warn(err); return; }
+            const data = new FormData();
+            data.append('draft', json);
+            if (plan.staged) {
+                data.append('uploadedPhotos', new Blob(
+                    [JSON.stringify(pending.map(photo=>photo.key))], {type:'application/json'}));
+            } else {
+                pending.forEach(photo=>data.append('files',photo.file));
+            }
+            saveAttempt = {id:crypto.randomUUID(),data,uncertain:false,
+                wifiOnly:plan.wifiOnly, staged:plan.staged ? [...pending] : []};
         }
         form.inert=true;
-        let approved=false;
-        try{
-            await api('items',{method:'POST',body:saveAttempt.data,headers:{'X-Otthontar-Save-Id':saveAttempt.id}});
+        let approved = false, guard, finalRequest = false;
+        try {
+            if (saveAttempt.wifiOnly && saveAttempt.staged.some(photo=>!photo.staged))
+                guard = await OtthontarPhotos.wifiUpload(confirmPhotoWifi);
+            const staged = saveAttempt.staged;
+            for (const [index, photo] of staged.entries()) {
+                if (photo.staged) continue;
+                guard?.check();
+                confirmChange(`Fotók feltöltése · ${index + 1} / ${staged.length}`);
+                const body = new FormData();
+                body.append('file', photo.file);
+                await api('items/uploads/'+photo.key, {method:'PUT',body,signal:guard?.signal});
+                photo.staged = true;
+            }
+            guard?.check();
+            finalRequest = true;
+            if (staged.length) confirmChange('Adatlap mentése…');
+            await api('items',{method:'POST',body:saveAttempt.data,signal:guard?.signal,
+                headers:{'X-Otthontar-Save-Id':saveAttempt.id}});
             dirty=()=>false;location.replace(returnPath);
         }catch(err){
-            saveAttempt.uncertain ||= err.outcomeUnknown === true;
+            saveAttempt.uncertain ||= finalRequest && err.outcomeUnknown === true;
+            if (!finalRequest) {
+                if (!saveAttempt.uncertain) saveAttempt = null;
+                if (guard?.signal.aborted) warn(new Error('Megváltozott a kapcsolat. Folytatáshoz csatlakozz Wi-Fihez.'));
+                else warn(err);
+                return;
+            }
             // Keep the exact submitted data while its outcome is uncertain. An application-level
             // rejection of that same request can resolve the uncertainty and restore editing.
-            const rejected=err.applicationProblem && [404,409,422].includes(err.status);
+            const rejected=err.applicationProblem && [404,409,413,422].includes(err.status);
             if(rejected && err.problem?.code==='CALENDAR_LOCATION_APPROVAL'){
-                const {data}=saveAttempt;
+                const attempt=saveAttempt;
                 saveAttempt=null;
+                confirmation.hidden=true;
                 if(await confirmCalendarLocation(err.problem)){
-                    data.set('calendarApproval',new Blob([JSON.stringify(err.problem.approval)],{type:'application/json'}));
-                    saveAttempt={id:crypto.randomUUID(),data,uncertain:false};
+                    attempt.data.set('calendarApproval',new Blob([JSON.stringify(err.problem.approval)],{type:'application/json'}));
+                    saveAttempt={...attempt,id:crypto.randomUUID(),uncertain:false};
                     approved=true;
                 }else{
                     form.inert=false;
@@ -389,10 +431,17 @@ function editor(item) {
                 }
                 return;
             }
+            if(err.problem?.code==='PHOTO_UPLOAD_MISSING'){
+                pending.forEach(photo=>{photo.staged=false;});
+                saveAttempt=null;
+                warn(err);
+                return;
+            }
             if(!saveAttempt.uncertain || rejected)saveAttempt=null;
             warn(saveAttempt ? new Error(err.message+' A mentés eredménye még bizonytalan. A Mentés gombbal ugyanazt a kérést próbálhatod újra.') : err);
             if(!saveAttempt && err.status===409)try{await conflict();}catch(other){warn(other);}
         }finally{
+            guard?.close();
             form.querySelectorAll('fieldset, #conflict').forEach(part=>{part.inert=!!saveAttempt;});
             form.inert=false;
             if(approved)form.requestSubmit();

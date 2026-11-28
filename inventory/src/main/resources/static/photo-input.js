@@ -1,12 +1,15 @@
 /* Originals stay in the editor's pending list until the server confirms saving. */
 'use strict';
 window.OtthontarPhotos = (() => {
-    const MAX_FILE = 20 * 1024 * 1024;
+    const MAX_FILE = 40 * 1024 * 1024;
+    const WIFI_ONLY_BYTES = 100_000_000;
+    const PROXY_REQUEST_BUDGET = 90_000_000;
     const requestLimitMiB = Number(document.body.dataset.uploadLimitMib || 200);
-    const MAX_REQUEST = requestLimitMiB * 1024 * 1024;
+    const batchLimitMiB = Number(document.body.dataset.photoBatchLimitMib || 400);
+    const maxBatch = batchLimitMiB * 1024 * 1024;
     async function prepare(original) {
-        if (!original.size || original.size > MAX_FILE) throw Error('A fotó legfeljebb 20 MiB lehet. Az eredeti fájl megmarad; válassz kisebb képet.');
-        const bytes = new Uint8Array(await original.arrayBuffer());
+        if (!original.size || original.size > MAX_FILE) throw Error('A fotó legfeljebb 40 MiB lehet. Az eredeti fájl megmarad; válassz kisebb képet.');
+        const bytes = new Uint8Array(await original.slice(0,3).arrayBuffer());
         const jpeg = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
         // Preserve existing JPEG bytes, including EXIF. Browser previews honor orientation;
         // the imaging service normalizes the generated thumbnail separately.
@@ -27,10 +30,40 @@ window.OtthontarPhotos = (() => {
             throw Error('Ez a kép nem alakítható JPEG-gé ezen a böngészőn (például HEIC/HEIF). Az eredetit megtartottuk ezen a lapon. Válassz JPEG-et vagy állítsd az iPhone kamerát a Leginkább kompatibilis formátumra.');
         } finally { bitmap?.close(); }
     }
-    function validateTotal(files, draftBytes = 0) {
-        // Leave room for multipart field headers and boundaries, not only photo bytes.
-        if (files.reduce((sum,file)=>sum+file.size, draftBytes) + 1024 * (files.length+2) > MAX_REQUEST)
-            throw Error(`A mentés legfeljebb ${requestLimitMiB} MiB lehet a teljes űrlappal együtt. Vegyél ki néhány képet; a piszkozat megmarad.`);
+    function uploadPlan(files, draftBytes = 0) {
+        const bytes = files.reduce((sum,file)=>sum+file.size, 0);
+        if (bytes > maxBatch)
+            throw Error(`Egy mentésben legfeljebb ${batchLimitMiB} MiB új fotó küldhető. Vegyél ki néhány képet; a piszkozat megmarad.`);
+        // Keep legacy multipart requests comfortably below the proxy and multipart limits.
+        const wireBytes = bytes + draftBytes + 1024 * (files.length + 2);
+        return {wifiOnly: bytes > WIFI_ONLY_BYTES,
+            staged: files.length > 20 || wireBytes > Math.min(PROXY_REQUEST_BUDGET, requestLimitMiB * 1024 * 1024)};
     }
-    return {prepare,validateTotal};
+
+    async function wifiUpload(confirmSettings) {
+        const network = navigator.connection;
+        const state = () => {
+            if (!navigator.onLine) return 'blocked';
+            if (network?.type === 'wifi') return 'wifi';
+            return !network?.type || ['other', 'unknown'].includes(network.type) ? 'unverified' : 'blocked';
+        };
+        const reason = '100 MB feletti fotófeltöltéshez Wi-Fi kell. A képek megmaradnak ezen a lapon.';
+        const manual = state() === 'unverified' && await confirmSettings();
+        if (state() !== 'wifi' && !manual) throw Error(reason);
+        const controller = new AbortController();
+        const allowed = () => state() === 'wifi' || (manual && state() === 'unverified');
+        const changed = () => { if (!allowed()) controller.abort(); };
+        const check = () => { if (controller.signal.aborted || !allowed()) throw Error(reason); };
+        network?.addEventListener('change', changed);
+        window.addEventListener('offline', changed);
+        return {
+            signal: controller.signal, check,
+            close() {
+                network?.removeEventListener('change', changed);
+                window.removeEventListener('offline', changed);
+            }
+        };
+    }
+
+    return {prepare, uploadPlan, wifiUpload};
 })();

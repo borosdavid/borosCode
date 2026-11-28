@@ -41,7 +41,7 @@ verziófeltételes mentés és a 409-es ütközésjelzés megmaradt. Az entitás
 repositoryk, fotótranzakciók és a kompatibilitási döntések leírása:
 [JPA-átállás](docs/jpa-atallas.md).
 
-A Thymeleaf közös oldalkeretet és a leltár sablonját szolgálja ki. A böngésző helyben őrzi a még szerkesztett mezőket és képeket. A Mentés a leltárszolgáltatásnak küldi el az űrlapot. A szolgáltatás egy MySQL-tranzakcióban ellenőrzi az adatlap verzióját és rögzíti az összetartozó adatokat. A külön imaging szolgáltatás HTTP-n fogadja a JPEG-et, ellenőrzi, és visszaad egy legfeljebb 420 pixeles előnézetet. Ennek a szolgáltatásnak nincs saját tartós adata. A leltárszolgáltatás tárolja mindkét fájlt és a hozzájuk tartozó azonosítót. Egy JPG legfeljebb 20 MiB, a teljes mentés legfeljebb 200 MiB lehet. Végleges törléskor az adatbázisban tartós törlési sor készül a képfájlokhoz. Átmeneti fájlhiba esetén a takarítás újraindítás után is folytatódik.
+A Thymeleaf közös oldalkeretet és a leltár sablonját szolgálja ki. A böngésző helyben őrzi a még szerkesztett mezőket és képeket. A Mentés a leltárszolgáltatásnak küldi el az űrlapot. A szolgáltatás egy MySQL-tranzakcióban ellenőrzi az adatlap verzióját és rögzíti az összetartozó adatokat. A külön imaging szolgáltatás HTTP-n fogadja a JPEG-et, ellenőrzi, és visszaad egy legfeljebb 420 pixeles előnézetet. Ennek a szolgáltatásnak nincs saját tartós adata. A leltárszolgáltatás tárolja mindkét fájlt és a hozzájuk tartozó azonosítót. Az aktuális határokat a [fényképfeltöltés leírása](#fényképfeltöltés) rögzíti. Végleges törléskor az adatbázisban tartós törlési sor készül a képfájlokhoz. Átmeneti fájlhiba esetén a takarítás újraindítás után is folytatódik.
 
 ```mermaid
 erDiagram
@@ -70,6 +70,7 @@ Az Actuator /actuator/health végpont mindkét szolgáltatásnál elérhető. A 
 | GET /api/items?trash=false | Tárgyak helyszínnel és borítóazonosítóval |
 | GET /api/items/{id} | Adatlap, verzió, fotók sorrendben |
 | POST /api/items | Multipart draft JSON és ismételhető files mező. A Ledger.Draft a mezőszerződés. Új UUID-nál version=0, frissítéskor az utoljára olvasott verzió kell. |
+| PUT /api/items/uploads/{uuid} | Egy JPEG előfeltöltése a bejelentkezett fiókhoz, multipart `file` mezőben. Ugyanaz az azonosító és fájl biztonságosan újrapróbálható. |
 | POST /api/items/{id}/{trash,restore,purge,move}?version=N | Verzióvédett Lomtár-művelet |
 | GET /api/photos/{id}/{original,small} | JPEG |
 | POST /thumbnail (imaging) | image/jpeg bemenet és JPEG válasz |
@@ -79,6 +80,25 @@ Az adatlap mentéséhez opcionális az `X-Otthontar-Save-Id` UUID fejléc. A web
 A hibás kérés 400, hiányzó tétel 404, ütközés 409, túl nagy feltöltés 413, hibás üzleti adat vagy JPEG 422, elérhetetlen képszolgáltatás 503 választ adhat. A kliens a hibánál megtartja a piszkozatot.
 
 Új modulhoz az inventory/src/main/resources/templates/layout.html fájl főnavigációjához adj menüpontot, és hozz létre saját Thymeleaf-mappát az inventory sablonmappája mellett. Új útvonalat és vezérlőt külön Java-csomagban adj hozzá. Egy önálló üzleti szolgáltatás az imaging példájához hasonló Maven-modult, saját belépési pontot és compose.yaml szolgáltatásbejegyzést kaphat. Saját adattulajdon esetén külön séma és hozzáférés kell. A meglévő adatmodellt az inventory/src/main/resources/db/migration alatt következő sorszámú Flyway-migrációval bővítsd. A már lefutott V1 fájlt hagyd érintetlenül.
+
+## Fényképfeltöltés
+
+Képenként 40 MiB, egy tárgymentésben alapértelmezésben összesen 400 MiB új fotó
+fér el. A mentési összkorlátot az `APP_PHOTO_BATCH_MAX_SIZE` beállítás adja meg.
+A 100 MB (100 000 000 bájt) feletti feltöltéshez Wi-Fi szükséges. A határ az
+elküldendő JPEG-ek méretére vonatkozik. Az iPhone-os webapp ismeretlen
+kapcsolattípusnál a mobiladat kikapcsolása után kézi megerősítést kér.
+
+A nagy képcsomag egyenként kerül előfeltöltésre. A képek az adatlap sikeres
+mentésével együtt válnak láthatóvá, a sorrend és a borító is ekkor rögzül.
+Az el nem mentett, szerverre már elküldött fotókat a rendszer egy nap után
+takarítja. Megszakítás után a nyitott adatlapról folytatható a művelet.
+
+A szerver a V7 Flyway-migrációt futtatja. A nagyobb JPEG-ekhez az Inventory
+és az Imaging szolgáltatás frissítése együtt szükséges. Az előfeltöltött
+azonosítók listáját a végső `POST /api/items` kérés `uploadedPhotos` JSON-részben
+fogadja. A kéréshez mentési azonosító kell. A régi, `files` részeket használó
+kliensek ugyanazon a mentési végponton működnek.
 
 ## Verziók és ellenőrzések
 

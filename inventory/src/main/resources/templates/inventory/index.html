@@ -15,7 +15,7 @@
     <script defer th:src="@{/pwa.js}"></script>
     <script defer th:src="@{/inventory.js}"></script>
 </head>
-<body class="workspace" th:attr="data-app-root=@{/},data-upload-limit-mib=${uploadLimitMiB}">
+<body class="workspace" th:attr="data-app-root=@{/},data-upload-limit-mib=${uploadLimitMiB},data-photo-batch-limit-mib=${photoBatchLimitMiB}">
 <a class="skip-link" href="#content">Ugrás a tartalomra</a>
 <header th:replace="~{layout :: header}"></header>
 <main class="workspace-main">
@@ -52,6 +52,17 @@
         </div>
     </form>
 </dialog>
+<dialog id="photo-wifi-dialog" aria-labelledby="photo-wifi-title">
+    <form method="dialog">
+        <h2 id="photo-wifi-title">Nagy feltöltés Wi-Fin</h2>
+        <p>Csatlakozz Wi-Fihez, és kapcsold ki a mobiladatot a feltöltés végéig.</p>
+        <p>iPhone-on a Beállítások → Mobilhálózat menüben találod a Mobiladat-forgalom kapcsolót.</p>
+        <div class="actions">
+            <button value="cancel" autofocus>Mégse</button>
+            <button class="primary" value="confirm">Wi-Fin vagyok, a mobiladat ki van kapcsolva</button>
+        </div>
+    </form>
+</dialog>
 <template id="editor">
     <form id="itemform" class="editor">
         <a class="back-link" th:href="@{/leltar}">← Vissza a leltárhoz</a>
@@ -81,7 +92,7 @@
             <div id="gallery" class="gallery wide"></div>
             <label>Fotók kiválasztása<input id="picker" type="file" accept="image/*,.heic,.heif" multiple aria-describedby="photo-help"></label>
             <label>Fotó készítése<input id="camera" type="file" accept="image/*" capture="environment" aria-describedby="photo-help"></label>
-            <p id="photo-help" class="wide form-hint">Legfeljebb 20 MiB képenként és <span th:text="${uploadLimitMiB}">200</span> MiB mentésenként. A nem mentett fotók a nyitott lapon maradnak.</p>
+            <p id="photo-help" class="wide form-hint">Legfeljebb 40 MiB képenként és <span th:text="${photoBatchLimitMiB}">400</span> MiB új fotó mentésenként. 100 MB felett Wi-Fi szükséges. A nem mentett fotók a nyitott lapon maradnak.</p>
         </fieldset>
         <section id="conflict" class="notice" hidden></section>
         <div class="editor-actions"><button class="primary">Mentés</button></div>

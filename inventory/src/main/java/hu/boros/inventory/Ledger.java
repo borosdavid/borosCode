@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Supplier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -165,6 +166,21 @@ public class Ledger {
   @Transactional(isolation = Isolation.READ_COMMITTED)
   public void save(
       Draft d, List<MultipartFile> uploads, CalendarLocationChanges.Approval approval) {
+    save(
+        d,
+        approval,
+        () ->
+            uploads.stream()
+                .map(
+                    file ->
+                        new PhotoUploads.Prepared(photos.store(file), file.getOriginalFilename()))
+                .toList());
+  }
+
+  void save(
+      Draft d,
+      CalendarLocationChanges.Approval approval,
+      Supplier<List<PhotoUploads.Prepared>> prepare) {
     validate(d);
     var id = d.id().toString();
     String action = d.actionId();
@@ -221,16 +237,15 @@ public class Ledger {
                 .map(photo -> photo.id)
                 .toList());
     int previous = ids.size();
-    for (var upload : uploads) {
-      String photo = photos.store(upload);
-      entities.persist(new PhotoEntity(photo, id, upload.getOriginalFilename(), ids.size()));
-      photoRecords.flush();
-      ids.add(photo);
+    var prepared = prepare.get();
+    for (var photo : prepared) {
+      entities.persist(new PhotoEntity(photo.id(), id, photo.filename(), ids.size()));
+      ids.add(photo.id());
     }
     String cover = d.cover();
     if (cover != null && cover.startsWith("new:")) {
       int index = Integer.parseInt(cover.substring(4));
-      require(index >= 0 && index < uploads.size(), "Ismeretlen új borítókép.");
+      require(index >= 0 && index < prepared.size(), "Ismeretlen új borítókép.");
       cover = ids.get(previous + index);
     }
     if (cover == null || cover.isBlank()) cover = ids.isEmpty() ? null : ids.getFirst();

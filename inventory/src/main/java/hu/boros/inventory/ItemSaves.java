@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
@@ -25,11 +26,13 @@ public class ItemSaves {
   private final EntityManager entities;
   private final Ledger ledger;
   private final ObjectMapper json;
+  private final PhotoUploads pending;
 
-  ItemSaves(EntityManager entities, Ledger ledger, ObjectMapper json) {
+  ItemSaves(EntityManager entities, Ledger ledger, ObjectMapper json, PhotoUploads pending) {
     this.entities = entities;
     this.ledger = ledger;
     this.json = json;
+    this.pending = pending;
   }
 
   @Transactional(isolation = Isolation.READ_COMMITTED)
@@ -39,7 +42,36 @@ public class ItemSaves {
       Ledger.Draft draft,
       List<MultipartFile> uploads,
       CalendarLocationChanges.Approval approval) {
-    String fingerprint = fingerprint(draft, uploads, approval);
+    return retainReceipt(
+        accountId,
+        operation,
+        draft,
+        fingerprint(draft, uploads, approval, null),
+        () -> ledger.save(draft, uploads, approval));
+  }
+
+  @Transactional(isolation = Isolation.READ_COMMITTED)
+  public InventoryViews.ItemView saveStaged(
+      String accountId,
+      UUID operation,
+      Ledger.Draft draft,
+      List<UUID> staged,
+      CalendarLocationChanges.Approval approval) {
+    Ledger.require(
+        !staged.isEmpty()
+            && !staged.contains(null)
+            && new HashSet<>(staged).size() == staged.size(),
+        "Hibás képlista.");
+    return retainReceipt(
+        accountId,
+        operation,
+        draft,
+        fingerprint(draft, List.of(), approval, staged),
+        () -> ledger.save(draft, approval, () -> pending.take(accountId, staged)));
+  }
+
+  private InventoryViews.ItemView retainReceipt(
+      String accountId, UUID operation, Ledger.Draft draft, String fingerprint, Runnable save) {
     String operationId = operation.toString();
     // The unique key serializes concurrent retries. A rollback removes the claim as well.
     entities
@@ -69,7 +101,7 @@ public class ItemSaves {
           CONFLICT, "A mentési azonosítóhoz másik tartalom tartozik.");
     if (receipt[1] != null) return ledger.item(UUID.fromString((String) receipt[1]));
 
-    ledger.save(draft, uploads, approval);
+    save.run();
     var saved = ledger.item(draft.id());
     entities
         .createNativeQuery(
@@ -85,10 +117,14 @@ public class ItemSaves {
   }
 
   private String fingerprint(
-      Ledger.Draft draft, List<MultipartFile> uploads, CalendarLocationChanges.Approval approval) {
+      Ledger.Draft draft,
+      List<MultipartFile> uploads,
+      CalendarLocationChanges.Approval approval,
+      List<UUID> staged) {
     try (var output =
         new DigestOutputStream(
             OutputStream.nullOutputStream(), MessageDigest.getInstance("SHA-256"))) {
+      if (staged != null) output.write(1); // Distinguish staged and legacy request fingerprints.
       writePart(output, json.writeValueAsBytes(draft));
       for (var upload : uploads) {
         String name = upload.getOriginalFilename();
@@ -108,6 +144,11 @@ public class ItemSaves {
                     approval.events() == null
                         ? null
                         : new java.util.TreeMap<>(approval.events()))));
+      }
+      if (staged != null) {
+        output.write(
+            Long.BYTES); // Distinguish staged saves from the existing length-prefixed format.
+        writePart(output, json.writeValueAsBytes(staged));
       }
       return HexFormat.of().formatHex(output.getMessageDigest().digest());
     } catch (IOException e) {
